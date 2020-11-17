@@ -1,0 +1,21 @@
+#
+#  0  acronym  filename	 action-to-take   of none/null = vim
+#  1. pound in col 1 is comment
+#  2. to insure edit  use   acro filename  sudo vim    
+#  3. :sort  will 'sort' this file
+#----
+T        ~/tempname
+ff       ~/whereis/f
+hostname /etc/hostname
+hosts    /etc/hosts less 
+knr     ~/Documents/knr.pdf   atril
+pw      /etc/passwd less
+qft  /home/rchansen/.config/qtile/config.py
+qt       ~/.config/qtile/config.py
+stdio    /usr/include/stdio.h
+stdlib   /usr/include/stdlib.h
+stringh  /usr/include/string.h
+t       tempname
+thinkpy /home/rchansen/Documents/Manuals/thinkpython.pdf atril
+vb /usr/share/doc/virtualbox-6.1/UserManual.pdf atril
+vimrc ~/.vim/vimrc
