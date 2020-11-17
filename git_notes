@@ -1,0 +1,5 @@
+ 2012  echo "# whereis" > README.md
+ 2013  git add README.md 
+ 2015  git commit -m 'first commit - README.md'
+ 2023  git remote add origin https://github.com/rchanse/whereis.git
+ 2025  git push --set-upstream origin master

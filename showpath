@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+    IFS=":"
+    read -r -a who <<< "$PATH"   # parse into who array  sep is xff
+#   echo ${#who[*]}           # show length
+    let ub=${#who[@]}         # put length in ub (upper bound) var
+    let j=0
+    while [ $j -lt $ub ]; do    # loop to show variable
+#     if [ -f ${who[$j]}/$1 ]; then
+#       echo $j  $1  is in ${who[$j]} 
+#     else
+#       echo $j  $1 NOT in ${who[$j]} 
+#     fi
+      if [ ".${who[$j]}" == ".." ]; then
+        who[$j]=$PWD
+        echo "found file '.' replace with pwd-value index: $j"
+      fi
+      echo $j  ${who[$j]}
+#     echo ${who[$j]}
+#     echo $j  ${who[$j]}/$1
+      let j=$j+1
+    done
+
+
+

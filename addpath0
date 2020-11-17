@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+IFS=
+
+if [ ".$1" == "." ]; then
+
+cat <<EOF
+usage: addpath0  -- add a file to the beginning of the PATH variable
+  parms usage
+   parm1
+    null  - show this help info
+    .     - place current pwd at front PATH
+    other - place other at front of PATH
+   parm2
+    nomsg - do not show msgs (before and after)
+    othe  -        show msgs (before and after)
+
+  note: other may or may not be a directory. PATH doesn't care.
+EOF
+
+else
+
+    if [ ".$2" != ".nomsg" ]; then
+    echo
+    echo BEFORE
+    echo
+    echo $PATH
+    echo
+    fi
+
+    if [ ".$1" == "." ]; then
+    export PATH="$PWD:$PATH"
+    else
+    export PATH="$1:$PATH"
+    fi
+
+    if [ ".$2" != ".nomsg" ]; then
+    echo
+    echo AFTER
+    echo
+    echo $PATH
+    fi
+fi

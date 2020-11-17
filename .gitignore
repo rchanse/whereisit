@@ -1,0 +1,14 @@
+*~
+*.swp
+.*.swp
+.*~
+tempname
+f_acrolist
+gnamelist
+g2namelist
+gdirnamelist
+grmelist
+FF_acrolist
+mine.vim
+rchtemp*
+11asummary.out

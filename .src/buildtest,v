@@ -1,0 +1,87 @@
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.11.15.07.01.37;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@orig with exit stmts
+@
+text
+@#!/usr/bin/env bash
+
+
+echo $HOME/rchtest
+if [ -d $HOME/rchtest ]; then
+  echo "$HOME/rchtest exists. Please renameit."
+  echo -n "Enter new subdirectory name (return to exit): "
+  read newname rest
+  if [ ".$newname" == "." ]; then
+    echo "Nothing done, I quit."
+    exit 8
+  else
+    echo "mv $HOME/rchtest $HOME/$newname"  
+    mv $HOME/rchtest $HOME/$newname  
+    echo "OK, we are ready -- rerun the buildtest script"
+    exit 0
+  fi
+else
+  echo "On we go, allocate, populate and rePATH  $HOME/rchtest"
+fi 
+
+mkdir $HOME/rchtest
+ls -alh $HOME/rchtest
+cd $HOME/rchbuild              # get to right dir to do work
+
+
+function cpit () {
+  cp $1 $HOME/rchtest/$1
+  copyrc=$?
+  if [ $copyrc -eq 0 ]; then
+    echo "$1 copied to rchtest."
+  else
+    echo "Boo Boo -- check $1"
+  fi
+}
+echo "Your original PATH
+echo $PATH
+
+cpit buildtest             # this script
+cpit 11asummary            # file of one line summaries
+cpit ech0                  # debugging echo function
+cpit ech1                  # debugging echo inline
+cpit engage                # startup if needed
+cpit addpath               # put file a end of PATH
+cpit addpath0              # put file at start of PATH
+cpit unpath                # remove file from PATH 
+cpit f                     # go to file by acronym
+cpit f_acrolist            # start list of acronyms
+cpit showpath              # show the path files
+cpit meminpath             # show which path files have mem (compare
+
+# make ready to go
+. addpath0 $HOME/rchtest
+
+echo "You can back off with  unpath $HOME/rchtest
+echo "Restart with existing rchtest file with  . ~/rchtest/engager"
+echo 
+echo "Your revised PATH"
+echo $PATH
+echo 
+echo "Good Luck"
+
+@

@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+
+source /home/rchansen/mycodedoc/filechk
+source /home/rchansen/mycodedoc/ech0
+
+usage (){
+cat <<EOF
+function: wrsum    found in $0
+  description: for the given parm1, you will be placed in 11asummary
+   of this directory to provide a summary stmt of this function.
+   format:  parm1 - comments on item (" - "  required)
+
+EOF
+}
+
+# provide doc in no parms provided.
+if [ "." == ".$1" ]; then
+  usage
+  exit 0
+fi
+
+item=$1         # the element to make info about
+found='no'
+
+# files involved
+ls_list="/tmp/ls_list"                  # list of files in this dir
+doc_info=$PWD"/11asummary"              # the one line summary file
+file_temp2="/tmp/temp2"                 # sum of above two lists
+file_sumout="/tmp/11asummary.out"       # rebuild sum plus new item
+
+ls -a > $ls_list                        # gen list of file
+cat $doc_info $ls_list > $file_temp2    # combine the file
+
+# header elt 
+echo "#member description add as ' - comments '" > $file_sumout
+
+let lineno=2     # start adding after header
+
+while  read -r filename dash  rest ; do
+  newline=""
+  newline="$filename $dash $rest "  #/ build summary line
+  
+  # first go out and recopy prev 11asummary item lines.
+  if [ ".-" == ".$dash" ]; then
+    echo "$newline"  >> $file_sumout          #/ rebuilding 11asummary
+    ech0 $lineno :: "$newline"
+    let lineno=$lineno+1
+  fi
+
+  # Now find that the item is an existing file (in ls -a list part)
+  if [ "$filename" == "$item" ]; then
+    found="yes"               # mark as found
+    saveline="$filename"      # remember the item 
+    let findline=$lineno      # remember the line number
+  fi
+done < $file_temp2             # end read loop from given doc_info  
+
+#add the newline if found
+if [ ".$found" == ".yes" ]; then
+  echo "$saveline" >> $file_sumout     # add when found
+else
+  echo "delete this line - requesed $item does not exist" >> $file_sumout
+fi
+
+ech0 vim +$findline $file_sumout  
+vim +$findline $file_sumout  
+#vim +$findline 11asummary.out
+
+echo -e "Hit Enter to rewrite 11asummary "
+read value
+if [ ".$value" == "." ]; then
+  cp $file_sumout  $doc_info 
+  echo "l1asummary refreshed from 11asummary.out"
+else
+  echo "11asummary not touched"
+fi
+

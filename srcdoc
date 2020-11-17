@@ -1,0 +1,57 @@
+Concerns Eric S Raymond's (src) Simple Revision Control
+I hope you like to read.  google 'esr src software'
+
+source location:https://gitlab.com/esr/src
+ you can get it by git clone https://gitlab.com/esr/src.git
+
+a python pgm : src place it in your PATH libs.
+
+"Pre-reqs"
+a.   This is built on old unix source control systems rcs and sccs
+     install the gnu flavors of them
+b.  sudo apt-get install rcs
+c.  sudo apt-get install cssc
+
+Mon 16 Nov 2020 04:38:46 PM CST
+Optional: sudo apt-get asciidoc (takes long to get and 1.5 G of space
+ I did not do it and have yet to see problems.
+
+Try this:
+
+1. enter 'src'        shows cmds
+2.        src help intro
+3.        src help revisions
+4.        src help commands
+5.        src help commit
+
+Good luck
+
+
+little example - make file, save/track it, mod it, retrieve orig
+
+a. make a new directory  
+b. cd to the newdir
+c. make your own "hello, world" script (say 'howdy')
+  2 line text of howdy
+#!/usr/bin/env bash
+echo "Howdy, world"
+
+chmod +x howdy
+./howdy
+make sure it works
+ ( enter ls -alR 
+src commit -m "original ver." howdy
+ ( enter ls -alR               note the .src directory
+src log            or  src log howdy
+go change the 'hello' msg in howdy
+re-test 'new ver' of howdy
+src diff howdy
+src commit -m 'new howdy msg' howdy
+ (Now you want orig ver back
+ src checkout 1 howdy
+ cat howdy
+
+
+NOTE after the first commit you will have a new hidden dir  .src
+where info is kept.   Use  ls -R 
+

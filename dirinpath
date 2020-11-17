@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+function mem_check () {
+    IFS=":"            # set Interal Field Seperator for PATH var
+    ech0 $PATH
+
+    read -r -a p_file <<< "$PATH"   # parse into p_file array  sep is colon
+#   ech0 ${#p_file[*]}           # num of elt in array   
+    let ub=${#p_file[@]}         # another num of elt in array 
+#   ech0 $ub
+
+    let j=0
+    while [ $j -lt $ub ]; do    # loop to show variable
+      
+      if [ ".${p_file[$j]}" == ".." ]; then   # replace . by pwd 
+        p_file[$j]=$PWD
+      fi
+
+      if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
+        echo $j  $1  is in ${p_file[$j]} 
+      fi
+      let j=$j+1
+    done
+    
+  IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
+} 
+
+if [ ".$1" == "." ]; then
+
+cat << "EOF"
+Here is the help/usage doc
+EOF
+
+exit 0
+fi
+
+file_to_check=$1      # <<========= file to process
+
+if [ -d $file_to_check ]; then
+  echo
+  echo "List of files in $file_to_check "
+  ls -A $file_to_check                      # show it
+  ls -A $file_to_check > /tmp/lslist        # save it
+else
+  echo "$file_to_check  NOT found. "
+  echo "I quit. "
+  exit 4
+fi
+
+function emptyfile () {
+  if [ -f $1 ]; then
+    rm $1
+    touch $1
+  else
+    touch $1
+  fi
+
+}
+
+# create an array of files to skip  (using temp file /tmp/skiplist)
+# 1. make empty, 2. write to temp file, 3. write back to array
+
+emptyfile /tmp/skiplist             #  1. make empty
+
+
+cat > /tmp/skiplist << "EOF"         # 2. write to temp file
+f_acrolist      # list may change over time
+c               # inline directories may change
+tempname
+TEMPNAME
+EOF
+
+let i=0                        # 3. write back to array
+while read -r who rest ; do
+    skip[$i]=$who
+    let i=$i+1
+done < /tmp/skiplist   # list of mems to skip
+let num_skip=$i        # actually one more so chk less
+
+# list the skip list
+echo
+echo "Skip list below:"
+let i=0
+while [ $i -lt $num_skip ]; do
+  echo $i ${skip[$i]}
+  let i=$i+1
+done
+
+echo
+echo "PATH by number"
+showpath
+
+echo
+echo "Process list for $file_to_check"
+echo "============================================="
+while  read filename rest ; do
+  ech0 $filename
+
+  let j=0
+  process="yes"
+  while [ $j -lt $num_skip ] && [ ".$process" == ".yes" ]; do
+    if [ ".${skip[$j]}" == ".$filename" ]; then
+      ech0 "MATCH $j ${slip[$j]} $filename "
+      process="no"
+    else
+      ech0 "NO-MATCH $j ${slip[$j]} $filename "
+    fi
+    let j=$j+1
+  done
+
+  echo
+  echo "$filename process: $process"
+  if [ ".$process" == ".yes" ]; then
+    mem_check $filename
+  fi
+  
+done < /tmp/lslist
+exit 0
+ls -alh /tmp/myfile*
+
+echo "Here's /tmp/myfile."
+cat /tmp/myfile
+
+emptyfile /tmp/myfile
+
+ls -alh /tmp/myfile
+

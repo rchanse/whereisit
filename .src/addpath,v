@@ -1,0 +1,107 @@
+head	1.2;
+access;
+symbols;
+locks
+	rchansen:1.2;
+comment	@# @;
+expand	@b@;
+
+
+1.2
+date	2020.11.15.04.44.54;	author rchansen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2020.11.15.04.30.59;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ver similar to addpath0 format
+@
+text
+@#!/usr/bin/env bash
+IFS=
+
+if [ ".$1" == "." ]; then
+
+cat <<EOF
+usage: addpath  -- add a file to the end of the PATH variable
+  parms usage
+   parm1
+    null  - show this help info
+    .     - place current pwd at end of PATH
+    other - place other at end of PATH
+   parm2
+    nomsg - do not show msgs (before and after)
+    other -        show msgs (before and after)
+
+  note: other may or may not be a directory. PATH doesn't care.
+EOF
+
+else
+
+    if [ ".$2" != ".nomsg" ]; then
+    echo
+    echo BEFORE
+    echo
+    echo $PATH
+    echo
+    fi
+
+    if [ ".$1" == "." ]; then
+    export PATH="$PATH:$PWD"
+    else
+    export PATH="$PATH:$1"
+    fi
+
+    if [ ".$2" != ".nomsg" ]; then
+    echo
+    echo AFTER
+    echo
+    echo $PATH
+    fi
+fi
+@
+
+
+1.1
+log
+@original version
+@
+text
+@d2 1
+a2 4
+
+echo
+echo $PATH
+echo
+d7 1
+a7 1
+usage: addpath0  -- add a file to the end of the PATH variable
+d9 1
+d13 3
+d20 1
+a20 2
+fi
+
+d22 20
+a41 4
+if [ ".$1" == "." ]; then
+  export PATH="$PATH:$PWD"
+else
+  export PATH="$PATH:$1"
+a42 5
+
+echo
+echo AFTER
+echo
+echo $PATH
+@

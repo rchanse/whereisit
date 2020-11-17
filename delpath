@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+echo
+echo $PATH
+echo
+
+if [ ".$1" == "." ]; then
+
+cat <<EOF
+usage: delpath  -- remove a file from first occurence in PATH variable
+  parms usage
+   parm1
+    null  - show this help info
+    .     - remove  current pwd from PATH (first time only)
+    other - remove other from PATH (first time only)
+
+   parm2
+    all   - remove all occurences of parm1 value
+    other - ignored
+
+  note: if there are more than one occurence of filename then only
+    the first is removed. 
+EOF
+
+fi
+
+
+if [ ".$1" == "." ]; then
+  dir_to_remove=$PWD
+else
+  dir_to_remove=$1  
+fi
+
+PATH=:$PATH:                # surround PATH by colons (cover first/last)
+
+if [ ".$2" == ".all" ]; then
+PATH=${PATH//:$dir_to_remove:/:}  # replace all :item: by : (note //)
+else
+  PATH=${PATH//:$dir_to_remove:/:}  # replace one :item: by : (note /)
+fi
+
+PATH=${PATH#:}                    # remove lead colon
+PATH=${PATH%:}                    # remove trailing colon
+#PATH=${PATH#:}; PATH=${PATH%:}
+export PATH="$PATH"
+
+echo
+echo AFTER
+echo
+echo $PATH

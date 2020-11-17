@@ -1,0 +1,6 @@
+#  Just the body of the function
+#  turn on debugging with  export ech0=ON
+#  R    off                export ech0=anythingbut_ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  

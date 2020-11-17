@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+echo
+echo "Please be sure you invoked this as  'source setvar' or '. setvar"
+echo "If you did not, variable  rchjlp will not remain set."
+echo
+echo -n "You will use $HOME/\$rchjlp files, Enter your variable: "
+read myvar_to_use
+
+export rchjlp=$myvar_to_use
+
+echo "rchjlp var is : $rchjlp"
+echo
+echo "As a savety enter   echo \$rchjlp   or  chkvar (after environme is
+ready."

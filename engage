@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ -d $HOME/rchtest ]; then
+  cd $HOME/rchtest
+  . addpath0 $HOME/rchtest nomsg
+else
+  cd $HOME/rchbuild
+  . addpath0 $HOME/rchbuild nomsg
+fi
+
+echo 
+echo 
+echo "'Make it so!' - Jean-Luc Picard"
+echo
+echo
+echo Your path is now:
+echo $PATH

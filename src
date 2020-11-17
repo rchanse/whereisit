@@ -1,0 +1,2843 @@
+#!/usr/bin/env python
+#
+# SRC - simple revision control.
+#
+# Things to know before hacking this:
+#
+# All the code outside the RCS and SCCS classes (and the RevisionMixin
+# helper) is intended to be generic to any file-oriented VCS.
+#
+# SRC and RCS/SCCS have different goals in managing locks.  RCS/SCCS
+# wants to keep the workfile read-only except when it's explicitly
+# checked out, SRC wants to leave it writeable all the time.  Thus,
+# the checkin sequence is "release lock; check in; assert lock".  If
+# this seems confusing, it's because in RCS/SCCS terminology, locked is
+# writeable and unlocked is read-only.
+#
+# Despite appearances, this code does not actually use RCS locks (and
+# sets locking to non-strict).  That just happens to be a handy way to
+# record which revision the user last checked out, which is significant
+# for future checkouts and for branching.
+#
+# With sufficient cleverness it would be possible to go in a different
+# direction - leave the master unlocked at all times except during
+# during the commit sequence, intervening with a chmod to turn off
+# write protection on the workfile when RCS/SCCS would normally turn
+# it on.  I had this as a to-do for a long time but have abandoned the
+# concept; fighting RCS/SCCS's notion of when the workfile ought to be
+# write-locked seems too likely to lead to weird bugs in unexpected
+# situations.
+#
+# In an ideal world, we'd get rid of A status. The SCCS back end doesn't
+# have it, because the only way to register new content is by "sccs add"
+# on an already existing file and that creates a new SCCS master with
+# the content checked in as the first commit.  RCS ci works that way as
+# well.  On the other hand, if you use rcs -i foo it creates a master foo,v
+# but does *not* stuff it with the content of any corresponding foo.  This
+# is what A status means.
+#
+# This code uses magic tags with a 0 in the second-to-last slot to
+# designate branches.  It's the same format as CVS sticky tags, for
+# the same reason.  They need to be distinguishable from regular tags
+# pointing at revisions, and this way the code to transform the sticky
+# tag into the branch name is as simple as possible.
+#
+# Top of the list of things that people will bikeshed about is the
+# letter codes returned by 'src status'.  Different VCSes have
+# conflicting ideas about this.  The universal ones are 'A' = Added,
+# 'M' = Modified, and '?' = Untracked.  Here's a table of the ones
+# in dispute.  Entries with '-' mean the VCS does not have a closely
+# corresponding status.
+#
+#                   git     hg     svn      src
+# Unmodified        ' '     '='    ' '      '='
+# Renamed           'R'      -      -        -
+# Deleted           'D'     'R'    'D'       -
+# Copied            'C'      -      -        -
+# Ignored           '!'     'I'    'I'      'I'
+# Updated/unmerged  'U'      -      -        -
+# Missing            -      '!'    '!'      '!'
+# Locked             -       -     'L'      'L'
+#
+# (hg used to use 'C' as the code for unmodified status.)
+#
+# This is a bit oversimplified; it is meant not as a technical
+# comparison but rather to illustrate how bad the letter collisions are.
+# SRC follows the majority except for absolutely *not* using a space as
+# a status code; this makes the reports too hard to machine-parse.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+# This code runs under both Python 2 and Python 3.
+# Preserve this property!
+
+from __future__ import print_function
+
+import sys, os, subprocess, datetime, time, calendar, stat, glob
+import shutil, difflib, json, io, re, signal
+import tempfile, email.utils
+import struct, fcntl, termios, errno
+try:
+    import curses
+except ImportError:
+    pass
+
+version="1.28"
+
+CENTURY = "20"	# A Y2.1K problem, but only for SCCS.
+
+# General notes on Python 2/3 compatibility:
+#
+# SRC uses the following strategy to allow it to run on both Python 2
+# and Python 3:
+#
+# * Use binary I/O to read/write data from/to files and subprocesses;
+#   where the exact bytes are important (such as in checking for
+#   modified files), use the binary data directly.
+#
+# * Use latin-1 encoding to transform binary data to/from Unicode when
+#   necessary for operations where Python 3 expects Unicode; this will
+#   ensure that bytes 0x80..0xff are passed through and not clobbered.
+#   The polystr and polybytes functions are used to do this so that when
+#   running on Python 2, the byte string data is used unchanged.
+#
+# * Construct custom stdin, stdout, and stderr streams when running
+#   on Python 3 that force ASCII encoding, and wrap them around the
+#   underlying binary buffers (in Python 2, the streams are binary and
+#   are used unchanged); this ensures that the same transformation is
+#   done on data from/to the standard streams, as is done on binary data
+#   from/to files and subprocesses; the make_std_wrapper function does
+#   this.  Without this change, 0x80..0xff written to stdout will be
+#   garbled in unpredictable ways.
+
+master_encoding = 'latin-1'
+
+if str is bytes:  # Python 2
+
+    import cgi
+    htmlescape = cgi.escape
+
+    polystr = str
+    polybytes = bytes
+
+else:  # Python 3
+
+    import html
+    def htmlescape(s):
+        # Python 2 compatibility.
+        # Might be bwtter to do this the other way around.
+        return html.escape(s).replace("&#x27;", "'")
+
+    def polystr(obj):
+        "Polymorphic string factory function"
+        # This is something of a hack: on Python 2, bytes is an alias
+        # for str, so this ends up just giving a str back for all
+        # inputs; but on Python 3, if fed a byte string, it decodes it
+        # to Unicode using the specified master encoding, which should
+        # be either 'ascii' if you're sure all data being handled will
+        # be ASCII data, or 'latin-1' otherwise; this ensures that the
+        # original bytes can be recovered by re-encoding.
+        if isinstance(obj, str):
+            return obj
+        if not isinstance(obj, bytes):
+            return str(obj)
+        return str(obj, encoding=master_encoding)
+
+    def polybytes(s):
+        "Polymorphic string encoding function"
+        # This is the reverse of the above hack; on Python 2 it returns
+        # all strings unchanged, but on Python 3 it encodes Unicode
+        # strings back to bytes using the specified master encoding.
+        if isinstance(s, bytes):
+            return s
+        if not isinstance(s, str):
+            return bytes(s)
+        return bytes(s, encoding=master_encoding)
+
+    def make_std_wrapper(stream):
+        "Standard input/output wrapper factory function"
+        # This ensures that the encoding of standard output and standard
+        # error on Python 3 matches the master encoding we use to turn
+        # bytes to Unicode in polystr above.
+        return io.TextIOWrapper(stream.buffer, encoding=master_encoding, newline="\n")
+
+    sys.stdin = make_std_wrapper(sys.stdin)
+    sys.stdout = make_std_wrapper(sys.stdout)
+    sys.stderr = make_std_wrapper(sys.stderr)
+
+# Note: Avoid using unbolded blue (poor luminance contrast with black
+# terminal-emulator background) or bolded yellow (poor contrast with
+# white background.)
+RESET = BOLD = ''
+CBLACK = CBLUE = CGREEN = CCYAN = CRED = CMAGENTA = CYELLOW = CWHITE = ''
+
+def init_colors():
+    curses.setupterm()
+    global RESET, BOLD
+    RESET = polystr(curses.tigetstr('sgr0')) or ''
+    BOLD = polystr(curses.tigetstr('bold')) or ''
+    colors = {'setaf': [0, 4, 2, 6, 1, 5, 3, 7], # ANSI colors
+              'setf': [0, 1, 2, 3, 4, 5, 6, 7]}  # legacy colors
+    for (k, v) in colors.items():
+        x = curses.tigetstr(k)
+        if x:
+            for (i, c) in enumerate(['black', 'blue', 'green', 'cyan', 'red',
+                                     'magenta', 'yellow', 'white']):
+                globals()['C' + c.upper()] = polystr(curses.tparm(x, v[i]))
+            break
+
+if 'curses' in sys.modules and sys.stdout.isatty():
+    try:
+        init_colors()
+    except (curses.error, AttributeError):
+        pass
+
+def rfc3339(t):
+    "RFC3339 string from Unix time."
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t))
+
+def announce(msg):
+    sys.stdout.write("src: " + msg + "\n")
+
+def croak(msg):
+    sys.stdout.flush()
+    sys.stderr.write("src: " + msg + "\n")
+    sys.exit(1)
+
+debug = 0
+DEBUG_COMMANDS  = 1    # Show commands as they are executed
+DEBUG_SEQUENCE  = 2    # Sequence debugging
+DEBUG_PARSE     = 3    # Debug logfile parse
+
+quiet = False		# option -q: run more quietly
+pseudotime = False	# option -T: artificial clock for regression testing
+
+class popen_or_die:
+    "Read or write from a subordinate process."
+    def __init__(self, command, legend="", mode="r"):
+        assert mode in ("r", "w", "rb", "wb")
+        self.command = command
+        self.legend = legend
+        self.mode = mode
+        # Pipe to the correct streams depending on the chosen mode
+        self.stdin = (subprocess.PIPE if mode == "w" else None)
+        self.stdout = (subprocess.PIPE if mode == "r" else None)
+        self.stderr = (subprocess.STDOUT if mode == "r" else None)
+        if self.legend:
+            self.legend = " "  + self.legend
+        self.fp = None
+    def __enter__(self):
+        if debug >= DEBUG_COMMANDS:
+            if self.mode == "r":
+                sys.stderr.write("%s: reading from '%s'%s\n" % (rfc3339(time.time()), self.command, self.legend))
+            else:
+                sys.stderr.write("%s: writing to '%s'%s\n" % (rfc3339(time.time()), self.command, self.legend))
+        try:
+            # The I/O streams for the subprocess are always bytes; this
+            # is what we want for some operations, but we will need
+            # to decode to Unicode for others to work in Python 3, as
+            # explained in the general notes.
+            self.fp = subprocess.Popen(self.command, shell=True,
+                                       stdin=self.stdin, stdout=self.stdout, stderr=self.stderr)
+            # The Python documentation recommends using communicate() to
+            # avoid deadlocks, but this doesn't allow fine control over
+            # reading the data; since we are not trying to both read
+            # from and write to the same process, this should be OK.
+            return self.fp.stdout if self.mode == "r" else self.fp.stdin
+        except (OSError, IOError) as oe:
+            croak("execution of %s%s failed: %s" \
+                                % (self.command, self.legend, oe))
+    def __exit__(self, extype, value, traceback_unused):
+        if extype:
+            if debug > 0:
+                raise extype(value)
+            croak("fatal exception in popen_or_die.")
+        if self.fp.stdout is not None:
+            # This avoids a deadlock in wait() below if the OS pipe
+            # buffer was filled because we didn't read all of the data
+            # before exiting the context mgr (shouldn't happen but this
+            # makes sure).
+            self.fp.stdout.read()
+        self.fp.wait()
+        if self.fp.returncode != 0:
+            croak("%s%s returned error." % (self.command, self.legend))
+        return False
+
+def screenwidth():
+    "Return the current width of the terminal window."
+    default_width = 73
+
+    if "COLUMNS" in os.environ:
+        return int(os.environ["COLUMNS"])
+
+    try:
+        return struct.unpack(
+            'HH', fcntl.ioctl(0, termios.TIOCGWINSZ, struct.pack('HH', 0, 0))
+        )[1]
+    except IOError as e:
+        if e.errno == errno.ENOTTY:
+            return default_width
+        else:
+            raise e
+
+WIDTH = screenwidth() - 1
+
+def is_history(arg):
+    "Are we looking at a history file?"
+    for vcsb in backends:
+        if vcsb.is_history(arg):
+            return True
+    return False
+
+def modified(workfile, history=None):
+    "Has the workfile been modified since it was checked out?"
+    # Alas, we can't rely on modification times; it was tried, and
+    # os.utime() is flaky from Python - sometimes has no effect.  Where
+    # the bug is - Python, glibc, kernel - is unknown.  Even if we
+    # could, it's nice to catch the case where an edit was undone.
+    #
+    # If no revisions, bail out
+    if not backend.has_revisions(workfile):
+        return False
+    if history is None:
+        history = History(workfile)
+    with backend.lifter(workfile):
+        with backend.cat(workfile, history.current().native) as bstream:
+            base_content = bstream.read()  # this data will be binary
+            with open(workfile, "rb") as fp:
+                workfile_content = fp.read()
+            # This comparison uses the binary data for maximum accuracy
+            return base_content != workfile_content
+
+def do_or_die(dcmd, legend="", mute=True, missing=None):
+    "Either execute a command or die."
+    if legend:
+        legend = " "  + legend
+    if debug == 0 and mute:
+        muteme = " >/dev/null 2>&1"
+    else:
+        muteme = ""
+    if debug >= DEBUG_COMMANDS:
+        sys.stderr.write("executing '%s'%s\n" % (dcmd, legend))
+    try:
+        retcode = subprocess.call("(" + dcmd + ")" + muteme, shell=True)
+        if retcode < 0:
+            croak("%s was terminated by signal %d." % (repr(dcmd), -retcode))
+        elif retcode != 0:
+            errmsg = "%s returned %d." % (repr(dcmd), retcode)
+            if retcode == 127:
+                if missing is None:
+                    missing = backend.__class__.__name__
+                errmsg += "\nYou probably need to install %s." % missing
+            croak(errmsg)
+    except (OSError, IOError) as e:
+        croak("execution of %s%s failed: %s" % (repr(dcmd), legend, e))
+
+def capture_or_die(command):
+    "Run a specified command, capturing the output."
+    if debug >= DEBUG_COMMANDS:
+        sys.stderr.write("%s: capturing %s\n" % (rfc3339(time.time()), command))
+    try:
+        # This will return binary data
+        content = subprocess.check_output(command, shell=True)
+    except (subprocess.CalledProcessError, OSError) as oe:
+        croak("execution of %s failed: %s" % (repr(command), oe))
+    if debug >= DEBUG_COMMANDS:
+        sys.stderr.write(polystr(content))
+    return content
+
+class HistoryEntry:
+    "Capture the state of a native revision item in the log."
+    def __init__(self, history):
+        self.history = history
+        self.revno = None
+        self.native = None	# magic cookie only interpreted by back end
+        self.headers = None
+        self.log = ""
+        self.date = None
+        self.parent = None	# Another HistoryEntry
+        self.child = None	# Another HistoryEntry
+        self.branches = set([])
+        self.branch = None
+    def selected(self):
+        return self == self.history.current()
+    def getdate(self, who):
+        if self.headers and not pseudotime:
+            return self.headers.get(who + "-date") or self.date
+        return self.date
+    def unixtime(self, who):
+        date = self.getdate(who)
+        try:
+            t = calendar.timegm(time.strptime(date, "%Y-%m-%dT%H:%M:%SZ"))
+            offset = 0
+            if self.headers and not pseudotime:
+                offset = self.headers.get(who + "-date-offset") or 0
+            return t, offset
+        except (TypeError, ValueError):
+            croak("garbled date %s" % date)
+    def __str__(self):
+        return "<%s = %s>" % (self.revno, self.native)
+
+def registered(workfile):
+    "Is this a workfile for a registered history?"
+    return os.path.exists(backend.history(workfile))
+
+class History:
+    "Encapsulate a revision list and some methods on it"
+    def __init__(self, name):
+        self.name = name
+        self.revlist = []
+        self.symbols = {}
+        self.branch = "trunk"
+        self.lockrevs = []
+        self.description = ""
+        self.annotations = {}
+        if not registered(self.name):
+            croak("%s is not registered" % self.name)
+        self.by_revno_d = {}
+        self.by_native_d = {}
+        self.branches = set([])
+        backend.parse(self)
+        self.lift_headers()
+        self.normalize_header_dates()
+    def build_indices(self):
+        for item in self.revlist:
+            self.by_revno_d[item.revno] = item
+            self.by_native_d[item.native] = item
+        for item in self.revlist:
+            item.parent = self.by_native_d.get(backend.pred(item.native))
+            item.child  = self.by_native_d.get(backend.succ(item.native))
+            if item.parent and item.parent.child != item:
+                item.parent.branches.add(item)
+        #sys.stderr.write("Symbols: %s\n" % self.symbols)
+        #for item in self.revlist:
+        #    sys.stderr.write("Item %s\n" % item)
+        #sys.stderr.write("By revision: %s\n" % self.by_revno_d.keys())
+        if self.revlist:
+            for (name, rev) in list(self.symbols.items()):
+                if backend.isbranch(rev):
+                    base = backend.branch_to_base(rev, self)
+                    tip = backend.branch_to_tip(rev, self)
+                    while True:
+                        self.by_native_d[base].branch = name
+                        if base == tip:
+                            break
+                        base = backend.succ(base)
+        # Digest JSON from the description field
+        if not self.description.strip():
+            self.annotations = {}
+        else:
+            try:
+                # The JSON loader returns Unicode, so this is one place
+                # where internal data will be Unicode even in Python 2;
+                # since ASCII data will be inter-converted between byte
+                # string and Unicode whenever needed in Python 2, this
+                # is not an issue.
+                self.annotations = json.loads(self.description.strip())
+            except ValueError as _e:
+                croak("legacy data %s in description field" % self.description)
+    def lift_headers(self):
+        valid = ('author', 'author-date', 'committer', 'committer-date',
+                 'mark', 'parents')
+        for item in self.revlist:
+            headers = {}
+            i = 0
+            while True:
+                n = item.log.find('\n', i)
+                if n < 0:
+                    break
+                header = item.log[i:n].split(':', 1)
+                if len(header) != 2:
+                    break
+                key = header[0].lower()
+                if key not in valid:
+                    break
+                headers[key] = header[1].strip()
+                i = n + 1
+            # eat blank line between headers and body
+            while i < len(item.log) and item.log[i] == '\n':
+                i += 1
+            item.log = item.log[i:]
+            if headers:
+                item.headers = headers
+    def normalize_header_dates(self):
+        for item in self.revlist:
+            if item.headers:
+                for k in tuple(item.headers):
+                    if k.endswith("-date"):
+                        d = email.utils.parsedate_tz(item.headers[k])
+                        if d:
+                            u = email.utils.mktime_tz(d)
+                            u = datetime.datetime.utcfromtimestamp(u)
+                            item.headers[k] = u.isoformat() + "Z"
+                            item.headers[k + "-offset"] = d[9] if d[9] else 0
+    def __len__(self):
+        return len(self.revlist)
+    def current(self):
+        "Return the revision currently checked out."
+        # Yes, this looks weird.  The idea is: Try to return the locked
+        # revision.  If that blows up, try to return the tip revision of
+        # the current branch.  If that blows up, return None.
+        try:
+            return self.by_native_d[self.lockrevs[0]]
+        except (IndexError, KeyError):
+            try:
+                return self.by_native_d[backend.branch_to_tip(self.symbols[self.branch], self)]
+            except (IndexError, KeyError):
+                return None
+    def current_branch(self, backwards=False):
+        "Return a list of items that are descendants or ancestors of current."
+        if debug >= DEBUG_SEQUENCE:
+            sys.stdout.write(("current_branch(%s)" % self.current()))
+        selection = []
+        p = self.current()
+        if p is not None:
+            selection = [p]
+            while True:
+                if p.parent is None:
+                    break
+                else:
+                    p = p.parent
+                selection = [p] + selection
+            s = self.current()
+            while True:
+                s = s.child
+                if s is None:
+                    break
+                selection.append(s)
+            if backwards:
+                selection.reverse()
+        return selection
+    def tip(self, rev=None):
+        "Return the tip revision of the branch of the given native revision."
+        if rev is None:
+            rev = self.current().native
+        s = self.by_native_d[rev]
+        while True:
+            if s.child is None:
+                return s
+            else:
+                s = s.child
+    def native_to_revno(self, revision):
+        "Map a native ID to a revno"
+        item = self.by_native_d.get(revision)
+        return item and item.revno
+    def by_revno(self, revno):
+        "Map a revno to a revision item."
+        try:
+            return self.by_revno_d[revno]
+        except KeyError:
+            if revno == 0:
+                # This case comes up if we try to select the tip
+                # revision of a history without revisions.
+                croak("{0} has no revisions".format(self.name))
+            else:
+                croak("{0} has no revno {1}".format(self.name, revno))
+    def revno_to_native(self, revno):
+        "Map a revno to a native ID"
+        return self.by_revno(revno).native
+    def set_annotations(self):
+        "Write auxilary symbols as JSON."
+        backend.write_description(json.dumps(self.annotations), self)
+
+help_topics = {
+    "topics": """
+The following help topics are available:
+
+intro       -- Basic concepts: commits, tags, branches.  The form of commands.
+revisions   -- How to specify ranges of commits to operate on.
+commands    -- a summary of the commands.
+commit      -- the commit command: how to commit changes to a file.
+amend       -- the amend command: editing stored change comments.
+checkout    -- the checkout command: retrieving historical versions of files.
+cat         -- the cat command: dumping revisions to standard output.
+status      -- the status command: more details and unusual status codes.
+log         -- the log command: dump commit log information to standard output.
+list        -- the list command: dump commit summaries to standard output.
+diff        -- the diff command: dump revision differences to standard output.
+fast-export -- the fast-export command: export history to other systems.
+fast-import -- the fast-import command: import history from other systems.
+srcify      -- the srcify command: change manaagement from SCCS/RCS to src. 
+ignores     -- .srcignore files and their uses.
+
+The 'help', 'rename', 'ls', 'move', 'copy', 'visualize', and 'version'
+commands are completely described in the command summary.
+""",
+    "intro": """
+SRC Introduction
+
+    SRC (or src) is designed for version control on single-file
+    projects.
+
+    A SRC history is a sequence of commits numbered in strict time order
+    starting from 1.  Each holds a modification to the file, a comment,
+    and the date-time of the commit.
+
+    The sequence also has a branch structure.  By default there is
+    just one branch named 'trunk'.  You can start a new named branch
+    at any commit.  Branches can later be renamed or deleted.  Because
+    of branching, parent and child commits do not necessarily have
+    consecutive numbers.
+
+    Commits will always be be added to the tip of the current branch.
+    You can change the current branch by either checking out a revision
+    that is on that branch, or using a 'src branch' command to
+    explicitly change the current branch.
+
+    You can assign tags (names) to point to commits.  They too can be
+    renamed later or deleted.
+
+    The general form of a SRC command is
+
+        src verb [switches] [revision-spec] [files...]
+
+    That is, a command verb is followed by optional switches, which are
+    (sometimes) optionally followed by a range of commits to operate
+    on, which is optionally followed by a list of files to operate on.
+    Usually you will specify either a revision range or multiple files,
+    but not both.
+
+    The token '--' tells the command-line interpreter that subcommands,
+    switches, and revision-specs are done - everything after it is a
+    filename, even if it looks like a subcommand or revision number.
+
+    If you do not specify any files, SRC will operate sequentially on
+    each individual file in the current directory with a history.
+
+    A good help topics to read after this one would be 'revisions'.
+""",
+    "revisions": """
+SRC Revisions
+
+    A 'revision' is a 1-origin integer, or a tag name designating an
+    integer revision, or a branch name designating the tip revision of
+    its branch, or '@' meaning the currently fetched revision.  Revision
+    numbers always increase in commit-date order.
+
+    A revision range is a single revision, or a pair of revisions 'M-N'
+    (all revisions numerically from M to N) or 'M..N' (all revisions
+    that are branch ancestors of N and branch successors of M).  If N is
+    less than M, the range is generated as if N >= M then reversed.
+
+    If SRC complains that your revision spec looks like a nonexistent
+    filename, you can prefix it with '@' (this is always allowed).
+
+    Some commands (help, commit, status, delete/rename commands for tags
+    and branches, ls, move, copy, fast-import, release, version) don't
+    take a revision spec at all and will abort if you give one.
+
+    Some commands (amend, checkout, cat, tag and branch creation)
+    optionally take a singleton revision spec.
+
+    Some commands (log, list, diff, fast-export) accept a range or a
+    singleton.
+
+    Unless otherwise noted under individual commands, the default
+    revision is the tip revision on the current branch.
+
+    A good topic to read next would be 'commands'.
+""",
+    "commands": """
+SRC Commands Summary
+
+src help [command]
+    Displays help for commands.
+
+src commit [-|-m 'string'|-f 'file'|-e] ['file'...]
+    Enters a commit for specified files, separately to each one.
+    A history is created for the file if it does not already exist.
+    With '-', take comment text from stdin; with '-m' use the following
+    string as the comment; with '-f' take from a file.  With '-e', edit
+    even after '-', '-f' or '-m'. 'ci' is a synonym for 'commit'.
+
+src amend [-|-m 'string'|-f 'file'|-e] ['revision'] ['file'...]
+    Amends the stored comment for a specified revision, defaulting to
+    the latest revision on the current branch.  Flags are as for commit.
+
+src checkout ['revision'] ['file'...]
+    Refresh the working copies of the file(s) from their history files.
+    'co' is a synonym for 'checkout'.
+
+src cat ['revision'] ['file'...]
+    Send the specified revisions of the files to standard output.
+
+src status [-a] ['file'...]
+    '=' = unmodified,   'M' = modified, '!' = missing,
+    '?' = not tracked,  'I' = ignored,  'A' = added,
+    'L' = locked (recover with 'src checkout').
+    Find more details under 'help status'. 'st' is a synonym for
+    'status'.
+
+src tag [list|-l|create|-c|delete|del|-d] ['name'] ['revision'] ['file'...]
+    List tags, create tags, or delete tags.  Create/delete takes a
+    singleton revision, defaulting to the current branch tip.  List
+    defaults to all revisions.
+
+src branch [list|-l|create|-c|delete|del|-d] ['name'] ['file'...]
+    List, create, or delete branches.  When listing, the active branch
+    is first in the list.  The default branch is 'trunk'.  Create/delete
+    takes a singleton revision, defaulting to the current branch tip.
+    List defaults to all revisions, including 0 (the trunk root phantom
+    revision).
+
+src rename ['tag'|'branch'] ['oldname'] ['newname']  ['file'...]
+    Rename a tag or branch.  Refuses to step on an existing symbol or
+    rename a nonexistent one. 'rn' is a synonym for 'rename'.
+
+src list [(-<n>|-l <n>)] [-f 'fmt'] ['revision-range'] ['file'...]
+    Sends summary information about the specified commits to standard
+    output.  The summary line tagged with '*' is the state that the file
+    would return to on checkout without a revision-spec.  See 'help
+    list' for information about custom formats.  Use '-<n>' or '-l <n>',
+    where <n> is a number, to limit the listing length.  Default range is
+    the current branch, reversed.
+
+src log [-v] [(-<n>|-l <n>)] [(-p|-u|-c) [-b|-w]] ['revision-range'] ['file'...]
+    Sends log information about the specified commits to standard
+    output.  Use '-<n>' or '-l <n>', where <n> is a number, to limit the
+    listing length.  Default range is the current branch, reversed.
+    Use '--patch', '-p' or '-u' to also send a unified format diff
+    listing to standard output for each revision against its immediate
+    ancestor revision; '-c' emits a context diff instead. When generating
+    a diff, '-b' ignores changes in the amount of whitespace, and '-w'
+    ignores all whitespace.  Histories imported via 'fast-import' (when
+    not using its '-p' option) have RFC-822-style headers inserted into
+    the log comment to preserve metadata not otherwise representable in
+    SRC, such as distinct author and committer identifications and
+    dates.  These headers are normally suppressed by 'log', however,
+    '-v' shows a summarized view of important headers; '-v -v' shows
+    all headers as-is.
+
+src diff [(-u|-c) [-b|-w]] ['revision-range'] ['file'...]
+    Sends a diff listing to standard output.  With no revision spec,
+    diffs the working copy against the last version checked in.  With
+    one revno, diffs the working copy against that stored revision; with
+    a range, diff between the beginning and end of the range. 'di' is a
+    synonym for 'diff'.
+
+src ls
+    List all registered files.
+
+src visualize
+    Emit a DOT visualization of repository structures.  To use this,
+    install the graphviz package and pipe the output to something like
+    'dot -Tpng | display -'. 'vis' is a synonym for 'visualize'.
+
+src move 'old' 'new'
+    Rename a workfile and its history.  Refuses to step on existing
+    workfiles or histories. 'mv' is a synonym for 'move'.
+
+src copy 'old' 'new'
+    Copy a workfile and its history.  Refuses to step on existing files
+    or histories. 'cp' is a synonym for 'copy'.
+
+src fast-export ['revision-range'] ['file'...]
+    Export one or more projects to standard output as a Git fast-import
+    stream.  For a history originally imported from elsewhere, author
+    and committer identification is gleaned from the RFC-822-style
+    headers inserted into the commit comment by 'fast-import' (if its
+    '-p' option was not used).  Otherwise, this information is copied
+    from your Git configuration.  The default range is all commits.
+
+src fast-import [-p] ['file'...]
+    Parse a git-fast-import stream from standard input.  The
+    modifications for each individual file become separate SRC
+    histories.  Mark, committer and author data, and mark cross-
+    references to parent commits, are preserved in RFC-822-style headers
+    on log comments unless the '-p' (plain) option is given, in which
+    case this metadata is discarded.  Give arguments to restrict the
+    files imported.
+
+src release ['file'...]
+    Release locks on files.  This is never necessary in a normal
+    workflow, which will be repeated edit-commit cycles, but it may be
+    handy if you have to interoperate with other tools that expect RCS
+    masters to be in their normal (unlocked/unwritable) state.
+
+src srcify
+    Move a directory from being RCS- or SCCS-managed to being SRC-managed.
+    That is: if the current directory contains an RCS directory, rename it
+    to .src (but leave any SCCS directory in place).  Then check out all
+    masters for editing that are not already checked out.
+
+src version
+    Report the versions of SRC, the underlying Python, and the back end.
+
+The omission of 'src remove' is a deliberate speed bump.
+""",
+    "status": """
+src status [-a] ['file'...]
+
+    The status command shows you the version-control status of files.
+    It is designed to be useful for both humans and software front ends
+    such as Emacs VC mode.
+
+    The status codes, in roughly most common to rarest, are:
+
+    = - Unmodified.  File is the same as the latest stored revision.
+    M - Modified.  File has been changed since the latest stored revision.
+    ? - Not tracked.  SRC does not keep a history for this file.
+    I - ignored.  This file matches the patterns in '.srcignore'.
+    ! - Missing.  There is a history for this file but the workfile is missing.
+    A - The file has been registered into SRC but has no commits.
+    L - The file is locked/writable.
+
+    Modification status is by content (using a SHA1 hash) rather than
+    the filesystem's last-modified date.  Thus, if you make changes to a
+    work file in your editor, then undo them, the file's status returns
+    to '='.
+
+    You can usually recover a file from 'A', 'L', and '!' status with
+    'src checkout'.  'A' and 'L' statuses should only occur if you have
+    used RCS directly on a file, or if you have called 'src commit' with
+    the deliberately undocumented '-a' option meant for Emacs VC's use.
+
+    If you give 'src status' no filename arguments, it surveys all files
+    in the current directory but untracked and ignored files are not
+    listed.  If you give it filename arguments, status is listed for all
+    of them.
+
+    The '-a' option forces status listing of all files.  This differs
+    from 'src status *' because the latter will not see dotfiles and
+    thus not list the status of them.
+""",
+    "commit":"""
+src commit [-|-m 'string'|-f 'file'| -e] ['file'...]
+
+    The commit command is how you add revisions to your file history.
+    It always adds the contents of the workfile as a revision to the tip
+    of the current branch.
+
+    You also use commit on files that have not been registered to start
+    an SRC history for them.
+
+    When you commit, you must specify a change comment to go with the
+    revision.  There are several ways to do this.
+
+    The '-m' option to the command takes the following string argument
+    as the comment.  The '-' option takes the comment text from standard
+    input.  The '-f' option takes the comment from a named file.
+
+    If you use none of these, or if you use one of them and the '-e'
+    option, SRC will start an editor in which you can compose the
+    comment.  Text specified via '-m', '-f', or '-' becomes the initial
+    contents of the comment.
+
+    SRC respects the EDITOR variable and calls it on a temporary file to
+    create your comment.  Th file will have a footer including its name
+    and revision which will be discarded when you finish editing.
+
+    If you leave the comment empty (except for the generated footer)
+    or consisting only of whitespace, the commit will be aborted.  The
+    commit will also be aborted if your editor returns a failure status.
+
+    If you commit to multiple files at once, separate changes will be
+    registered for each one, and you may get a separate edit session for
+    each (if you have not set the comment text with options, or have
+    forced editing with '-e').  This is a major difference from other
+    VCSes, which are usually designed to create changesets common to
+    multiple files.
+
+    'ci' is a synonym for 'commit'.
+""",
+    "amend" : """
+src amend [-|-m 'string'|-f 'file'| -e] ['revision'] ['file'...]
+
+    Use this command to amend (modify) the change comment in a saved
+    revision.  The commit date is not changed.
+
+    Takes a singleton revision number, tag, or branch, defaulting to the
+    latest revision on the current branch.
+
+    The edit flags and EDITOR variable are interpreted are as for
+    commit.  The only difference is that existing change comment is
+    appended to any text you specify with switches as the initial
+    comment passed to your editor.
+
+    'am' is a synonym for 'amend'
+""",
+    "checkout":"""
+src checkout ['revision'] ['file'...]
+
+    Refresh the working copies of the file(s) from their history files.
+
+    Takes a single revision number, tag, or branch name.  The default if
+    you give none is the tip revision of the current branch.
+
+    This command is how you discard the contents of a modified workfile.
+
+    You can also use it to revert the workfile to match a previous
+    stored revision.  Doing so may, as a side effect, change your
+    current branch.
+
+    'co' is a synonym for 'checkout'.
+""",
+   "cat" : """
+src cat ['revision'] ['file'...]
+
+    Send the specified revision of each file to standard output.  This
+    is not normally very useful with more than one file argument, but
+    SRC does not prevent that.
+
+    Takes a single revision number, tag, or branch name.  The default if
+    you give none is the tip revision of the current branch.
+
+    This command is mainly intended for use in scripts.
+""",
+   "tag" : """
+src tag [list|-l|create|-c|delete|del|-d] ['name'] ['revision'] ['file'...]
+
+    List tags (with '-l'), create tags (with '-c'), or delete tags (with
+    '-d').
+
+    Takes at most a singleton revision; the default is the current
+    branch tip.
+
+    Tag creation and deletion require a following name argument.  Tag
+    creation will not step on an existing tag name, and a nonexistent
+    branch cannot be deleted.
+""",
+   "branch" : """
+src branch [list|-l|create|-c|delete|del|-d] ['name'] ['file'...]
+
+    List branches (with '-l'), create branches (with '-c'), or delete
+    branches (with '-d').
+
+    In the list produced by '-', the active branch is first in the list.
+
+    Branch creation and deletion require a following name argument.
+    Branch creation will not step on an existing branch name, and a
+    nonexistent branch cannot be deleted.
+""",
+   "log" : """
+src log [-v] [(-<n>|-l <n>)] [(-p|-u|-c) [-b|-w]] ['revision-range'] ['file'...]
+
+    Sends log information about the specified commits of each file to
+    standard output.  The log information includes the revision number,
+    the date, and the log comment.
+
+    With no revision, dumps a log of the entire current branch.
+
+    The '--patch', '-p' or '-u' option additionally sends a unified
+    format diff listing to standard output for each revision against its
+    immediate ancestor revision; '-c' emits a context diff instead. When
+    generating a diff, '-b' ignores changes in the amount of whitespace,
+    and '-w' ignores all whitespace.
+
+    The '-<n>' or '-l <n>' option, where <n> is a number, can be used to
+    limit the listing length.
+
+    Histories imported via 'fast-import' (when not using its '-p' option)
+    have RFC-822-style headers inserted into the log comment to preserve
+    metadata not otherwise representable in SRC, such as distinct author
+    and committer identifications and dates.  These headers are normally
+    suppressed by 'log', however, '-v' shows a summarized view of
+    important headers; '-v -v' shows all headers as-is.
+""",
+   "list" : """
+src list [(-<n>|-l <n>)] [-f 'fmt'] ['revision-range'] ['file'...]
+
+    Sends summary information about the specified commits of each file
+    to standard output.  The summary information includes the revision
+    number, the date, and the first line of the log comment.
+
+    This command is provided assuming you will use the good practice of
+    beginning each commit with a self-contained summary line.
+
+    With no revision, dumps a log of the entire current branch.
+
+    The '-f' option allows you to set a custom format string.  Available
+    substitutions are:
+
+    {0} - the file name
+    {1} - the revision number
+    {2} - the mark '*' if this is the currently checked out revision, else '-'.
+    {3} - the date in RFC3339 format
+    {4} - the summary line
+
+    The '-<n>' or '-l <n>' option, where <n> is a number, can be used to
+    limit the listing length.
+
+    'li' is a synonym for 'list'.
+""",
+   "diff" : """
+src diff [(-u|-c) [-b|-w]] ['revision-range'] ['file'...]
+
+    Sends a diff listing to standard output.
+
+    With no revision spec, diffs the working copy against the last
+    version checked in.  With one revno, diffs the working copy against
+    that stored revision; with a range, diff between the beginning and
+    end of the range.
+
+    The actual difference generation is done with diff(1).  The default
+    diff format is '-u' (unified), but if you specify a '-c' option
+    after the verb a context diff will be emitted. '-b' ignores changes
+    in the amount of whitespace, and '-w' ignores all whitespace.
+
+    'di' is a synonym for 'diff'.
+""",
+   "fast-export" : """
+src fast-export ['revision-range'] ['file'...]
+
+    Export one or more projects to standard output as a git fast-import
+    stream.  This can be consumed by 'git fast-import' to create a Git
+    repository containing the project history.
+
+    It is possible (though probably not very useful) to fast-export a
+    limited range of commits, producing an incremental dump.  In this
+    case branch joins are done with the magic ^0 suffix.
+
+    Fast-exporting multiple files produces a single stream with a joint
+    history.
+
+    For a history originally imported from elsewhere, author and
+    committer identification is gleaned from the RFC-822-style headers
+    inserted into the commit comment by 'fast-import' (if its '-p'
+    option was not used).  Otherwise, this information is copied from
+    your Git configuration.
+
+    The default range is all commits.
+""",
+   "srcify" : """
+src srcify
+
+    Change the current directory with an RCS or SCCS subdirectory to be
+    managed by src instead. Any RCS directory is renamed .src. Then all
+    files with histories are checked out for editing.
+""",
+   "fast-import" : """
+src fast-import [-p] ['file'...]
+
+    Parse a git-fast-import stream from standard input.  The
+    modifications for each individual file become separate SRC
+    histories.  Give arguments to restrict the files imported.
+
+    The import is actually done with the rcs-fast-import(1) tool, which
+    must be on your $PATH for this command to work.
+
+    Some gitspace metadata cannot be represented in the SRC/RCS
+    model of version control.  Mark, committer and author data, and
+    mark cross-references to parent commits.  These are preserved in
+    RFC-822-style headers on log comments unless the '-p' (plain) option
+    is given, in which case this metadata is discarded.
+""",
+   "ignores" : """
+Making SRC Ignore Certain Files
+
+    You can have a file named '.srcignore' containing the names of files
+    that SRC should ignore, or more commonly patterns describing files
+    to ignore.
+
+    When SRC is told to ignore a file, it won't show up in 'src status'
+    listings unless the '-a' (all) flag is used or you give it as an
+    explicit argument.  It will also be ignored when commands that
+    expect a list of registered files see it (which could easily happen
+    when you use shell wildcards in SRC commands).
+
+    Other version-control systems have these too.  The classic example
+    of how to do this is using the pattern '*.o' to ignore C object
+    files.  But if you need to do that, you should probably be using a
+    multi-file VCS with changesets, not this one.
+
+    Patterns that might be useful with single-file projects include
+    '*~' to ignore editor backup files, or '*.html' if you're writing
+    documents that render to HTML but aren't sourced in it.
+
+    The repo subdirectory - normally '.src' - is always ignored, but
+    '.srcignore' itself is not automatically ignored.
+
+    SRC's pattern syntax is that of Unix glob(3), with initial '!'
+    treated as a negation operator.  This is forward-compatible to Git's
+    ignore syntax.
+
+    *   matches any string of characters.
+    ?   matches any single character.
+    []  brackets a character class; it matches any character in the
+        class.  So, for example, [0123456789] would match any decimal
+        digit.
+    [!] brackets a negated character class; [!0123456789] would match
+        any character not a decimal digit.
+""",
+    }
+
+def help_method(*args):
+    "Summarize src commands, or (with argument) show help for a single command."
+    if not args:
+        sys.stdout.write(help_topics['topics'])
+    for arg in args:
+        if arg in args:
+            if arg in help_topics:
+                sys.stdout.write(help_topics[arg])
+            else:
+                croak("%s is not a known help topic.\n%s" % (arg, help_topics['topics']))
+
+def parse_as_revspec(token):
+    "Does this look like something that should be parsed as a revision spec?"
+    if "/" in token:
+        return False
+    elif ".." in token:
+        return True
+    elif token.count("-") == 1 and '.' not in token:
+        return True
+    elif token.isdigit():
+        return True
+    elif token.startswith("@"):	# Escape clause for tags that look like files
+        return True
+    else:
+        return False
+
+ignorable = None
+
+def ignore(filename):
+    "Should the specified file be ignored?"
+    global ignorable
+    if ignorable is None:
+        ignorable = set([])
+        ignorable = set()
+        if os.path.exists(".srcignore"):
+            with open(".srcignore", "rb") as fp:
+                for line in fp:
+                    # Use polystr to ensure internal data is Unicode in Python 3
+                    line = polystr(line)
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    elif line.startswith("!"):
+                        ignorable -= set(glob.glob(line[1:].strip()))
+                    else:
+                        ignorable |= set(glob.glob(line.strip()))
+    return (filename == repodir) or (filename in ignorable)
+
+class CommandContext:
+    "Consume a revision specification or range from an argument list"
+    def __init__(self, cmd, args,
+                 require_empty=False,
+                 default_to=None,
+                 parse_revspec=True):
+        if not os.path.exists(repodir):
+            croak("repository subdirectory %s does not exist" % repodir)
+        self.start = self.end = None
+        self.seq = None
+        self.branchwise = None
+        if type(args) == type(()):
+            args = list(args)
+        self.args = list(args)
+        self.default_to = default_to
+        self.lo = self.start
+        self.hi = self.end
+        revspec = None
+        if self.args:
+            if self.args[0] == "--":
+                self.args.pop(0)
+            elif parse_revspec and parse_as_revspec(args[0]):
+                revspec = self.args.pop(0)
+                if revspec.startswith("@"):
+                    revspec = revspec[1:]
+                try:
+                    if "-" in revspec or ".." in revspec:
+                        self.branchwise = ".." in revspec
+                        try:
+                            (self.start, self.end) = revspec.split("-")
+                        except ValueError:
+                            try:
+                                (self.start, self.end) = revspec.split("..")
+                            except ValueError:
+                                croak("internal error - argument parser is confused")
+                        try:
+                            self.start = int(self.start)
+                        except ValueError:
+                            pass
+                        try:
+                            self.end = int(self.end)
+                        except ValueError:
+                            pass
+                    else:
+                        try:
+                            self.end = self.start = int(revspec)
+                        except ValueError:
+                            self.end = self.start = revspec
+                except ValueError:
+                    croak("malformed revision spec: %s" % revspec)
+        if require_empty and not self.is_empty():
+            croak("%s doesn't take a revision spec" % cmd)
+        if not self.args:
+            try:
+                masters = [fn for fn in os.listdir(repodir) if is_history(fn)]
+                masters.sort()
+            except OSError:
+                croak("repo directory %s does not exist" % repodir)
+            if masters:
+                self.args += [backend.workfile(master) for master in masters]
+            else:
+                croak("%s requires at least one file argument" % cmd)
+    def is_empty(self):
+        "Is the spec empty?"
+        return self.start is None
+    def is_singleton(self):
+        "Is the spec a singleton?"
+        return self.start is not None and self.start == self.end
+    def is_range(self):
+        "Is the spec a range?"
+        return self.start is not None and self.start != self.end
+    def select_all(self, metadata):
+        "Set the range to all revisions."
+        self.lo = 1
+        self.hi = len(metadata)
+        self.seq = [metadata.by_revno(i) for i in range(self.lo, self.hi+1)]
+    def select_tip(self, metadata):
+        "Set the range to the tip revision."
+        self.lo = len(metadata)
+        self.hi = None
+        self.seq = [metadata.by_revno(self.lo)]
+    def __contains__(self, i):
+        "Does the spec contain the given revno?"
+        if self.seq is None:
+            croak("revision spec hasn't been resolved")
+        return i in self.seq
+    def resolve(self, metadata):
+        "Resolve a revision spec that may contain tags into revnos."
+        if debug >= DEBUG_SEQUENCE:
+            sys.stderr.write("Entering resolve with start=%s, end=%s\n" % (self.start, self.end))
+        if self.is_empty():
+            if self.default_to == "branch":
+                self.seq = metadata.current_branch(backwards=False)
+            elif self.default_to == "branch_reversed":
+                self.seq = metadata.current_branch(backwards=True)
+            else:
+                self.seq = []
+            return self.seq
+        def subresolve(token):
+            part = token
+            if type(part) == type(0):
+                return part
+            if token == '':	# User specified @
+                current = metadata.current()
+                if current is None:
+                    croak("in {0}, no current revision".format(metadata.name))
+                return current.revno
+            if part not in metadata.symbols:
+                croak("in {0}, can't resolve symbol {1}".format(metadata.name,token))
+            else:
+                part = metadata.symbols[part]
+            if backend.isbranch(part):
+                part = backend.branch_to_tip(part, metadata)
+            return metadata.native_to_revno(part)
+        self.lo = subresolve(self.start)
+        self.hi = subresolve(self.end)
+        mreversed = (self.lo > self.hi)
+        if mreversed:
+            swapme = self.hi
+            self.hi = self.lo
+            self.lo = swapme
+        if self.hi > len(metadata):
+            croak("{0} has no {1} revision".format(metadata.name, self.hi))
+        if not self.branchwise:
+            self.seq = [metadata.by_revno(i) for i in range(self.lo, self.hi+1)]
+        else:
+            self.seq = []
+            e = metadata.by_revno(self.hi)
+            while True:
+                self.seq.append(e)
+                if e.revno == self.lo:
+                    break
+                if e.parent is None:
+                    croak("%s is not an ancestor of %s" % (self.lo, self.hi))
+                else:
+                    e = e.parent
+        if debug >= DEBUG_SEQUENCE:
+            sys.stderr.write("selection: %s, branchwise is %s\n" % ([x.revno for x in self.seq], "on" if self.branchwise else "off"))
+            for item in metadata.revlist:
+                sys.stdout.write("%s\t%s\t%s\n" % (item.revno, item.date, item.native))
+        # Because in the branchwise case the sequence is generated in reverse
+        if self.branchwise:
+            self.seq.reverse()
+        # Range might have been reversed
+        if mreversed:
+            self.seq.reverse()
+        return self.seq
+
+class CommentContext:
+    COMMENT_CUTLINE = """\
+.............................................................................
+"""
+    COMMENT_EXPLANATION = """\
+The cut line and things below it will not become part of the comment text.
+"""
+    def __init__(self, legend, args):
+        "Attempt to collect a comment from command line args."
+        self.leader = ""
+        self.comment = None
+        self.force_edit = False
+        self.parse_revspec = True
+        if args:
+            if args[0] == '--':
+                self.parse_revspec = False
+                args.pop(0)
+            elif args[0] == "-":
+                self.leader = sys.stdin.read()
+                args.pop(0)
+            elif args[0] == "-e":
+                self.force_edit = True
+            elif args[0] == "-m":
+                args.pop(0)
+                try:
+                    self.leader = args[0]
+                    args.pop(0)
+                except IndexError:
+                    croak("%s -m requires a following string" % legend)
+            elif args[0].startswith("-m"):
+                self.leader = args[2:]
+                args.pop(0)
+            elif args[0] == "-f":
+                args.pop(0)
+                try:
+                    # Read filesystem data as binary for robustness, but
+                    # decode to Unicode for internal use
+                    with open(args[0], "rb") as fp:
+                        self.leader = polystr(fp.read())
+                    args.pop(0)
+                except IndexError:
+                    croak("%s -f requires a following filename argument" % legend)
+                except OSError:
+                    croak("couldn't open %s." % args[1])
+            elif args[0].startswith("-"):
+                croak("unexpected %s option" % args[0])
+    def edit(self, content="", trailer="", diff=None):
+        "Interactively edit a comment if required, then prepare for handoff."
+        if self.leader and not self.force_edit:
+            self.comment = self.leader
+        else:
+            orig_content = content
+            if self.leader:
+                content = self.leader + content
+            if trailer or diff:
+                content += "\n" + CommentContext.COMMENT_CUTLINE + CommentContext.COMMENT_EXPLANATION + trailer
+            editor = os.getenv("EDITOR") or "emacsclient"
+            try:
+                # Use polybytes to ensure that binary data is written
+                # on Python 3
+                with tempfile.NamedTemporaryFile(prefix = "src", suffix = "tmp", delete = False) as fp:
+                    commentfile = fp.name
+                    fp.write(polybytes(content))
+                    if diff:
+                        fp.write(b"\nChanges to be committed:\n")
+                        for s in diff:
+                            fp.write(polybytes(s))
+                            fp.write(b"\n")
+                do_or_die(editor + " " + commentfile, mute=False)
+                # Use polystr to ensure that incoming data is decoded
+                # to Unicode on Python 3
+                with open(commentfile, "rb") as fp:
+                    self.comment = polystr(fp.read())
+                    os.unlink(commentfile)
+            except IOError:
+                croak("edit aborted.")
+            where = self.comment.find(CommentContext.COMMENT_CUTLINE)
+            if where != -1:
+                self.comment = self.comment[:where]
+            self.comment = self.comment.strip()
+            if self.comment == orig_content.strip() or not self.comment:
+                return False
+            # Can be removed if we ever parse RCS/SCCS files directly
+            for badnews in backend.delimiters:
+                if badnews in self.comment:
+                    croak("malformed comment")
+        if not self.comment.endswith("\n"):
+            self.comment += "\n"
+        return True
+    def content(self):
+        "Return the edited comment."
+        return self.comment
+
+def external_diff(file0, s0, file1, s1, unified=True, ignore_ws=None):
+    "Compute diff using external program."
+    def writetmp(s):
+        with tempfile.NamedTemporaryFile(prefix = "src", suffix = "tmp", delete = False) as fp:
+            fp.write(polybytes(s))
+            return fp.name
+    if unified:
+        opts, tok0, tok1 = '-u', '-', '+'
+    else:
+        opts, tok0, tok1 = '-c', '*', '-'
+    if ignore_ws:
+        opts += ' ' + ignore_ws
+    tmp0 = writetmp(s0)
+    tmp1 = writetmp(s1)
+    with popen_or_die('diff %s "%s" "%s" || :' % (opts, tmp0, tmp1)) as fp:
+        diff = polystr(fp.read())
+    os.unlink(tmp0)
+    os.unlink(tmp1)
+    diff = re.sub(r"(?m)^([%s]{3} ).+$" % tok0, r"\1" + file0, diff, 1)
+    diff = re.sub(r"(?m)^([%s]{3} ).+$" % tok1, r"\1" + file1, diff, 1)
+    return diff.split('\n')
+
+def compute_diff(metadata, lo, hi, differ, ignore_ws=None):
+    """Compute diff between two revs of a file.
+    If 'lo' is None, then this is a "creation event" in which 'hi'
+    materializes fully formed from nothing.
+    If 'hi' is None, then diff 'lo' against the working file.
+    File must already have been "lifted"."""
+    name = metadata.name
+    if lo is None:
+        file0 = '/dev/null'
+        old_content = ''
+    else:
+        file0 = name + ' (r' + str(lo) + ')'
+        with backend.cat(name, metadata.revno_to_native(lo)) as fp:
+            old_content = fp.read()  # this data will be binary
+    if hi is None:
+        file1 = name + ' (workfile)'
+        with open(name, "rb") as fp:
+            new_content = fp.read()
+    else:
+        file1 = name + ' (r' + str(hi) + ')'
+        with backend.cat(name, metadata.revno_to_native(hi)) as fp:
+            new_content = fp.read()  # this data will be binary
+    # Don't list identical files (comparison uses binary data
+    # for maximum accuracy).
+    if old_content == new_content:
+        return ()
+    # All operations here will need Unicode in Python 3
+    if ignore_ws:
+        return external_diff(file0, old_content, file1, new_content,
+                             differ == difflib.unified_diff, ignore_ws)
+    lines0 = polystr(old_content).split('\n')
+    lines1 = polystr(new_content).split('\n')
+    return differ(lines0, lines1,
+                  fromfile=file0,
+                  tofile=file1,
+                  lineterm="")
+
+def colorize_unified(s):
+    for x in colorize_unified.colors:
+        if s.startswith(x[0]):
+            return x[1] + s + RESET
+    return s
+
+colorize_unified.colors = (('+++ ', BOLD), ('--- ', BOLD), ('@@ ', CCYAN),
+                           ('+', CGREEN), ('-', CRED))
+
+def print_diff(metadata, lo, hi, differ, ignore_ws=None):
+    "Dump diff between revisions to standard output."
+    if differ == difflib.unified_diff:
+        colorizer = colorize_unified
+    else:
+        colorizer = lambda x: x
+    with backend.lifter(metadata.name):
+        for line in compute_diff(metadata, lo, hi, differ, ignore_ws):
+            sys.stdout.write(colorizer(line) + "\n")
+
+def exec_copy(source, target):
+    if os.path.exists(target):
+        oldtargetmode = newtargetmode = os.stat(target).st_mode
+        sourcemode = os.stat(source).st_mode
+        for bitmask in (stat.S_IXUSR, stat.S_IXGRP, stat.S_IXOTH):
+           if bitmask & sourcemode:
+               newtargetmode |= bitmask
+           else:
+               newtargetmode &=~ bitmask
+        if newtargetmode != oldtargetmode:
+            os.chmod(target, newtargetmode)
+
+def checkout_method(*args):
+    "Refresh the working copy from the history file."
+    ctx = CommandContext("checkout", args)
+    if ctx.is_range():
+        croak("checkout needs an empty or singleton revision spec")
+    for arg in ctx.args:
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.select_tip(metadata)
+            revision = ""
+        elif ctx.lo > len(metadata):
+            croak("%s has only %d revisions" % (arg, len(metadata)))
+        else:
+            revision = metadata.revno_to_native(ctx.lo)
+        with backend.lifter(arg):
+            backend.checkout(arg, revision)
+        if not quiet and len(args) > 1:
+            announce("%s <- %d" % (arg, ctx.lo))
+
+def commit_method(*args):
+    "Commit changes to files."
+    if not os.path.exists(repodir):
+        try:
+            os.mkdir(repodir)
+        except OSError:
+            croak(" %s creation failed, check directory permissions." % repodir)
+    args = list(args)
+    register_only = False
+    parse_revspec = True
+    differ = difflib.unified_diff
+    while args:
+        if args[0] == '--':
+            args.pop(0)
+            parse_revspec = False
+            break
+        elif args[0] == '-a':
+            # The Emacs VC-mode support for SRC was written early,
+            # before 1.0, when I hadn't quite figured out what the
+            # most efficient method for file registration would be.
+            # VC-mode wants to have a registration as well as a
+            # checkin method. This is no longer needed for normal SRC
+            # operation, but it's better to leave this in place than
+            # risk causing hassles for people running old Enacs versions.
+            register_only = True
+            parse_revspec = False
+            args.pop(0)
+        else:
+            break
+    if not register_only:
+        comment = CommentContext("commit", args)
+    ctx = CommandContext("commit", args,
+                         require_empty=True,
+                         parse_revspec=parse_revspec and comment.parse_revspec)
+    for arg in ctx.args:
+        if not os.path.exists(arg):
+            croak("I see no '%s' here." % arg)
+        if os.path.isdir(arg):
+            croak("cannot commit directory '%s'" % arg)
+    for arg in ctx.args:
+        if not registered(arg):
+            trailer = "Committing initial revision of {0}.\n".format(arg)
+            revcount = 0
+            metadata = None
+            diff = compute_diff(type('', (), {'name':arg}), None, None, differ)
+        elif register_only:
+            croak("attempt to re-add a registered file failed")
+        else:
+            metadata = History(arg)
+            ctx.resolve(metadata)
+            if metadata and ctx.is_empty():
+                ctx.select_tip(metadata)
+            revcount = len(metadata)
+            trailer = "Committing {0} revision {1}.\n".format(arg, revcount+1)
+            with backend.lifter(arg):
+                diff = compute_diff(metadata, ctx.lo, None, differ)
+        if not register_only and not diff:
+            announce("in %s, no changes to commit" % arg)
+            continue
+        if not register_only and not comment.edit('', trailer, diff):
+            announce("in %s, commit cancelled" % arg)
+        else:
+            if not registered(arg):
+                backend.register(arg)
+            if not register_only:
+                with backend.lifter(arg):
+                    # If the user changed the executable bit while
+                    # modifying the workfile, propagate this change to
+                    # the master.  Without this hack, the sequence (1)
+                    # Commit workfile (2) Make workfile executable, (3)
+                    # checkin workfile fails to work as expected because
+                    # the VCS doesn't propagate the changed executable
+                    # bit to the master, leading to misbehavior on the
+                    # next checkout.
+                    exec_copy(arg, backend.history(arg))
+                    backend.checkin(arg, comment.content())
+            if metadata is None:
+                metadata = History(arg)
+            modified(arg, metadata)
+            if not quiet and len(args) > 1:
+                announce("%s -> %d" % (arg, revcount))
+
+def add_method(*args):
+    "For Emacs VC compatibility."
+    commit_method("-a", *args)
+
+def amend_method(*args):
+    "Amend comments in stored revisions."
+    if not os.path.exists(repodir):
+        croak("repository subdirectory %s does not exist" % repodir)
+    args = list(args)
+    differ = difflib.unified_diff
+    comment = CommentContext("amend", args)
+    ctx = CommandContext("amend", args, parse_revspec=comment.parse_revspec)
+    if ctx.is_range():
+        croak("amend cannot take a range")
+    for arg in ctx.args:
+       if not os.path.exists(arg):
+           croak("I see no '%s' here." % arg)
+       elif not registered(arg):
+           croak("%s is not registered." % arg)
+    for arg in ctx.args:
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.lo = metadata.tip().revno
+        trailer ="Amending {0} revision {1}.\n".format(arg, ctx.lo)
+        item = metadata.by_revno(ctx.lo)
+        parent = item.parent.revno if item.parent else None
+        with backend.lifter(arg):
+            diff = compute_diff(metadata, parent, ctx.lo, differ)
+        if not comment.edit(metadata.by_revno(ctx.lo).log, trailer, diff):
+            announce("in %s, amend cancelled" % arg)
+        else:
+            with backend.lifter(arg):
+                backend.amend(arg,
+                          metadata.revno_to_native(ctx.lo),
+                          comment.content())
+    if not quiet and len(args) > 1:
+        announce("%s : %d" % (arg, ctx.lo))
+
+def list_method(*args):
+    "Generate a summary listing of commits, one line per commit."
+    args = list(args)
+    custom = None
+    limit = None
+    parse_revspec = True
+    while args and args[0].startswith("-"):
+        if args[0] == '--':
+            parse_revspec = False
+            args.pop(0)
+            break
+        elif args[0] == "-f":
+            args.pop(0)
+            try:
+                custom = args[0]
+                args.pop(0)
+            except IndexError:
+                croak("list -f requires a following string")
+        elif args[0].startswith("-f"):
+            custom = args[0][2:]
+            args.pop(0)
+        elif args[0] == "-l":
+            args.pop(0)
+            try:
+                limit = args[0]
+                args.pop(0)
+                limit = int(limit)
+            except IndexError:
+                croak("list -l requires a following integer")
+            except ValueError:
+                croak("%s is not an integer" % limit)
+        elif args[0][1:].isdigit():
+            limit = int(args.pop(0)[1:]) # it's all digits, so no ValueError
+        else:
+            croak("unexpected %s option" % args[0])
+    ctx = CommandContext("list", args,
+                         default_to="branch_reversed",
+                         parse_revspec=parse_revspec)
+    for arg in ctx.args:
+        if ignore(arg) or os.path.isdir(arg) or not registered(arg):
+            continue
+        if custom is None:
+            sys.stdout.write("= %s %s\n" % (arg, ((WIDTH - len(arg) - 3) * "=")))
+        for item in ctx.resolve(History(arg)):
+            # Must allow enough room for revno and date
+            if item.selected():
+                mark = "*"
+            else:
+                mark = "-"
+            summary = item.log.split('\n')[0]
+            if custom is None:
+                summary = summary[:WIDTH - 34]
+                sys.stdout.write("%-4d  %s %s %s\n" \
+                             % (item.revno, mark, item.getdate('author'), summary))
+            else:
+                sys.stdout.write(custom.format(arg, item.revno, mark, item.getdate('author'), summary))
+            if limit is not None:
+                limit -= 1
+                if limit <= 0:
+                    break
+
+def log_method(*args):
+    "Report revision logs"
+    limit = None
+    args = list(args)
+    parse_revspec = True
+    differ = None
+    ignore_ws = None
+    verbose = 0
+    while args and args[0].startswith("-"):
+        if args[0] == '--':
+            parse_revspec = False
+            args.pop(0)
+            break
+        elif args[0] == "-l":
+            args.pop(0)
+            try:
+                limit = args[0]
+                args.pop(0)
+                limit = int(limit)
+            except IndexError:
+                croak("list -l requires a following integer")
+            except ValueError:
+                croak("%s is not an integer" % limit)
+        elif args[0][1:].isdigit():
+            limit = int(args.pop(0)[1:]) # it's all digits, so no ValueError
+        elif args[0] in ('--patch', '-p', '-u'):
+            differ = difflib.unified_diff
+            args.pop(0)
+        elif args[0] == '-c':
+            differ = difflib.context_diff
+            args.pop(0)
+        elif args[0] in ('-b', '-w'):
+            ignore_ws = args.pop(0)
+        elif args[0] == '-v':
+            verbose += 1
+            args.pop(0)
+        else:
+            croak("unexpected %s option" % args[0])
+    ctx = CommandContext("log", args,
+                         default_to="branch_reversed",
+                         parse_revspec=parse_revspec)
+    for arg in ctx.args:
+        if ignore(arg) or os.path.isdir(arg) or not registered(arg):
+            continue
+        sys.stdout.write("= %s %s\n" % (arg, ((WIDTH - len(arg) - 3) * "=")))
+        metadata = History(arg)
+        for item in ctx.resolve(metadata):
+            sys.stdout.write("%s%-4d%s | %s%s%s | %s%s%s\n" \
+                             % (BOLD + CCYAN, item.revno, RESET,
+                                CYELLOW, item.getdate('author'), RESET,
+                                BOLD + CGREEN, item.branch, RESET))
+            if verbose and item.headers:
+                headers = item.headers
+                if verbose == 1:
+                    headers = {}
+                    for k in ('author', 'committer'):
+                        if k in item.headers:
+                            v = item.headers[k]
+                            if k + "-date" in item.headers:
+                                v += " " + item.headers[k + "-date"]
+                            headers[k] = v
+                for k in sorted(headers.keys()):
+                    sys.stdout.write("%s%s%s: %s\n" %
+                                     (BOLD, k.title(), RESET, headers[k]))
+                sys.stdout.write("\n")
+            sys.stdout.write("%s" % item.log)
+            if differ:
+                if item.parent:
+                    parent = item.parent.revno
+                    pdesc = 'r%d/%s' % (parent, arg)
+                else:
+                    parent = None
+                    pdesc = '/dev/null'
+                sys.stdout.write("\n%sdiff %s r%s/%s%s\n" %
+                                 (BOLD, pdesc, item.revno, arg, RESET))
+                print_diff(metadata, parent, item.revno, differ, ignore_ws)
+            sys.stdout.write(("-" * WIDTH) + "\n")
+            if limit is not None:
+                limit -= 1
+                if limit <= 0:
+                    break
+
+def status_method(*args):
+    "Get status of some or all files."
+    try:
+        managed = [fn for fn in os.listdir(repodir) if is_history(fn)]
+    except OSError:
+        croak("repo directory %s does not exist" % repodir)
+    args = list(args)
+    allflag = False
+    if args:
+        if args[0] == '--':
+            args.pop(0)
+        elif args[0] == '-a':
+            allflag = True
+            args.pop(0)
+    if args:
+        candidates = args
+    else:
+        candidates = [f for f in os.listdir(".") if f != repodir]
+    pairs = []
+    for fn in candidates:
+        if ignore(fn):
+            if allflag or fn in args:
+                pairs.append((fn, "I"))
+            continue
+        masterbase = os.path.basename(backend.history(fn))
+        if masterbase not in managed:
+            if allflag or fn in args:
+                if not os.access(fn, os.R_OK):
+                    croak("%s does not exist or is unreadable." % fn)
+                else:
+                    pairs.append((fn, "?"))
+        elif not os.path.exists(fn):
+            pairs.append((fn, "!"))
+        elif modified(fn):
+            pairs.append((fn, "M"))
+        elif not os.access(fn, os.W_OK):
+            pairs.append((fn, "L"))
+        elif not backend.has_revisions(fn):
+            pairs.append((fn, "A"))
+        else:
+            pairs.append((fn, "="))
+    if not args:
+        for m in managed:
+            if backend.workfile(m) not in candidates:
+                pairs.append((m, "!"))
+    pairs.sort()
+    for (fn, status) in pairs:
+        sys.stdout.write(status + "\t" + fn + "\n")
+
+def cat_method(*args):
+    "Dump revision content to standard output."
+    ctx = CommandContext("cat", args)
+    if ctx.is_range():
+        croak("cat refuses to cough up a hairball")
+    elif ctx.args[0] == '--':
+            ctx.args.pop(0)
+    for arg in ctx.args:
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.select_tip(metadata)
+        with backend.lifter(arg):
+            for item in ctx.seq:
+                with backend.cat(arg, item.native) as fp:
+                    # Use polystr to ensure that sys.stdout gets Unicode
+                    # in Python 3.
+                    sys.stdout.write(polystr(fp.read()))
+
+def diff_method(*args):
+    "Dump diffs between revisions to standard output."
+    if type(args) == type(()):
+        args = list(args)
+    differ = difflib.unified_diff
+    ignore_ws = None
+    while args and args[0] != '--' and args[0].startswith("-"):
+        if args[0] == '-u':
+            differ = difflib.unified_diff
+            args.pop(0)
+        elif args[0] == '-c':
+            differ = difflib.context_diff
+            args.pop(0)
+        elif args[0] in ('-b', '-w'):
+            ignore_ws = args.pop(0)
+        else:
+            croak("unexpected %s option" % args[0])
+    ctx = CommandContext("diff", args)
+    for arg in ctx.args:
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.select_tip(metadata)
+        print_diff(metadata, ctx.lo, ctx.hi, differ, ignore_ws)
+
+def tag_helper(args, legend, validation_hook, delete_method, set_method):
+    "Dispatch to handlers for tag and branch manipulation."
+    if not os.path.exists(repodir):
+        croak("repository subdirectory %s does not exist" % repodir)
+    args = list(args)
+    if not args:
+        args = ["list"] + args
+    if args[0] == '--':
+        args.pop(0)
+    else:
+        if args[0] in ("-d", "del", "delete"):
+            args.pop(0)
+            if not args:
+                croak("%s deletion requires a name argument" % legend)
+            name = args.pop(0)
+            ctx = CommandContext(legend, args)
+            if not ctx.is_empty():
+                croak("can't accept a revision-spec when deleting a %s." % legend)
+            for arg in ctx.args:
+                metadata = History(arg)
+                if name not in metadata.symbols:
+                    croak("in %s, %s is not a symbol" % (arg, name))
+                elif backend.isbranch(metadata.symbols[name]) != (legend  == "branch"):
+                    croak("in %s, %s is not a %s" % (arg, name, legend))
+                else:
+                    with backend.lifter(arg):
+                        delete_method(name, metadata)
+                    if not quiet and len(args) > 1:
+                        announce("in %s, %s %s removed" % (arg, legend, name))
+                return
+        if args[0] in ("-l", "list"):
+            args.pop(0)
+            ctx = CommandContext(legend + " listing", args, require_empty=True)
+            for arg in ctx.args:
+                metadata = History(arg)
+                ctx.resolve(metadata)
+                if ctx.is_empty():
+                    prepend = [0]
+                    ctx.select_all(metadata)
+                else:
+                    prepend = []
+                revisions = prepend + [item.revno for item in ctx.seq]
+                sys.stdout.write("= %s %s\n" \
+                                 % (arg, ((WIDTH - len(arg) - 5) * "=")))
+                keys = list(metadata.symbols.keys())
+                if metadata.branch in keys:
+                    keys.remove(metadata.branch)
+                    keys.sort()
+                    keys = [metadata.branch] + keys
+                for key in keys:
+                    value = metadata.symbols[key]
+                    if legend == "branch":
+                        # Note!  This code relies on
+                        # backend.branch_to_parent() returning an empty
+                        # string when called on a trunk revision.
+                        displaystr = backend.branch_to_parent(value)
+                        if not displaystr:
+                            display = 0
+                        else:
+                            display = metadata.native_to_revno(displaystr)
+                    else:
+                        display = metadata.native_to_revno(value)
+                    if display in revisions and backend.isbranch(value) == (legend == "branch"):
+                        sys.stdout.write("%4s\t%s\n" % (display,key))
+            return
+        if args[0] in ("-c", "create"):
+            args.pop(0)
+            if not args:
+                croak("%s setting requires a name argument" % legend)
+            name = args.pop(0)
+            ctx = CommandContext(legend, args)
+            if ctx.is_range():
+                croak("can't accept a range when setting a %s" % legend)
+            for arg in ctx.args:
+                metadata = History(arg)
+                revision = validation_hook(ctx, metadata, name)
+                with backend.lifter(arg):
+                    set_method(name, revision, metadata)
+                    if not quiet and len(args) > 1:
+                        announce("in %s, %s %s = %s" % (arg, legend, name, ctx.start))
+            return
+        else:
+            croak("%s requires a list, create, or delete modifier" % legend)
+
+def tag_method(*args):
+    "Inspect, create, and delete tags."
+    def tag_set_validate(ctx, metadata, name):
+        ctx.resolve(metadata)
+        if name in metadata.symbols:
+            croak("tag %s already set." % name)
+        if ctx.is_empty():
+            ctx.select_tip(metadata)
+        return metadata.revno_to_native(ctx.lo)
+    tag_helper(args, "tag",
+               tag_set_validate,
+               backend.delete_tag, backend.set_tag)
+
+def branch_method(*args):
+    "Inspect, create, and delete branches."
+    def branch_set_validate(ctx, _metadata, _name):
+        if not ctx.is_empty():
+            croak("cannot accept a revision after a branch name")
+    tag_helper(args, "branch",
+               branch_set_validate,
+               backend.delete_branch, backend.set_branch)
+
+def rename_method(*args):
+    "Rename a branch or tag."
+    args = list(args)
+    if not args or args[0] not in ("tag", "branch"):
+        croak("rename requires a following 'tag' or 'branch'")
+    legend = args.pop(0)
+    if not args:
+         croak("rename requires a source name argument")
+    name = args.pop(0)
+    if not args:
+        croak("rename requires a target name argument")
+    newname = args.pop(0)
+    ctx = CommandContext(legend + " renaming", args, require_empty=True)
+    for arg in ctx.args:
+        metadata = History(arg)
+        if name not in metadata.symbols:
+            croak("in %s, cannot rename nonexistent %s %s" % (arg, legend, name))
+        if newname in metadata.symbols:
+            croak("in %s, cannot rename to existing %s %s" % (arg, legend, name))
+        ctx = CommandContext(legend, args)
+        if not ctx.is_empty():
+            croak("can't accept a revision-spec when renaming a %s." \
+                  % legend)
+        # In the case of a branch, we want to change only the
+        # tag reference.
+        with backend.lifter(arg):
+            backend.set_tag(newname, metadata.symbols[name], metadata)
+            backend.delete_tag(name, metadata)
+        if not quiet and len(args) > 1:
+            announce("in %s, %s -> %s" % (arg, name, newname))
+
+def filecmd(legend, hook, args):
+    CommandContext(legend, args, require_empty=True)
+    if len(args) != 2:
+        croak("%s requires exactly two arguments" % legend)
+    (source, target) = args
+    if not os.path.exists(source):
+        croak("I see no '%s' here." % source)
+    elif os.sep in target and not os.path.exists(os.path.dirname(target)):
+        croak("directory '%s' does not exist." % target)
+    elif not registered(source):
+        croak("%s is not registered" % source)
+    elif registered(target):
+        croak("%s is registered, I won't step on it" % source)
+    elif os.path.exists(target):
+        croak("%s exists, please delete manually if you want it gone" % target)
+    else:
+        hook(source, target)
+
+def move_method(*args):
+    "Move a file and its history."
+    filecmd("move", backend.move, args)
+
+def copy_method(*args):
+    "Copy a file and its history."
+    filecmd("copy", backend.copy, args)
+
+def release_method(*args):
+    "Release locks."
+    ctx = CommandContext("release", args, require_empty=True)
+    for arg in ctx.args:
+        if not os.path.exists(arg):
+            croak("I see no '%s' here." % arg)
+        elif not registered(arg):
+            croak("%s is not registered, skipping" % arg)
+        else:
+            with backend.lifter(arg):
+                backend.release(arg)
+
+def srcify_method(*args):
+    "Move an RCS or SCCS directory into SRC management."
+    if args:
+        croak("lift cannot accept arguments")
+    if not os.path.isdir("RCS") and not os.path.isdir("SCCS"):
+        croak("no RCS or SCCS directory")
+    candidates = [f for f in os.listdir(".") if os.path.isfile(f) and not os.path.islink(f)]
+    for fn in candidates:
+        if registered(fn) and (not os.path.exists(fn) or not modified(fn)):
+            with backend.lifter(fn):
+                backend.checkout(fn, "")
+    if os.path.isdir("RCS"):
+        os.rename("RCS", ".src")
+
+def ls_method(*args):
+    "List registered files."
+    if args:
+        croak("ls cannot accept arguments")
+    try:
+        masters = [fn for fn in os.listdir(repodir) if is_history(fn)]
+    except OSError:
+        croak("repo directory %s does not exist" % repodir)
+    masters.sort()
+    for master in masters:
+        sys.stdout.write(backend.workfile(master) + "\n")
+
+def visualize_method(*args):
+    "Generate (and possibly display) a DOT visualization of repo structure."
+    if not os.path.exists(repodir):
+        croak("repository subdirectory %s does not exist" % repodir)
+    args = list(args)
+    comment = CommentContext("visualize", args)
+    ctx = CommandContext("visualize", args, parse_revspec=comment.parse_revspec)
+    for arg in ctx.args:
+       #if not os.path.exists(arg):
+       #    croak("I see no '%s' here." % arg)
+       if not registered(arg):
+           croak("%s is not registered." % arg)
+    for arg in ctx.args:
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.select_all(metadata)
+        sys.stdout.write("digraph {\n")
+        if len(ctx.args) > 1:
+            pref = arg + ":"
+        else:
+            pref = ""
+        for item in ctx.seq:
+            if item.parent:
+                sys.stdout.write('\t%s%d -> %s%d;\n' \
+                                 % (pref, item.parent.revno, pref, item.revno))
+            summary = htmlescape(item.log.split('\n')[0][:42])
+            sys.stdout.write('\t%s%s [shape=box,width=5,label=<<table cellspacing="0" border="0" cellborder="0"><tr><td><font color="blue">%s%s</font></td><td>%s</td></tr></table>>];\n' \
+                             % (pref, item.revno, pref, item.revno, summary))
+            if metadata.tip(item.native) == item:
+                    sys.stdout.write('\t"%s%s" [shape=oval,width=2];\n' \
+                                     % (pref, item.branch))
+                    sys.stdout.write('\t"%s%s" -> "%s%s" [style=dotted];\n' \
+                                     % (pref, item.revno, pref, item.branch))
+        keys = sorted(metadata.symbols.keys())
+        for name in keys:
+            native = metadata.symbols[name]
+            branch_label = backend.isbranch(native)
+            if branch_label:
+                native = backend.branch_to_tip(native, metadata)
+            revno = metadata.native_to_revno(native)
+            if not branch_label:
+                sys.stdout.write('\t{rank=same; "%s%s"; "%s%s"}\n' \
+                                 % (pref, name, pref, revno))
+                sys.stdout.write('\t"%s%s" -> "%s%s" [style=dotted];\n' \
+                                 % (pref, name, pref, revno))
+        sys.stdout.write("}\n")
+
+def fast_export_method(*args):
+    "Dump revision content to standard output."
+    def attribute(item, who, fallback):
+        s = fallback
+        if item.headers and who in item.headers:
+            s = item.headers[who]
+        t, o = item.unixtime(who)
+        return "%s %s %d %s%02d%02d\n" % \
+            ((who, s, t, "-" if o < 0 else "+") + divmod(abs(o), 3600))
+    ctx = CommandContext("fast-export", args)
+    mark = 0
+    if pseudotime:
+        username = "J. Random Hacker"
+        useremail = "jrh@nowhere.man"
+    else:
+        # Use polystr to ensure that data is decoded to Unicode on
+        # Python 3.
+        username = polystr(capture_or_die("git config --get user.name")).strip()
+        useremail = polystr(capture_or_die("git config --get user.email")).strip()
+    attribution = "%s <%s>" % (username, useremail)
+    markmap = {}
+    tips = {}
+    last_commit_mark = 0
+    for arg in ctx.args:
+        if not registered(arg):
+            croak("%s is not registered" % arg)
+        executable = os.stat(backend.history(arg)).st_mode & stat.S_IXUSR
+        if executable:
+            perms = "100755"
+        else:
+            perms = "100644"
+        metadata = History(arg)
+        ctx.resolve(metadata)
+        if ctx.is_empty():
+            ctx.select_all(metadata)
+        with backend.lifter(arg):
+            for i in range(ctx.lo, ctx.hi+1):
+                item = metadata.by_revno(i)
+                with backend.cat(arg, item.native) as fp:
+                    content = fp.read()  # this data will be binary
+                size = len(content)  # size will be # of bytes, as desired
+                mark += 1
+                markmap[item.revno] = mark
+                sys.stdout.write("blob\nmark :%d\ndata %d\n" % (mark, size))
+                # Use polystr to ensure sys.stdout gets Unicode in Python 3
+                sys.stdout.write(polystr(content) + "\n")
+                # FIXME: Make this canonical even with tags.
+                # This is tricky; see reposurgeon's rules for branch coloring.
+                branch = item.branch
+                if branch == "trunk":
+                    branch = "master"
+                oldbranch = branch
+                for c in "~^\\*?":
+                    branch = branch.replace(c, "")
+                if not branch:
+                    croak("branch name %s is ill-formed" % oldbranch)
+                elif branch != oldbranch:
+                    announce("branch name %s sanitized to %s" % (oldbranch, branch))
+                if branch not in tips:
+                    sys.stdout.write("reset refs/heads/" + branch + "\n")
+                sys.stdout.write("commit refs/heads/%s\n" % branch)
+                sys.stdout.write("mark :%d\n" % (mark + 1))
+                sys.stdout.write(attribute(item, "author", attribution))
+                sys.stdout.write(attribute(item, "committer", attribution))
+                sys.stdout.write("data %s\n%s" % (len(item.log), item.log))
+                if last_commit_mark:
+                    sys.stdout.write("from :%d\n" % last_commit_mark)
+                if len(arg.split()) > 1:
+                    arg = '"' + arg + '"'
+                sys.stdout.write("M %s :%d %s\n\n" % (perms, mark, arg))
+                mark += 1
+                last_commit_mark = mark
+                markmap[item.revno] = mark
+                tips[branch] = mark
+            for (key, val) in list(metadata.symbols.items()):
+                val = metadata.native_to_revno(val)
+                if val in ctx:
+                    sys.stdout.write("reset refs/tags/%s\nfrom :%d\n\n" % (key, markmap[val]))
+    for branch in tips:
+        sys.stdout.write("reset refs/heads/%s\nfrom :%d\n\n" % (branch, tips[branch]))
+
+def fast_import_method(*args):
+    "Accept a git fast-import stream on stdin, turn it into file histories."
+    if not isinstance(backend, RCS):
+        croak("fast-import is only supported with the RCS backend")
+    if os.path.exists("RCS"):
+        croak("refusing to unpack into existing RCS directory!")
+    # Force -l to fit SRC's lockless interface.
+    do_or_die(r"rcs-fast-import -l " +" ".join(args), missing="rcs-fast-import")
+    try:
+        os.makedirs(repodir)
+    except OSError:
+        pass
+    for fn in os.listdir("RCS"):
+        corresponding = os.path.join("RCS", os.path.basename(fn))
+        fn = os.path.join(repodir, os.path.basename(fn))
+        if os.path.exists(fn):
+            croak("%s exists, aborting leaving RCS in place!" % corresponding)
+        os.rename(corresponding, fn)
+    shutil.rmtree("RCS")
+
+
+def version_method(*args):
+    "Report SRC's version"
+    sys.stdout.write("src: %s\n" % version)
+    (major, minor, micro, _releaselevel, _serial) = sys.version_info
+    sys.stdout.write("python: %s.%s.%s\n" % (major, minor, micro))
+    sys.stdout.write("%s: %s\n" % (backend.__class__.__name__,backend.version()))
+    sys.stdout.write("platform: %s\n" % sys.platform)
+    if os.path.exists(".git"):
+        sys.stdout.write("revision: %s\n" % capture_or_die("git rev-parse HEAD"))
+
+dispatch = {
+    "help":        help_method,
+    "commit":      commit_method,
+    "ci":          commit_method,
+    "add":         add_method,
+    "amend":       amend_method,
+    "am":          amend_method,
+    "list":        list_method,
+    "li":          list_method,
+    "log":         log_method,
+    "checkout":    checkout_method,
+    "co":          checkout_method,
+    "status":      status_method,
+    "st":          status_method,
+    "cat":         cat_method,
+    "diff":        diff_method,
+    "di":          diff_method,
+    "tag":         tag_method,
+    "branch":      branch_method,
+    "rn":          rename_method,
+    "rename":      rename_method,
+    "ls":          ls_method,
+    "move":        move_method,
+    "mv":          move_method,
+    "copy":        copy_method,
+    "cp":          copy_method,
+    "visualize":   visualize_method,
+    "vis":         visualize_method,
+    "fast-export": fast_export_method,
+    "fast-import": fast_import_method,
+    "release":     release_method,
+    "srcify":      srcify_method,
+    "version":     version_method,
+}
+
+class RevisionMixin:
+    "Express common operations on RCS and SCCS revisions."
+    def splitrev(self, rev):
+        "RCS revision to numeric tuple."
+        return [int(d) for d in rev.split(".")]
+    def joinrev(self, rev):
+        "Numeric tuple to RCS revision."
+        return ".".join([str(d) for d in rev])
+    def pred(self, rev):
+        "Our predecessor. Walks up parent branch."
+        n = self.splitrev(rev)
+        if n[-1] > 1:
+            n[-1] -= 1
+            rev = self.joinrev(n)
+        else:
+            rev = self.joinrev(n[:-2])
+        return rev
+    def succ(self, rev):
+        "Our successor."
+        if rev:
+            n = self.splitrev(rev)
+            n[-1] += 1
+            return self.joinrev(n)
+        else:
+            return "1.1"
+    def isbranch(self, symbol):
+        "Is this a branch symbol?"
+        # RCS convention - this could work for SCCS too, if we simulated
+        # RCS symbols in some way.
+        return "0." in symbol
+    def branch_to_parent(self, revid):
+        "Go from a branch ID sticky tag to the revision it was based on."
+        # Must return an empty string for the fake root sticky tag.
+        return self.joinrev(self.splitrev(revid)[:-2])
+    def branch_to_base(self, revid, metadata):
+        "Go from a branch ID sticky tag to the first revision of its branch."
+        rev = self.branch_to_parent(revid)
+        if rev:
+            rev += ".1.1"
+        else:
+            rev = "1.1"
+        return rev
+    def branch_to_tip(self, revid, metadata):
+        "Go from a branch ID sticky tag to the tip revision of its branch."
+        rev = self.branch_to_base(revid, metadata)
+        while True:
+            nxt = self.succ(rev)
+            if metadata.native_to_revno(nxt) is None:
+                return rev
+            else:
+                rev = nxt
+        croak("internal error: couldn't find branch tip of %s" % rev)
+    def branch_stickybase(self, name, revision, metadata):
+        "Compute a base and tip revision for a named branch."
+        if name in metadata.symbols:
+            # Must unstickify...
+            base = metadata.symbols[name].split(".")
+            base = base[:-2] + base[-1:]
+            base = ".".join(base)
+            return(None, base)
+        else:
+            def branchfrom(c, p):
+                "Is c a branch child (not direct descendant) of parent p?"
+                c = c.split(".")
+                p = p.split(".")
+                return len(c) == len(p) + 2 and c[len(p):] == p
+            baserev = metadata.current()
+            newsib = len([item for item in metadata.revlist \
+                         if branchfrom(item.native, baserev)])
+            newsib += 1
+            base = baserev + "." + str(newsib)
+            sticky = baserev + ".0." + str(newsib)
+            return (sticky, base)
+    def branch_initial(self, branchname, metadata):
+        "Return initial commit of a named branch (the child of the root)."
+        # What we need to do is find the branch tip, then walk back to
+        # just after the first point where it joins another branch, then
+        # do a delete to end of branch from there.
+        base = self.branch_to_tip(metadata.symbols[branchname], metadata)
+        while True:
+            if base is not None and metadata.by_native_d[base].branches:
+                break
+            else:
+                base = self.pred(base)
+        return self.succ(base)
+
+class RCS(RevisionMixin):
+    "Encapsulate RCS back end methods."
+    delimiters = ('----------------------------',
+                  '=============================================================================')
+    class RCSLifter:
+        "Temporarily lift a master to the working directory."
+        def __init__(self, name):
+            self.name = name
+            self.where = os.getcwd()
+            self.deferred = []
+            self.previous_handlers = {}
+            if os.path.exists(".src") and os.path.exists("RCS"):
+                croak("both .src and RCS exist - bailing out.")
+        def defer_signal(self, sig_num, stack_frame):
+            self.deferred.append(sig_num)
+        def __enter__(self):
+            # Replace existing signal handlers with deferred handler
+            for sig_num in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+                # signal.signal returns None when no handler has been
+                # set in Python, which is the same as the default
+                # handler (SIG_DFL) being set
+                self.previous_handlers[sig_num] = (
+                    signal.signal(sig_num, self.defer_signal) or signal.SIG_DFL)
+            if os.path.dirname(self.name):
+                os.chdir(os.path.dirname(self.name))
+            if repodir == ".src" and not os.path.exists("RCS"):
+                os.rename(".src", "RCS")
+        def __exit__(self, extype, value, traceback_unused):
+            os.chdir(self.where)
+            if extype and debug > 0:
+                raise extype(value)
+            if repodir == ".src" and not os.path.exists(".src"):
+                os.rename("RCS", ".src")
+            # Restore handlers
+            for sig_num, handler in self.previous_handlers.items():
+                signal.signal(sig_num, handler)
+            # Send deferred signals
+            while self.deferred:
+                sig_num = self.deferred.pop(0)
+                os.kill(os.getpid(), sig_num)
+            return True
+    def lifter(self, name):
+        return RCS.RCSLifter(name)
+    def history(self, arg):
+        # The reason this is required is that we might not be within the
+        # lifter context when this function is called.  Thus we have to
+        # check both possible locations for the master.
+        for d in (backend.__class__.__name__, repodir):
+            p = os.path.join(os.path.dirname(arg), d, os.path.basename(arg) + ",v")
+            if os.path.exists(p):
+                return p
+        return p	# Use repodir as a default for nonexistent targets
+    @staticmethod
+    def is_history(path):
+        return path.endswith(",v")
+    def has_revisions(self, arg):
+        "Does the master for this file have any revisions"
+        # The magic number 105 is the size of an empty RCS file (no
+        # metadata, no revisions) at 76 bytes, plus 29 bytes.  We assume
+        # that this size has stayed constant or increased since ancient
+        # times.  In fact the size of an RCS file with revisions goes up
+        # more - by the 78 bytes for the final, fixed line of the log
+        # display.  This gives us plenty of slack to cope with minor
+        # format differences.
+        #
+        # The motivation here is to make "src status" faster by avoiding
+        # the need for an entire log parse when checking for "A" status.
+        return os.path.getsize(self.history(arg)) > 105
+    def workfile(self, arg):
+        "Workfile corresponding to an RCS master"
+        return arg[:-2]
+    def register(self, arg):
+        "Register a file"
+        # Key choices here: -b suppresses all keyword expansion, -U sets
+        # non-strict locking (which makes branch appends less painful).
+        do_or_die("rcs -q -U -kb -i '{0}' </dev/null && mv '{0},v' '{1}'".format(arg, repodir))
+    def checkin(self, arg, comment):
+        "Check in a commit, with comment."
+        comment = "'" + comment.replace("'", r"'\''") + "'"
+        # By unlocking the file before checkin we invoke the following
+        # property described on the rcs(1) manual page: "If rev is
+        # omitted and the caller has no lock, but owns the file and
+        # locking is not set to strict, then the revision is appended to
+        # the default branch (normally the trunk; see the -b option of
+        # rcs(1))."  This is the behavior we want and why locking is set
+        # to non-strict.
+        do_or_die("rcs -q -U -u '{0},v' && ci -l -m{1} '{0}'".format(arg, comment))
+    def checkout(self, arg, revision):
+        "Check out a revision. Leaves it writeable."
+        do_or_die("rm -f '{0}' && rcs -q -u '{0},v' && co -q -l{1} '{0}'".format(arg, revision))
+    def amend(self, arg, rev, comment):
+        "Amend a commit comment."
+        # Relies on caller to escape comment string
+        comment = "'" + comment.replace("'", r"'\''") + "'"
+        do_or_die("rcs -m{0}:{1} '{2}'".format(rev, comment, arg))
+    def cat(self, arg, revision):
+        "Ship the contents of a revision to stdout or a named file."
+        return popen_or_die("co -q -p -r{1} '{0}'".format(arg, revision))
+    def delete_tag(self, tagname, metadata):
+        "Delete a specified tag."
+        do_or_die("rcs -n{0} '{1}'".format(tagname, metadata.name))
+    def set_tag(self, tagname, revision, metadata):
+        "Set a specified tag."
+        do_or_die("rcs -n{0}:{1} '{2}'".format(tagname, revision, metadata.name))
+    def delete_branch(self, branchname, metadata):
+        "Delete a specified branch."
+        # From rcs(1): -orange deletes ("outdates") the revisions given
+        # by range.  A range consisting of a single revision number
+        # means that revision.  A range consisting of a branch number
+        # means the latest revision on that branch.  A range of the form
+        # rev1:rev2 means revisions rev1 to rev2 on the same branch,
+        # :rev means from the beginning of the branch containing rev
+        # up to and including rev, and rev: means from revision rev to
+        # the end of the branch containing rev.  None of the outdated
+        # revisions can have branches or locks.
+        do_or_die("rcs -o{0}: '{1}'".format(self.branch_initial(branchname, metadata), metadata.name))
+        self.delete_tag(branchname, metadata)
+    def set_branch(self, name, revision, metadata):
+        "Set the specified branch to be default, creating it if required."
+        (sticky, base) = self.branch_stickybase(name, revision, metadata)
+        if sticky:
+            do_or_die("rcs -n{0}:{1} '{2}'".format(name, sticky, metadata.name))
+        do_or_die("rcs -b%s %s" % (base, metadata.name))
+    def move(self, source, target):
+        "Move a file and its history."
+        do_or_die("mv '{0}' '{1}' && mv '{2}' '{3}'".format(source, target,
+                                                    self.history(source),
+                                                    self.history(target)))
+    def copy(self, source, target):
+        "Copy a file and its history."
+        do_or_die("cp '{0}' '{1}' && cp '{2}' '{3}'".format(source, target,
+                                                    self.history(source),
+                                                    self.history(target)))
+    def release(self, arg):
+        "Release locks."
+        do_or_die("rcs -q -u '{0},v'".format(arg))
+    def write_description(self, text, metadata):
+        "Write description field. If text is empty, clear the field."
+        text = "'" + text.replace("'", r"'\''") + "'"
+        do_or_die("rcs -t-{1} '{0}'".format(metadata.name, text))
+    def version(self):
+        # rcs --version fails under OS X
+        # rcs -V throws an obsolescence warning under GNU RCS 5.9.4
+        # We choose the more portable ioption here.
+        rawversion = capture_or_die("rcs -V 2>/dev/null")
+        m = re.search(r"[0-9]+\.[0-9]+\.[0-9]+".encode('ascii'),rawversion)
+        return m and polystr(m.group(0))
+    def parse(self, metadata):
+        "Get and parse the RCS log output for this file."
+        def sortkey(rev):
+            return rev.date + \
+                '.'.join('%010d' % int(n) for n in rev.native.split('.'))
+        metadata.symbols["trunk"] = "0.1"
+        with popen_or_die("cd %s >/dev/null; rlog %s 2>/dev/null; cd ..>/dev/null" % (repodir, metadata.name)) as fp:
+            if debug >= DEBUG_PARSE:
+                sys.stderr.write("\t-> init\n")
+            state = "init"
+            for line in fp:
+                # All operations here will need Unicode in Python 3
+                line = polystr(line)
+                if debug >= DEBUG_PARSE:
+                    sys.stderr.write("in: %s\n" % repr(line))
+                if state == "init":
+                    if line.startswith("locks:"):
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> locks\n")
+                        state = "locks"
+                    elif line.startswith("symbolic names:"):
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> symbols\n")
+                        state = "symbols"
+                    elif line.startswith("branch:"):
+                        branch = line.split(":")[1].strip()
+                        # Undocumented fact about RCS: The branch "1"
+                        # is the same as the blank branch.  Significant
+                        # because you can't reset to the blank branch
+                        # using rcs -b, that resets to the dynamically
+                        # highest branch.
+                        if not branch or branch == "1":
+                            metadata.branch = "trunk"
+                    elif line.startswith("description:"):
+                        state = "description"
+                elif state == "description":
+                    if line.startswith("============================"):
+                        break
+                    elif line.startswith("----------------------------"):
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> logheader\n")
+                        state = "logheader"
+                        metadata.revlist.append(HistoryEntry(metadata))
+                        metadata.description = metadata.description[:-1]
+                    else:
+                        metadata.description += line
+                elif state == "locks":
+                    if not line[0].isspace():
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> init\n")
+                        state = "init"
+                    else:
+                        fields = line.strip().split()
+                        metadata.lockrevs.append(fields[1])
+                elif state == "symbols":
+                    if not line[0].isspace():
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> init\n")
+                        state = "init"
+                    else:
+                        fields = line.strip().split()
+                        name = fields[0]
+                        if name.endswith(":"):
+                            name = name[:-1]
+                        rev = fields[1]
+                        metadata.symbols[name] = rev
+                elif state == "logheader":
+                    if line.startswith("revision "):
+                        fields = line.split()
+                        metadata.revlist[-1].native = fields[1]
+                    elif line.startswith("----------------------------"):
+                        metadata.revlist.append(HistoryEntry(metadata))
+                    elif line.startswith("date: "):
+                        fields = line.split()
+                        date = fields[1] + " " + fields[2]
+                        if date.endswith(";"):
+                            date = date[:-1]
+                        date = date.replace("/","-").replace(" ","T") + "Z"
+                        metadata.revlist[-1].date = date
+                    elif line.startswith("branches:"):
+                        continue
+                    elif line.startswith("======================="):
+                        # This deals with RCS v5.7 issuing a log header
+                        # divider just before the terminator, something
+                        # v5.8 does not do.
+                        if not metadata.revlist[-1].native:
+                            metadata.revlist.pop()
+                        elif not metadata.revlist[-1].log.endswith("\n"):
+                            metadata.revlist[-1].log += "\n"
+                        break
+                    elif line.strip() == "*** empty log message ***":
+                        continue
+                    elif metadata.revlist:
+                        metadata.revlist[-1].log += line
+            # Now that we have the symbol table...
+            if metadata.branch != "trunk":
+                for (k, v) in list(metadata.symbols.items()):
+                    if v == metadata.branch:
+                        metadata.branch = k
+                        break
+                else:
+                    croak("unrecognized branch ID '%s'" % branch)
+            metadata.revlist.sort(key=sortkey)
+            for (i, item) in enumerate(metadata.revlist):
+                if pseudotime:
+                    # Artificial date one day after the epoch
+                    # to avoid timezone issues.
+                    item.date = rfc3339(86400 + i * 60)
+                item.revno = i + 1
+            metadata.revlist.reverse()
+            if debug >= DEBUG_PARSE:
+                #sys.stdout.write("\t%d revisions\n" % len(metadata.revlist)
+                sys.stdout.write("\tlockrevs: %s\n" % metadata.lockrevs)
+                sys.stdout.write("\tsymbols: %s\n" % metadata.symbols)
+            metadata.build_indices()
+
+# SCCS branch numbering (not supported yet) works differently from RCS
+# branch numbering.  Node IDs have at most 4 parts in the form R.B.L.S
+# (release, level, branch, sequence):
+#
+# 1.0 - initial trunk version
+# 1.1 - next checkin on trunk
+# 1.1.1.0 - First branch from trunk v1.1
+# 1.1.1.1 - Next checkin on that branch
+# 1.1.2.0 - Second branch from v1.1
+# 1.2 - next checkin on trunk.
+#
+# The main difference is that in original AT&T SCCS you could not
+# branch from a branch, only from trunk. This restriction was removed
+# in at least some later versions, including CSSC and the Schilling
+# fork.  In section 3.5.3 the CSSC manual says
+#
+# "When a branch is created from an existing sid, the release and level
+# numbers are copied, the branch number is set to the lowest unused
+# value for that release and level, and the sequence number is set to
+# one. Hence the first branch from version 1.1 will be version 1.1.1.1,
+# and if a branch is made from that, its sid will be 1.1.2.1."
+#
+# Jorg Schilling writes, 2018-11-29: "I cannot speak for RCS, but the
+# naming conventions used for branches in SCCS are not engraved into
+# the sources but rather a convention that is encouraged by the way
+# "get -e -b" works with or without -rSID option. SCCS internally uses
+# serial numbers and for this reason it is currently limited to 2G
+# deltas even though the R.B.L.S scheme could allow more. You could
+# even edit the p.file and control the SID that is used for the next
+# delget(1) as long as you don't violate basic rules."
+
+class SCCS(RevisionMixin):
+    "Encapsulate SCCS back end methods."
+    delimiters = ("-X-X-X-X-X--X-X-X-X-X--X-X-X-X-X-",)
+    class SCCSLifter:
+        "Temporarily lift a master to the working directory."
+        def __init__(self, name):
+            self.name = name
+            self.where = os.getcwd()
+            if not os.path.isdir("SCCS"):
+                croak("no SCCS directory.")
+            self.deferred = []
+            self.previous_handlers = {}
+        def defer_signal(self, sig_num, stack_frame):
+            self.deferred.append(sig_num)
+        def __enter__(self):
+            # Replace existing signal handlers with deferred handler
+            for sig_num in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+                # signal.signal returns None when no handler has been
+                # set in Python, which is the same as the default
+                # handler (SIG_DFL) being set
+                self.previous_handlers[sig_num] = (
+                    signal.signal(sig_num, self.defer_signal) or signal.SIG_DFL)
+        def __exit__(self, extype, value, traceback_unused):
+            # Restore handlers
+            for sig_num, handler in self.previous_handlers.items():
+                signal.signal(sig_num, handler)
+            # Send deferred signals
+            while self.deferred:
+                sig_num = self.deferred.pop(0)
+                os.kill(os.getpid(), sig_num)
+            return True
+    def lifter(self, name):
+        return SCCS.SCCSLifter(name)
+    def __sccsfile(self, arg, pref):
+        return os.path.join(os.path.dirname(arg),
+                            "SCCS",
+                            pref + "." + os.path.basename(arg))
+    def history(self, arg):
+        return self.__sccsfile(arg, "s")
+    @staticmethod
+    def is_history(path):
+        return path.startswith("s.")
+    def has_revisions(self, arg):
+        "Does the master for this file have any revisions"
+        # It's not possible to create an SCCS file without at least one
+        # revision.
+        return True
+    def workfile(self, arg):
+        "Workfile corresponding to an SCCS master"
+        return arg[2:]
+    def register(self, arg):
+        "Register a file"
+        if not os.path.isdir("SCCS"):
+            os.mkdir("SCCS")
+    def checkin(self, arg, comment):
+        "Check in a commit, with comment."
+        comment = "'" + comment.replace("'", r"'\''") + "'"
+        if os.path.exists(self.history(arg)):
+            cmd = "delta -s -y{1} {0}".format(arg, comment)
+        else:
+            # Yuck - 2>/dev/null is required to banish the message
+            # admin: warning: SCCS/XXXXX: No id keywords.
+            cmd = "admin -fb -i '{0}' -y{1} <'{0}' 2>/dev/null".format(arg, comment)
+        do_or_die("TZ=UTC sccs " + cmd)
+        do_or_die("rm -f {0} && sccs get -e -s '{0}' >/dev/null".format(arg))
+    def checkout(self, arg, revision):
+        "Check out a revision. Leaves it writeable."
+        do_or_die("rm -f SCCS/p.{0}".format(arg))
+        if revision:
+            do_or_die("rm -f '{0}' && sccs get -s -e -r{1} '{0}' >/dev/null".format(arg, revision))
+        else:
+            do_or_die("rm -f '{0}' && sccs get -s -e '{0}' >/dev/null".format(arg))
+    def amend(self, arg, rev, comment):
+        "Amend a commit comment."
+        comment = "'" + comment.replace("'", r"'\''") + "'"
+        do_or_die("sccs cdc -r{1} -y{2} '{0}'".format(arg, rev, comment))
+    def cat(self, arg, revision):
+        "Ship the contents of a revision to stdout or a named file."
+        if revision:
+            return popen_or_die("sccs get -s -p -r{1} '{0}' 2>/dev/null".format(arg, revision))
+        else:
+            return popen_or_die("sccs get -p {0}".format(arg))
+    def delete_tag(self, tagname, metadata):
+        "Delete a specified tag."
+        if "tags" in metadata.annotations and tagname in metadata.annotations["tags"]:
+            del metadata.annotations["tags"][tagname]
+            metadata.set_annotations()
+    def set_tag(self, tagname, revision, metadata):
+        "Set a specified tag."
+        if "tags" not in metadata.annotations:
+            metadata.annotations["tags"] = {}
+        metadata.annotations["tags"][tagname] = revision.strip()
+        metadata.set_annotations()
+    def delete_branch(self, branchname, metadata):
+        "Delete a specified branch."
+        croak("branches are not supported in the SCCS back end")
+    def set_branch(self, name, revision, metadata):
+        "Set the specified branch to be default, creating it if required."
+        croak("branches are not supported in the SCCS back end")
+    def move(self, source, target):
+        "Move a file and its history."
+        do_or_die("mv '{0}' '{1}' && mv '{2}' '{3}'".format(source, target,
+                                                    self.history(source),
+                                                    self.history(target)))
+    def copy(self, source, target):
+        "Copy a file and its history."
+        do_or_die("cp '{0}' '{1}' && cp '{2}' '{3}'".format(source, target,
+                                                    self.history(source),
+                                                    self.history(target)))
+    def release(self, arg):
+        "Release locks."
+        do_or_die("sccs admin -dla '{0}'".format(arg))
+    def write_description(self, text, metadata):
+        "Write description field. If text is empty, clear the field."
+        if text:
+            scribblefile = os.path.join(os.path.dirname(metadata.name),"SCCS",".scribble")
+            # Write to filesystem as binary ASCII data for robustness
+            with open(scribblefile, "wb") as wfp:
+                wfp.write(polybytes(text) + b"\n")
+        else:
+            scribblefile = ''
+        do_or_die("sccs admin -t{0} {1} 2>/dev/null".format(scribblefile, metadata.name))
+        if text:
+            os.remove(scribblefile)
+    def version(self):
+        rawversion = capture_or_die("sccs --version 2>&1")
+        m = re.search(r"[0-9]+\.[0-9]+\.[0-9]+".encode('ascii'), rawversion)
+        return m and polystr(m.group(0))
+    def parse(self, metadata):
+        "Get and parse the SCCS log output for this file."
+        metadata.symbols["trunk"] = "0.1"
+        with popen_or_die("sccs prs -e -d':FD::Dt:\n:C:{1}' {0} 2>/dev/null".format(metadata.name, SCCS.delimiters[0])) as fp:
+            if debug >= DEBUG_PARSE:
+                sys.stderr.write("\t-> init\n")
+            state = "init"
+            for line in fp:
+                # All operations here will need Unicode in Python 3
+                line = polystr(line)
+                if debug >= DEBUG_PARSE:
+                    sys.stderr.write("in %s: %s\n" % (state, repr(line)))
+                if state == 'init':
+                    if line == 'none\n':
+                        line = ''
+                    metadata.description = line
+                    state = 'header'
+                elif state == "header":
+                    comment = ""
+                    if line.startswith("D "):
+                        try:
+                            (_, rev, yymmdd, hhmmss) = line.split()[:4]
+                            metadata.revlist.append(HistoryEntry(metadata))
+                            metadata.revlist[-1].native = rev
+                            yymmdd = CENTURY + yymmdd.replace('/','-')
+                            metadata.revlist[-1].date = yymmdd+"T"+hhmmss+"Z"
+                        except ValueError:
+                            croak("ill-formed delta line")
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> header\n")
+                        state = "comment"
+                elif state == "comment":
+                    if line == SCCS.delimiters[0] + "\n":
+                        metadata.revlist[-1].log = comment.rstrip() + "\n"
+                        if debug >= DEBUG_PARSE:
+                            sys.stderr.write("\t-> init\n")
+                        state = "header"
+                    else:
+                        comment += line
+            metadata.revlist.sort(key=lambda x: x.date)
+            for (i, item) in enumerate(metadata.revlist):
+                if pseudotime:
+                    # Artificial date one day after the epoch
+                    # to avoid timezone issues.
+                    item.date = rfc3339(86400 + i * 60)
+                item.revno = i + 1
+            metadata.revlist.reverse()
+            try:
+                with open(self.__sccsfile(metadata.name, "p"), "rb") as fp:
+                    for line in fp:
+                        metadata.lockrevs.append(polystr(line).split()[0])
+            except IOError:
+                pass
+            metadata.build_indices()
+            if 'tags' in metadata.annotations:
+                metadata.symbols.update(metadata.annotations['tags'])
+
+backends = (RCS, SCCS)
+
+if __name__ == "__main__":
+    try:
+        commandline = list(sys.argv[1:])
+        explicit = False
+        repodir = ".src"
+        backend = RCS
+
+        if not os.path.exists(".src"):
+            for vcs in backends:
+                if os.path.exists(vcs.__name__):
+                    repodir = vcs.__name__
+                    backend = vcs
+                    break
+
+        while commandline and commandline[0].startswith("-"):
+            if commandline[0] == '-d':
+                debug += 1
+            elif commandline[0] == '-q':
+                quiet = True
+            elif commandline[0] == '-T':
+                pseudotime = True
+            elif commandline[0] == '-S':
+                repodir = commandline[1]
+                explicit = True
+                commandline.pop(0)
+            else:
+                croak("unknown option %s before command verb" % commandline[0])
+            commandline.pop(0)
+
+        if not commandline:
+            help_method()
+            raise SystemExit(0)
+
+        # User might want to force the back end
+        for vcs in backends:
+            if commandline[0] == vcs.__name__.lower():
+                backend = vcs
+                commandline.pop(0)
+                break
+
+        # Ugly constraint...
+        if backend.__name__ == 'SCCS':
+            repodir = "SCCS"
+
+        backend = backend()
+
+        if not commandline:
+            help_method()
+            raise SystemExit(0)
+
+        if commandline[0] in dispatch:
+            dispatch[commandline[0]](*commandline[1:])
+        else:
+            croak("no such command as '%s'.  Try 'src help'" \
+                           % commandline[0])
+    except KeyboardInterrupt:
+        pass
+
+# The following sets edit modes for GNU EMACS
+# Local Variables:
+# mode:python
+# End:

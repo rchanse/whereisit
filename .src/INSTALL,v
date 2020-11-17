@@ -1,0 +1,113 @@
+head	1.2;
+access;
+symbols;
+locks
+	rchansen:1.2;
+comment	@# @;
+expand	@b@;
+
+
+1.2
+date	2020.11.16.20.28.54;	author rchansen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2020.11.15.17.12.38;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update members to create
+@
+text
+@#!/usr/bin/env bash
+
+
+function cpit () {
+  echo "cp $1 $HOME/rchtest/$1"
+  cp $1 $HOME/rchtest/$1
+  copyrc=$?
+  if [ $copyrc -eq 0 ]; then
+    echo "$1 copied to rchtest."
+  else
+    echo "Boo Boo -- check $1"
+  fi
+}
+
+echo $HOME/rchtest
+if [ -d $HOME/rchtest ]; then
+  echo "$HOME/rchtest exists. Please renameit."
+  echo -n "Enter new subdirectory name (return to exit): "
+  read newname rest
+  if [ ".$newname" == "." ]; then
+    echo "Nothing done, I quit."
+    exit 4
+  else
+    echo "mv $HOME/rchtest $HOME/$newname"  
+    mv $HOME/rchtest $HOME/$newname  
+    echo "OK, we are ready -- rerun the buildtest script"
+    exit 2
+  fi
+else
+  echo "On we go, allocate, populate and rePATH  $HOME/rchtest"
+fi 
+
+mkdir $HOME/rchtest
+ls -alh $HOME/rchtest
+cd $HOME/rchbuild              # get to right dir to do work
+
+echo "Your original PATH"
+echo $PATH
+
+cpit 11asummary            # file of one line summaries
+cpit addpath               # put file a end of PATH
+cpit addpath0              # put file at start of PATH
+cpit c                     # director quick change by acronym
+cpit chkvar                # check the rchjlp variable        
+cpit delpath               # remove file from PATH 
+cpit dirinpath             # chk all dir file where in path
+cpit ech0                  # debugging echo function
+cpit ech1                  # debugging echo inline
+cpit engage                # hook in code to activate environment
+cpit f                     # go to file by acronym
+cpit f_acrolist            # start list of acronyms
+cpit g                     # go to file by number
+cpit ged                   # like g but with nano rather than vim
+cpit INSTALL               # this script
+cpit lbang                 # for the lazy -  #!/usr/bin/env bash
+cpit meminpath             # show which path files have mem (compare
+cpit setvar                # set the rchjlp                         
+cpit showpath              # show the path files
+cpit wrsum                 # document aid tool  
+
+ls -alh ~/rchtest
+
+echo "To activate enter  '. ~/rchtest/engage' "
+echo "You can back off with '. unpath $HOME/rchtest' "
+echo "Restart with existing rchtest file with  . ~/rchtest/engage"
+echo 
+echo "Good Luck"
+@
+
+
+1.1
+log
+@reordered version
+@
+text
+@d43 2
+d46 1
+d52 2
+d55 1
+a55 1
+cpit lbangl                # for the lazy -  #!/usr/bin/env bash
+d57 1
+d59 1
+@
