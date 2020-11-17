@@ -1,0 +1,11 @@
+whereis
+
+  The first word in the first line (by default 'whereis') is
+the director which contains build code. 
+
+So default build library is   $HOME/where
+
+Obtained by: git clone https://github.com/rchanse/whereis.git
+
+IMPORTANT: if you changed the build lib make the change in line 1.
+This build lib is only used in INSTALL and refresh.

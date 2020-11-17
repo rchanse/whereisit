@@ -1,0 +1,8 @@
+  The member 'execdir' contain the basename of the directory which
+contains the executable code of this 'whereis' project.
+
+0. the default is rchjlp
+     rch - initials for Robert C. Hansen
+     jlp - initials for Jean-Luc Picard
+1. set by the setvar script (in build library, NOT in exec library.)
+
