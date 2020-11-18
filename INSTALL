@@ -1,38 +1,48 @@
 #!/usr/bin/env bash
 
+echo "Checking ..."
+echo "\$rchjlp is $rchjlp"
+read build_dir rest < $PWD/builddir
+read exec_dir rest < $PWD/execdir
+
+#echo "Execution lib dir is : "$HOME/$exec_dir
+build_lib=$HOME/$build_dir
+exec_lib=$HOME/$exec_dir 
+echo "Build     lib dir is : "$HOME/$build_dir
+echo "Execution lib dir is : "$exec_lib
+
 
 function cpit () {
-  echo "cp $1 $HOME/rchtest/$1"
-  cp $1 $HOME/rchtest/$1
+  echo "cp $1 $exec_lib/$1"
+  cp $1 $exec_lib/$1
   copyrc=$?
   if [ $copyrc -eq 0 ]; then
-    echo "$1 copied to rchtest."
+    echo "$1 copied to "$exec_lib
   else
     echo "Boo Boo -- check $1"
   fi
 }
 
-echo $HOME/rchtest
-if [ -d $HOME/rchtest ]; then
-  echo "$HOME/rchtest exists. Please renameit."
+if [ -d $exec_lib ]; then
+  echo "$exec_lib exists. Please renameit."
   echo -n "Enter new subdirectory name (return to exit): "
   read newname rest
   if [ ".$newname" == "." ]; then
     echo "Nothing done, I quit."
     exit 4
   else
-    echo "mv $HOME/rchtest $HOME/$newname"  
-    mv $HOME/rchtest $HOME/$newname  
-    echo "OK, we are ready -- rerun the buildtest script"
+    echo "mv $exec_lib $HOME/$newname"  
+    mv $exec_lib $HOME/$newname
+    echo "OK, we are ready -- rerun the INSTALL script"
     exit 2
   fi
 else
-  echo "On we go, allocate, populate and rePATH  $HOME/rchtest"
+  echo "On we go, allocate, populate and rePATH  $exec_lib."
 fi 
 
-mkdir $HOME/rchtest
-ls -alh $HOME/rchtest
-cd $HOME/rchbuild              # get to right dir to do work
+mkdir $exec_lib
+ls -alh $exec_lib    
+cd $build_lib                  # get to right dir to do work
 
 echo "Your original PATH"
 echo $PATH
@@ -52,20 +62,20 @@ cpit f                     # go to file by acronym
 cpit f_acrolist            # start list of acronyms
 cpit g                     # go to file by number
 cpit ged                   # like g but with nano rather than vim
-cpit INSTALL               # this script
+# not this one -- cpit INSTALL               # this script
 cpit lbang                 # for the lazy -  #!/usr/bin/env bash
 cpit meminpath             # show which path files have mem (compare
 cpit refresh               # copy a new version from build to exec  
-cpit setvar                # set the rchjlp                         
+# not this one -- cpit setvar                # set the rchjlp                         
 cpit src                   # Eric Raymond  Simple Revision Control  
 cpit srcdoc                # starter notes on src                  
 cpit showpath              # show the path files
 cpit wrsum                 # document aid tool  
 
-ls -alh ~/rchtest
+ls -alh $exec_lib
 
-echo "To activate enter  '. ~/rchtest/engage' "
-echo "You can back off with '. unpath $HOME/rchtest' "
-echo "Restart with existing rchtest file with  . ~/rchtest/engage"
+echo "To activate enter  '. ~/$rchjlp/engage' "
+echo "You can back off with '. unpath $exec_lib' "
+echo "Restart with existing rchtest file with  . ~/$rchjlp/engage"
 echo 
 echo "Good Luck"

@@ -1,1 +1,14 @@
 #!/usr/bin/env bash
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: $0
+
+Place your information here.
+
+EOF_usage
+
+exit 0          # if needed
+
+fi

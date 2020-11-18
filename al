@@ -19,7 +19,7 @@ else
     alias v1='vim  tempname'
     alias v2='vim ~/tempname'
     alias hal='ls -alh '
-    alias varshow='echo $rchjlp'
+    alias varshow='echo \$rchjlp is $rchjlp'
     alias cdx='cd ~/$rchjlp'
     alias cdb='cd ~/whereis'
 fi

@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 
-if [ -d $HOME/rchtest ]; then
+thefile=$0
+the_dir=`dirname $thefile`
+read -r exec_base rest < $the_dir/execdir
+read -r build_base rest < $the_dir/builddir
+
+ech0 exec_base $exec_base
+ech0 build_base $build_base
+
+if [ -d $HOME/$rchjlp ]; then
   cd $HOME/rchtest
-  . addpath0 $HOME/rchtest nomsg
+  . addpath0 $HOME/$rchjlp xomsg
 else
-  cd $HOME/rchbuild
-  . addpath0 $HOME/rchbuild nomsg
+  cd $HOME/$build_base
+  . addpath0 $HOME/$build_base xomsg
 fi
 
 echo 

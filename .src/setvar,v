@@ -1,4 +1,33 @@
-#!/usr/bin/env bash
+head	1.2;
+access;
+symbols;
+locks
+	rchansen:1.2;
+comment	@# @;
+expand	@b@;
+
+
+1.2
+date	2020.11.18.05.20.44;	author rchansen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2020.11.17.22.42.45;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@exec form of script
+@
+text
+@#!/usr/bin/env bash
 
 thefile=$0
 its_dir=`dirname $thefile`
@@ -10,7 +39,7 @@ it should be $0.
 
   The build directory for 'whereis' contains the script(s) and parm
 file(s) to run the system.  Currently it is thought to be
-$HOME$/$build_dir.
+$HOME$/build_dir.
 
 -------------------------
 EOF-info
@@ -38,3 +67,27 @@ date >> $its_dir/execdir
 
 export rchjlp=$rchjlp
 echo "and now rchjlp is $rchjlp"
+@
+
+
+1.1
+log
+@orig pre-rchjlp ver.
+@
+text
+@d3 38
+a40 13
+echo
+echo "Please be sure you invoked this as  'source setvar' or '. setvar"
+echo "If you did not, variable  rchjlp will not remain set."
+echo
+echo -n "You will use $HOME/\$rchjlp files, Enter your variable: "
+read myvar_to_use
+
+export rchjlp=$myvar_to_use
+
+echo "rchjlp var is : $rchjlp"
+echo
+echo "As a savety enter   echo \$rchjlp   or  chkvar (after environme is
+ready."
+@
