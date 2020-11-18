@@ -24,11 +24,7 @@ function mem_check () {
       fi
 
       if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
-        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
-          echo $j  $1  is in ${p_file[$j]} 
-        else
-          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
-        fi
+        echo $j  $1  is in ${p_file[$j]} 
       fi
       let j=$j+1
     done
