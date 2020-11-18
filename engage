@@ -1,7 +1,22 @@
 #!/usr/bin/env bash
 
-thefile=$0
-the_dir=`dirname $thefile`
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: engage
+
+You must supply the execution lib dir name.  Please re-issue the
+cmd with this value.   i. e. '. ~lib-name/engage  lib-name '
+
+EOF_usage
+
+
+else
+
+rchjlp=$1
+export rchjlp=$rchjlp
+
+the_dir=$HOME/$rchjlp     
 read -r exec_base rest < $the_dir/execdir
 read -r build_base rest < $the_dir/builddir
 
@@ -9,11 +24,11 @@ ech0 exec_base $exec_base
 ech0 build_base $build_base
 
 if [ -d $HOME/$rchjlp ]; then
-  cd $HOME/rchtest
-  . addpath0 $HOME/$rchjlp xomsg
+  cd $HOME/$rchjlp
+  . addpath0 $HOME/$rchjlp nomsg
 else
   cd $HOME/$build_base
-  . addpath0 $HOME/$build_base xomsg
+  . addpath0 $HOME/$build_base nomsg
 fi
 
 echo 
@@ -23,3 +38,7 @@ echo
 echo
 echo Your path is now:
 echo $PATH
+echo
+echo "Special variable \$rchjlp="$rchjlp
+
+fi

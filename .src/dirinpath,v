@@ -1,9 +1,33 @@
-#!/usr/bin/env bash
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.11.18.17.14.12;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@first ver no hilite special libs
+@
+text
+@#!/usr/bin/env bash
 
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
-    echo $@
+    echo $@@
   fi  
 }
 
@@ -13,7 +37,7 @@ function mem_check () {
 
     read -r -a p_file <<< "$PATH"   # parse into p_file array  sep is colon
 #   ech0 ${#p_file[*]}           # num of elt in array   
-    let ub=${#p_file[@]}         # another num of elt in array 
+    let ub=${#p_file[@@]}         # another num of elt in array 
 #   ech0 $ub
 
     let j=0
@@ -24,11 +48,7 @@ function mem_check () {
       fi
 
       if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
-        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
-          echo $j  $1  is in ${p_file[$j]} 
-        else
-          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
-        fi
+        echo $j  $1  is in ${p_file[$j]} 
       fi
       let j=$j+1
     done
@@ -136,4 +156,4 @@ emptyfile /tmp/myfile
 
 ls -alh /tmp/myfile
 
-
+@

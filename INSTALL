@@ -49,7 +49,9 @@ echo $PATH
 
 cpit 11asummary            # file of one line summaries
 cpit addpath               # put file a end of PATH
+cpit al                    # some semi-useful aliases
 cpit addpath0              # put file at start of PATH
+cpit builddir              # hold build director basename
 cpit c                     # director quick change by acronym
 cpit chkvar                # check the rchjlp variable        
 cpit COPYING               # MIT license
@@ -57,6 +59,7 @@ cpit delpath               # remove file from PATH
 cpit dirinpath             # chk all dir file where in path
 cpit ech0                  # debugging echo function
 cpit ech1                  # debugging echo inline
+cpit execdir               # hold execution dir basename
 cpit engage                # hook in code to activate environment
 cpit f                     # go to file by acronym
 cpit f_acrolist            # start list of acronyms

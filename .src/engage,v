@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.2
+date	2020.11.18.06.56.14;	author rchansen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2020.11.18.06.55.04;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@old rchtest version
+@
+text
+@#!/usr/bin/env bash
+
+if [ -d $HOME/rchtest ]; then
+  cd $HOME/rchtest
+  . addpath0 $HOME/rchtest nomsg
+else
+  cd $HOME/rchbuild
+  . addpath0 $HOME/rchbuild nomsg
+fi
+
+echo 
+echo 
+echo "'Make it so!' - Jean-Luc Picard"
+echo
+echo
+echo Your path is now:
+echo $PATH
+@
+
+
+1.1
+log
+@good rchjlp version
+@
+text
+@d3 1
+a3 9
+thefile=$0
+the_dir=`dirname $thefile`
+read -r exec_base rest < $the_dir/execdir
+read -r build_base rest < $the_dir/builddir
+
+ech0 exec_base $exec_base
+ech0 build_base $build_base
+
+if [ -d $HOME/$rchjlp ]; then
+d5 1
+a5 1
+  . addpath0 $HOME/$rchjlp nomsg
+d7 2
+a8 2
+  cd $HOME/$build_base
+  . addpath0 $HOME/$build_base nomsg
+@
