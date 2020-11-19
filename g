@@ -5,7 +5,9 @@ action=$1                                 # default for case
 let count=$#
 
 NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
-NAMES_list=$HOME/rchtest/gnamelist  # non-root file with list of names
+
+read exec_dir rest < $HOME/$rchjlp/execdir
+NAMES_list=$HOME/$exec_dir/gnamelist
 
 if [ -f $NAMES_list ]; then
   nl=`wc $NAMES_list | awk '{print $1}'`  
@@ -94,7 +96,7 @@ case "$action" in
   echo "  list file is $NAMES_list                 "
   echo "                                           "
   echo "     parm1  parm2 (maybe more)             "
-  echo "  g  (none) or .  - show this help/syntax  $0 with $# parms"
+  echo "  g  (none) or .  - show this help/syntax  "
   echo "       rep  file  - overlay list with file "
   echo "       add  file  - concat file to list    "
   echo "       show       - enumerat entire list   "
@@ -157,5 +159,6 @@ fi
   ;;
 esac
 exit 0
+
 
 
