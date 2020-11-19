@@ -1,11 +1,16 @@
-head	1.1;
+head	1.2;
 access;
 symbols;
 locks
-	rchansen:1.1;
+	rchansen:1.2;
 comment	@# @;
 expand	@b@;
 
+
+1.2
+date	2020.11.19.18.20.43;	author rchansen;	state Exp;
+branches;
+next	1.1;
 
 1.1
 date	2020.11.18.17.14.12;	author rchansen;	state Exp;
@@ -17,9 +22,9 @@ desc
 @@
 
 
-1.1
+1.2
 log
-@first ver no hilite special libs
+@hilight msgs for not in selected path ' dirinpath
 @
 text
 @#!/usr/bin/env bash
@@ -48,7 +53,11 @@ function mem_check () {
       fi
 
       if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
-        echo $j  $1  is in ${p_file[$j]} 
+        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
+          echo $j  $1  is in ${p_file[$j]} 
+        else
+          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
+        fi
       fi
       let j=$j+1
     done
@@ -156,4 +165,18 @@ emptyfile /tmp/myfile
 
 ls -alh /tmp/myfile
 
+
+
+@
+
+
+1.1
+log
+@first ver no hilite special libs
+@
+text
+@d27 5
+a31 1
+        echo $j  $1  is in ${p_file[$j]} 
+d138 2
 @
