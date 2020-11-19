@@ -1,4 +1,28 @@
-#        Format of lines below
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.11.19.03.20.03;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@starter acronym list for f
+@
+text
+@#        Format of lines below
 #  0  acronym  filename	 action-to-take   if none/null = editor
 #  1. pound in col 1 is comment
 #  2. to insure edit  use   acro filename  sudo vim    
@@ -28,3 +52,4 @@ os+n    /etc/os-release sudo nano
 thinkpy /home/rchansen/Documents/Manuals/thinkpython.pdf atril
 vb /usr/share/doc/virtualbox-6.1/UserManual.pdf atril
 vimrc ~/.vim/vimrc
+@
