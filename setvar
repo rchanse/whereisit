@@ -1,16 +1,32 @@
 #!/usr/bin/env bash
 
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
 thefile=$0
 its_dir=`dirname $thefile`
+suffix=`basename $PWD`
 read -r build_dir rest < $its_dir/builddir
+
+if [ ".$suffix" != ".$build_dir" ]; then
+  echo "Mismatch found. '$suffix' not '$build_dir'"
+  echo "Please change the first word on the first line of "
+  echo "$PWD/builddir to be $suffix."
+  #exit 8
+  return
+fi
 
 cat << EOF-info
   This is the initial script to setup the 'whereis' project.
 it should be $0.
 
   The build directory for 'whereis' contains the script(s) and parm
-file(s) to run the system.  Currently it is thought to be
-$HOME$/$build_dir.
+file(s) to create a running system.  Currently it is thought to be
+$HOME/$build_dir.
 
 -------------------------
 EOF-info
@@ -20,21 +36,42 @@ read answer rest
 
 if [ ".$answer" == ".y" ]; then
   echo "On we go."
-else 
-  echo "answer was other than 'y' "$answer
-  echo "I now quit for you to figure out why. "
-  exit 4
-fi
 
 cat << EOF-execset
-  
-  You will now set the
+    
+    You will now set the single global variable used by this
+ 'whereis' system ( \$rchjlp ).  It will ALSO be the directory
+ for the execution library.
+
 EOF-execset
 
-echo -n "Enter the value for \$rchjlp variable: "
-read rchjlp rest
-echo $rchjlp > $its_dir/execdir
-date >> $its_dir/execdir
+    read -r default rest < $its_dir/execdir
+    echo "The current default is "$default
+    echo -n "Enter the value for \$rchjlp variable(CR for default): "
+    read mychoice rest
 
-export rchjlp=$rchjlp
-echo "and now rchjlp is $rchjlp"
+    if [ ".$mychoice" == "." ]; then        # take the default
+    echo "You have chosen to take the default : "$default
+    echo "FYI - this is word 1 in line 1 of "$its_dir/execdir
+    mychoice=$default
+    fi
+
+    # (re)set the execute dir base
+    echo $mychoice > $its_dir/execdir
+    date >> $its_dir/execdir      # include timestamp in exedir
+
+    export rchjlp=$mychoice
+    echo
+    echo "and now \$rchjlp is : $rchjlp"
+    echo
+    echo "You may run this script multiple times."
+    echo "The value for \$rchjlp will be set by the last run."
+    echo "By the way, 'rchjlp' is derive as the initial of me -"
+    echo "Robert C. Hansen  and Jean-Luc Picard."
+else 
+  echo "answer ($answer) was other than 'y' "
+  echo "I now quit for you to figure out why. "
+  #exit 4
+  return
+fi
+echo "That's all, folks."

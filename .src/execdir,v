@@ -1,11 +1,16 @@
-head	1.1;
+head	1.2;
 access;
 symbols;
 locks
-	rchansen:1.1;
+	rchansen:1.2;
 comment	@# @;
 expand	@b@;
 
+
+1.2
+date	2020.11.19.17.10.04;	author rchansen;	state Exp;
+branches;
+next	1.1;
 
 1.1
 date	2020.11.18.06.52.42;	author rchansen;	state Exp;
@@ -17,10 +22,21 @@ desc
 @@
 
 
+1.2
+log
+@set as fubar
+@
+text
+@fubar
+@
+
+
 1.1
 log
 @original exec bssename
 @
 text
-@rchjlp
+@d1 1
+a1 1
+rchjlp
 @

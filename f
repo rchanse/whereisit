@@ -8,12 +8,9 @@
 
 editor="vim"                # set the default editor
 
-#  if [ ".$fdebug" == ".ON" ]; then
-  # whaterever echo stmt you wish
-#  fi
-
-function ech0 () {               # set  debug=ON  export debug
-  if [ ".$debug" == ".ON" ]; then
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
     echo $@
   fi  
 }
@@ -30,12 +27,12 @@ function nop() {    # a NO-OP to make code more readable later
 }
 
 #  Below is the acro file (name of acro filename action    file )
-acro_file=$HOME"/bin/ff_acrolist"
-acro_file=$HOME"/oin/f_acrolist"
-if [ -f $HOME/rchtest/f_acrolist ]; then
-  acro_file=$HOME/rchtest/f_acrolist
+acro_file=$HOME"/bin/f_acrolist"
+if [ -f $HOME/$rchjlp/f_acrolist ]; then
+  acro_file=$HOME/$rchjlp/f_acrolist
 else
-  acro_file=$HOME/rchbuild/f_acrolist
+  read bld_dir rest < $HOME/$rchjlp/builddir
+  acro_file=$HOME/$bld_dir/f_acrolist
 fi
 
 # save cmdline parms for later
@@ -179,3 +176,4 @@ fi
 ech0 3 $cmd_action
 echo $cmd_action $filename
 $cmd_action $filename
+
