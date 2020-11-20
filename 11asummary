@@ -1,28 +1,23 @@
-# member description add as ' - comments '
-#seperation between member and comment mean $rchjlp is used in the mem.
+#member description add as ' - comments '
 11asummary - me, myself and I  the one line summary stmts. 
 COPYING - MIT license 
-INSTALL + allocate $HOME/exec-lib and populat from build-lib
 addpath - script to add a file to end of path  ( invoke by . or souce) 
 addpath0 - script to add a file at start of path (invoke by .) 
-al + some 'useful aliases for 'whereis' project
 builddir - member contain basename of the build directory 
 c - directory quick change by acronym (invoke by .) 
-chkvar + script to check the rchjlp variable 
+checksys - aid to show $rchjlp build-lib exec-lib
+checkvar - stand alone exec to check/and show $rchjlp 
+chkvar - function to be put in other scrips to verify $rchjlp non-null 
 delpath - script to remove files from PATH  (invoke by .) 
 dirinpath - for given directory show which path file contain each mem 
 ech0 - a debugging echo function to copy into scripts 
 ech1 - some inline echo debugging code to invoke from other scripts 
-engage + the environment setting script 
 execdir - file which contains the basename of the execution directory 
-f + script to invoke or edit files from an acronym 
 f_acrolist - starter acronym list to work with f 
 g - invoke action on files by number, see 'g 0'  default editor-vim 
 ged - like g but with  editor=nano 
 lbang - for the lazy #!/usr/bin/env bash 
 meminpath - script to see which PATHfile contain a named member 
-refresh + script to copy new version file from rchbuild to $rchjlp 
-setvar + script to set the rchjlp variable 
 showpath - show the files in your PATH 
 src - Eric Raymond's Simple Revision Control 
 srcdoc - starting point for src 
