@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+cat << EOF_usage
+usage: chksys
+
+This script shows the value of \$rchjlp, build-lib and exec-lib
+
+EOF_usage
+
+
+echo "Needed global variable \$rchjlp : $rchjlp"
+
+if [ ".$rchjlp" == "." ]; then
+  echo "\$rchjlp is NULL, so build-lib and exec-lib cannot be determined."
+  echo "Set \$rchjlp by  'export rchjlp=xxx  where xxx is exec-lib basedir."
+  exit 4
+fi
+
+if [ ! -d $HOME/$rchjlp ]; then
+  echo "The directory $HOME/$rchjlp  DOES NOT EXIST!!"
+  echo "Check \$rchjlp ( $rchjlp ) and reset as needed."
+  echo "Use cmd 'export rchjlp=xxx  where xxx is correct value."
+  exit 4
+fi
+
+if [ -f $HOME/$rchjlp/builddir ]; then
+  read bld_dir rest < $HOME/$rchjlp/builddir
+  echo "build-lib is $HOME/$bld_dir "
+else
+  echo "$HOME/$rchjlp/builddir DOES NOT EXIST."
+  echo "Good Luck"
+fi
+
+if [ -f $HOME/$rchjlp/execdir ]; then
+  read exec_dir rest < $HOME/$rchjlp/execdir
+  echo "exec-lib is $HOME/$exec_dir "
+else
+  echo "$HOME/$rchjlp/execdir DOES NOT EXIST."
+  echo "Good Luck"
+fi
+
