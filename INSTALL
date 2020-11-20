@@ -53,6 +53,8 @@ cpit al                    # some semi-useful aliases
 cpit addpath0              # put file at start of PATH
 cpit builddir              # hold build director basename
 cpit c                     # director quick change by acronym
+cpit checksys              # aid to show rchjlp, bld-lib exec-lib
+cpit checkvar              # aid to show rchjlp
 cpit chkvar                # check the rchjlp variable        
 cpit COPYING               # MIT license
 cpit delpath               # remove file from PATH 
