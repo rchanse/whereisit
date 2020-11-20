@@ -1,5 +1,24 @@
 #!/bin/bash
 
+function chkvar () {
+
+echo "The rchjlp variable is: $rchjlp"
+
+if [ ".$rchjlp" == "." ] ; then
+
+cat << EOF-var
+  The value for \$rchjlp seems to be lost.  The script will be
+terminated.  Reset \$rchjlp from your console - 'export rchjlp=xxx'
+where xxx is the base name of your exection lib.  Try again, good luck.
+
+EOF-var
+
+exit 8      # now scram
+fi
+
+}
+
+
 #Set default values
 action=$1                                 # default for case
 let count=$#
@@ -7,7 +26,12 @@ let count=$#
 editor='nano'
 
 NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
-NAMES_list=$HOME/rchtest/gnamelist  # non-root file with list of names
+
+# start of 'whereis' addition
+chkvar
+read exec_dir rest < $HOME/$rchjlp/execdir
+NAMES_list=$HOME/$exec_dir/gnamelist
+# end of 'whereis' addition
 
 if [ -f $NAMES_list ]; then
   nl=`wc $NAMES_list | awk '{print $1}'`  
