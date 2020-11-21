@@ -1,0 +1,28 @@
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.11.21.06.04.12;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@original ver
+@
+text
+@#!/usr/bin/env bash
+
+echo "this script has been replaced by re_exec and re_build."
+@

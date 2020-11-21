@@ -1,0 +1,85 @@
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.11.21.16.47.54;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@ver without "Not in your path"
+@
+text
+@#!/usr/bin/env bash
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@@
+  fi  
+}
+
+    ech0 $PATH
+
+    IFS=":"            # set Interal Field Seperator for PATH var
+    ech0 $PATH
+
+    read -r -a who <<< "$PATH"   # parse into who array  sep is colon
+#   ech0 ${#who[*]}           # num of elt in array   
+    let ub=${#who[@@]}         # another num of elt in array 
+#   ech0 $ub
+
+    let j=0
+    while [ $j -lt $ub ]; do    # loop to show variable
+      
+      if [ ".${who[$j]}" == ".." ]; then   # replace . by pwd 
+        who[$j]=$PWD
+      fi
+
+      if [ -f ${who[$j]}/$1 ]; then     # show if found in dir.
+        echo $j  $1  is in ${who[$j]} 
+      fi
+      let j=$j+1
+    done
+    
+  IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
+
+  quit="no" 
+  echo -n "Compare two (enter 2 numbers CR to quit): "
+  read a b tail      
+  if [ ".$a" == "." ]; then
+    quit="yes"
+  fi
+  
+  while [ ".$quit" != ".yes" ]; do  
+    let i=$a
+    let j=$b
+    echo diff ${who[$i]}/$1  ${who[$j]}/$1
+    diff ${who[$i]}/$1  ${who[$j]}/$1
+    diffrc=$?
+    if [ $diffrc -eq 0 ]; then
+      echo ${who[$i]}/$1  ${who[$j]}/$1   EQUAL
+    else
+      echo ${who[$i]}/$1  ${who[$j]}/$1   DIFFERENT
+    fi
+    
+    echo -n "Compare two (enter 2 numbers CR to quit): "
+    read a b tail
+    if [ ".$a" == "." ]; then
+      quit="yes"
+    fi
+  done
+
+@
