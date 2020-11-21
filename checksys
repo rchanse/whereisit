@@ -9,6 +9,7 @@ EOF_usage
 
 
 echo "Needed global variable \$rchjlp : $rchjlp"
+echo
 
 if [ ".$rchjlp" == "." ]; then
   echo "\$rchjlp is NULL, so build-lib and exec-lib cannot be determined."
@@ -17,7 +18,8 @@ if [ ".$rchjlp" == "." ]; then
 fi
 
 if [ ! -d $HOME/$rchjlp ]; then
-  echo "The directory $HOME/$rchjlp  DOES NOT EXIST!!"
+  echo "The exec-lib directory $HOME/$rchjlp  DOES NOT EXIST!!"
+  echo "Have you run the 'INSTALL' script ??"
   echo "Check \$rchjlp ( $rchjlp ) and reset as needed."
   echo "Use cmd 'export rchjlp=xxx  where xxx is correct value."
   exit 4

@@ -1,18 +1,3 @@
 #!/usr/bin/env bash
 
-# better version coming
-
-read -r bld_dir rest < $HOME/$rchjlp/builddir
-read -r exec_dir rest < $HOME/$rchjlp/execdir
-
-echo cp -v $HOME/$bld_dir/$1 $HOME/$exec_dir/$1
-
-echo
-echo -n "Is this OK? y/Y to approve: "
-read answer rest
-
-if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
-  cp -v $HOME/$bld_dir/$1 $HOME/$exec_dir/$1
-else
-  echo "Answer ($answer) NOT 'y' or 'Y', Nothing done, I quit."
-fi
+echo "this script has been replaced by re_exec and re_build."
