@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: diffme parm1
+function: to compare  $PWD/parm2 with parm1/parm2
+
+No checking for parms or existence of files
+EOF_usage
+
+exit 0          # if needed
+
+fi
+
+echo diff $PWD/$2 $1/$2
+
+diff $PWD/$2 $1/$2
+drc=$?
+echo "======================="
+echo "comparison RC is $drc"
