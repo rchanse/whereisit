@@ -57,8 +57,8 @@ EOF-execset
     fi
 
     # (re)set the execute dir base
-    echo $mychoice > $its_dir/execdir
-    date >> $its_dir/execdir      # include timestamp in exedir
+    echo "$mychoice" > $its_dir/execdir
+#   date >> $its_dir/execdir      # include timestamp in exedir
 
     export rchjlp=$mychoice
     echo
