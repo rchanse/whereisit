@@ -8,6 +8,8 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 }
 
 function mem_check () {
+    chk_mem=$1
+    found="no"
     IFS=":"            # set Interal Field Seperator for PATH var
     ech0 $PATH
 
@@ -23,15 +25,20 @@ function mem_check () {
         p_file[$j]=$PWD
       fi
 
-      if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
+      if [ -f ${p_file[$j]}/$chk_mem ]; then  # show if found in dir.
         if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
-          echo $j  $1  is in ${p_file[$j]} 
+          echo $j  $chk_mem  is in ${p_file[$j]} 
         else
-          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
+          echo $j  $chk_mem  is in ${p_file[$j]}" <<==path-NOT-seach" 
         fi
+        found="yes"
       fi
       let j=$j+1
     done
+
+    if [ ".$found" == ".no" ]; then
+      echo "$chk_mem is NOT in your PATH"
+    fi
     
   IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
 } 
@@ -127,14 +134,3 @@ while  read filename rest ; do
   
 done < /tmp/lslist
 exit 0
-ls -alh /tmp/myfile*
-
-echo "Here's /tmp/myfile."
-cat /tmp/myfile
-
-emptyfile /tmp/myfile
-
-ls -alh /tmp/myfile
-
-
-

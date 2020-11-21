@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+this_mem=$1
+
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
@@ -7,11 +9,15 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
-    ech0 $PATH
+    echo
+    echo "Your PATH ( \$PATH ) is "
+    echo $PATH
+    echo
 
     IFS=":"            # set Interal Field Seperator for PATH var
-    ech0 $PATH
+    #ech0 $PATH
 
+    found="no"
     read -r -a who <<< "$PATH"   # parse into who array  sep is colon
 #   ech0 ${#who[*]}           # num of elt in array   
     let ub=${#who[@]}         # another num of elt in array 
@@ -24,12 +30,17 @@ function ech0 () {     # turn on debugging with  export ech0=ON
         who[$j]=$PWD
       fi
 
-      if [ -f ${who[$j]}/$1 ]; then     # show if found in dir.
-        echo $j  $1  is in ${who[$j]} 
+      if [ -f ${who[$j]}/$this_mem ]; then     # show if found in dir.
+        echo $j  $this_mem  is in ${who[$j]} 
+        found="yes"
       fi
       let j=$j+1
     done
     
+    if [ ".$found" == ".no" ]; then
+      echo "$this_mem is NOT found in your PATH."
+    fi
+
   IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
 
   quit="no" 
@@ -42,13 +53,13 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   while [ ".$quit" != ".yes" ]; do  
     let i=$a
     let j=$b
-    echo diff ${who[$i]}/$1  ${who[$j]}/$1
-    diff ${who[$i]}/$1  ${who[$j]}/$1
+    echo diff ${who[$i]}/$this_mem  ${who[$j]}/$this_mem
+    diff ${who[$i]}/$this_mem  ${who[$j]}/$this_mem
     diffrc=$?
     if [ $diffrc -eq 0 ]; then
-      echo ${who[$i]}/$1  ${who[$j]}/$1   EQUAL
+      echo ${who[$i]}/$this_mem  ${who[$j]}/$this_mem   EQUAL
     else
-      echo ${who[$i]}/$1  ${who[$j]}/$1   DIFFERENT
+      echo ${who[$i]}/$this_mem  ${who[$j]}/$this_mem   DIFFERENT
     fi
     
     echo -n "Compare two (enter 2 numbers CR to quit): "
@@ -57,4 +68,5 @@ function ech0 () {     # turn on debugging with  export ech0=ON
       quit="yes"
     fi
   done
+
 
