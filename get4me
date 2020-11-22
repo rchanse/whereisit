@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: get4me pull a member into the current directory with same name
+syntax get4me parm1
+
+parm1: some file which exists from another directory
+
+EOF_usage
+
+exit 0          # if needed
+
+fi
+
+file_I_want=$1
+file_dir=`dirname $file_I_want`
+mem_I_want=`basename $file_I_want`
+
+ech0 "file_I_want : "$file_I_want
+ech0 "file_dir    : "$file_dir
+ech0 "mem_I_want  : "$mem_I_want
+
+if [ -d $file_dir ]; then
+  true
+else
+  echo "$file_dir directory DOES NOT exist."
+  echo "Quiting, nothing done."
+  exit 4
+fi
+
+if [ -e $file_I_want ]; then
+  echo "Command to be issued is : cp -vp $file_I_want  $PWD/$mem_I_want"
+else
+  echo "$file_I_want does NOT Exist."
+  echo "Quiting, nothing done."
+  exit 4
+fi
+
+echo
+echo -n "Should I do it? (y/Y to do, else not do.): "
+
+read answer rest
+
+if [ ".$answer" = ".y" ] || [ ".$answer" == ".Y" ]; then
+  cp -vp $file_I_want  $PWD/$mem_I_want
+  copyrc=$?
+  echo "Copy return code : "$copyrc
+else
+  echo "Answer ($answer) not  y/Y, quiting, nothing done"
+fi

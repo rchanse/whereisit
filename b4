@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+echo "BEFORE BeFore Before before"                # <<== before 
+
+echo -n "enter var (anything but 'a'): "
+read a rest
+
+if [ ".$a" == ".a" ]; then
+  echo "\$a is "$a"   early out code"
+  return 2020                          # <<-- use for sourced fils
+  #exit 2020                        # <<-- for executed scripts
+else
+  echo "\$a is "$a"    fallthrough code"
+fi
+
+echo "AFTER -- after"

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+ech0 "Did you issue 'export ech0=ON' before entry"
+ech0 "If you see this msg you did. "
+
+export ech0=ON
+
+ech0 "ech0 was dynamically provided."
+
+export ech0=anythingbut_ON
+
+ech0 "Never see this."
+
+echo "A real echo here"
+echo "Before invoking  echotest1  "
+echo " arm ech0 with 'export ech0=ON' "
+echo " disarm ech0 with 'export ech0=anythingbut_ON' "
+echo 
+echo "At the start of a terminal session \$echo is likely NULL."

@@ -69,9 +69,11 @@ cpit f                     # go to file by acronym
 cpit f_acrolist            # start list of acronyms
 cpit g                     # go to file by number
 cpit ged                   # like g but with nano rather than vim
+cpit get4me                # grab a copy
 # not this one -- cpit INSTALL               # this script
 cpit lbang                 # for the lazy -  #!/usr/bin/env bash
 cpit meminpath             # show which path files have mem (compare
+cpit rchjlp                # tool to set $rchjlp
 cpit README.md             # notes like a 'typical' README
 cpit re_build              # copy from pwd/exec-lib to build-lib    
 cpit re_exec               # copy from pwd/build-lib to exec-lib    

@@ -42,27 +42,31 @@ That's it.
 
 So -- What next??
 
+---------- R E M O V E  the environment (stopping)
+. delpath ~/fubar
+
 --------- C H E C K I N G the environment
 checksys
 
----------- really screwing up the environmen ------
-goof up  $rchjlp        export rchjlp=anything_but_exec-lib basenam
+---------- setting $rchjlp ----(3 choices)
+a. from the console    'export rchjlp=fubar'
+b. before INSTALL     '. ~/whereis/rchjlp fubar'           or
+                      '. ~/whereis/rchjlp'    respond 'fubar' to prompt
+c. after INSTALL      '. ~/fubar/rchjlp fubar'             or
+                      '. ~/fubar/rchjlp'      respond 'fubar' to prompt
 
----------- fixing $rchjlp -----
-from the console     export rchjlp=fubar
-
-
----------- R E M O V E  the environment
-. delpath ~/fubar
-
----------- R E S T O R E the setup environment
+---------- (Re)Starting the environment
+( $rchjlp needs to be set.)
 . ~/fubar/engage
 or
 . ~/fubar/addpath0 ~/fubar
 
+---------- really screwing up the environmen ------
+goof up  $rchjlp        export rchjlp=anything_but_exec-lib basenam
 
 
-Here are some commands you can try
+
+Here are some commands you can try (with environment in place
 
 dirinpath ~/fubar                 (will show if fubar members will
                                    conflict with your PATH
@@ -135,8 +139,6 @@ build-lib: whereis  and  exec-lib: fubar
 
 3. now  cd ~/mybuild and install as above replacing fubar with myexec
 
-3a. $rchjlp plays the same role.
-3a. $rchjlp plays the same role.
 3a. $rchjlp plays the same role.
 --------------------------------------
 
