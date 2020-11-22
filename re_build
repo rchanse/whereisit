@@ -6,7 +6,7 @@ cat << EOF-usage
 usage: re_build parm1 parm2
 function: copy a member to build-lib (name will remain the same).
   parm1 - name of member to copy
-  parm2 - .     - the sending lib will be from pwd ( $PWD )
+  parm2 - .     - the sending lib will be from pwd ( \$PWD/\$parm1 )
           other - the sending lib will be the exec-lib.
 
   the cp command will be shown and confirmation is 'y' or 'Y'.
