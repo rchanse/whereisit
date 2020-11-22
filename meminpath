@@ -9,6 +9,20 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
+if [ ".$1" == "." ]; then
+
+cat << "EOF"
+usage: for a given member determine which PATH file(s) have it.  
+syntax: meminpath parm1
+
+parm1: NULL - shows this help
+       other - uses other to be the specified member
+
+EOF
+
+exit 0
+fi
+
     echo
     echo "Your PATH ( \$PATH ) is "
     echo $PATH

@@ -26,7 +26,7 @@ function mem_check () {
       fi
 
       if [ -f ${p_file[$j]}/$chk_mem ]; then  # show if found in dir.
-        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
+        if [ ".${p_file[$j]}" == ".$dir_to_check" ]; then
           echo $j  $chk_mem  is in ${p_file[$j]} 
         else
           echo $j  $chk_mem  is in ${p_file[$j]}" <<==path-NOT-seach" 
@@ -46,21 +46,26 @@ function mem_check () {
 if [ ".$1" == "." ]; then
 
 cat << "EOF"
-Here is the help/usage doc
+usage: determine which files in a directory are also in PATH file.
+syntax: dirinpath parm1
+
+parm1: NULL - shows this help
+       othe - uses other to be the specified path
+
 EOF
 
 exit 0
 fi
 
-file_to_check=$1      # <<========= file to process
+dir_to_check=$1      # <<========= file to process
 
-if [ -d $file_to_check ]; then
+if [ -d $dir_to_check ]; then
   echo
-  echo "List of files in $file_to_check "
-  ls -A $file_to_check                      # show it
-  ls -A $file_to_check > /tmp/lslist        # save it
+  echo "List of files in $dir_to_check "
+  ls -A $dir_to_check                      # show it
+  ls -A $dir_to_check > /tmp/lslist        # save it
 else
-  echo "$file_to_check  NOT found. "
+  echo "$dir_to_check  NOT found. "
   echo "I quit. "
   exit 4
 fi
@@ -109,7 +114,7 @@ echo "PATH by number"
 showpath
 
 echo
-echo "Process list for $file_to_check"
+echo "Process list for $dir_to_check"
 echo "============================================="
 while  read filename rest ; do
   ech0 $filename
