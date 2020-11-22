@@ -1,27 +1,100 @@
 #!/usr/bin/env bash
 
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+function cpit () {
+  echo "cp -p $1 $exec_lib/$1" >> $exec_lib/BooHoo
+  cp -p $1 $exec_lib/$1
+  copyrc=$?
+  if [ $copyrc -eq 0 ]; then
+    echo "$1 copied (OK) to "$exec_lib >>$exec_lib/BooHoo
+  else
+    echo "BooHoo -- cp ret code ($copyrc) check $1" >> $exec_lib/BooHoo
+    BooHoo="yes"
+  fi
+}
 echo "Checking ..."
-echo "\$rchjlp is $rchjlp"
+ech0 "\$rchjlp is $rchjlp"
+
+if [ ".$rchjlp" == "." ]; then
+  echo "\$rchjlp is NOT set, please fix. "
+  echo "Use 'export rchjlp=xxx' where xxx is desired exec-lib dir."
+  echo "Leaving -- no work done."
+  return
+fi
+
+if [ ! -e $PWD/builddir ]; then       # weak test to see if right dir.
+  echo "It appears you may not have  cd-ed to build-lib "
+  echo "Please fix. "
+  echo "Leaving -- no work done."
+  return
+fi
+
+current_dir_base=`basename $PWD`
+ech0 "current_dir_base = $current_dir_base"
 read build_dir rest < $PWD/builddir
+ech0 "build_dir = $build_dir"
 read exec_dir rest < $PWD/execdir
+
+if [ ".$build_dir" != ".$current_dir_base" ]; then
+  echo
+  echo "build-lib indicator ($build_dir) is NOT this dir. ($PWD)"
+  echo "Correct this in  $PWD/builddir. "
+  echo "Leaving -- no work done."
+  return
+fi
 
 #echo "Execution lib dir is : "$HOME/$exec_dir
 build_lib=$HOME/$build_dir
 exec_lib=$HOME/$exec_dir 
+echo "\$rchjlp is $rchjlp"
 echo "Build     lib dir is : "$HOME/$build_dir
-echo "Execution lib dir is : "$exec_lib
 
+# now check to insure exec-lib will be correct.
+if [ ".$exec_dir" == ".$rchjlp" ]; then
+  # $rchjlp matchs first word of first line of build-lib/execdir
+  ech0 " parm var ($exec_dir) EQUALs  global var \$rchjlp ($rchjlp)"
+  echo "Execution lib dir is : "$exec_lib"  (Yet to be built.)"
+else
+cat << EOF-exec-lib
+      
+Execution lib dir is : "$exec_lib"  (Yet to be built.)
 
-function cpit () {
-  echo "cp $1 $exec_lib/$1"
-  cp $1 $exec_lib/$1
-  copyrc=$?
-  if [ $copyrc -eq 0 ]; then
-    echo "$1 copied to "$exec_lib
-  else
-    echo "Boo Boo -- check $1"
-  fi
-}
+  MIS-MATCH   MIS-MATCH      global var and parm value
+
+  Correct by setting \$rchjlp (now $rchjlp) to be the same 
+as the first word on the first line of $build_lib/execdir
+which is now ($exec_dir).
+
+Use 'export rchjlp=(appropriate)     and/or"
+edit $build_lib/execdir.
+
+Leaving - no work done.
+
+EOF-exec-lib
+  return
+fi
+
+echo
+echo -n "Is that correct?  y/Y to continue :"
+read answer rest
+
+if [ ".$answer" = ".y" ] || [ ".Sanswer" == ".Y" ]; then
+  echo "answer ($answer), On we go!"
+else
+  echo "answer ($answer) NOT 'y' or 'Y', Leaving -- nothing done."
+  return
+fi
+
+# 2 debuggin shorr-out
+#echo "EARLY OUT"
+#return
+
 
 if [ -d $exec_lib ]; then
   echo "$exec_lib exists. Please renameit."
@@ -40,12 +113,24 @@ else
   echo "On we go, allocate, populate and rePATH  $exec_lib."
 fi 
 
+#echo "another early out"
+#return
+ls -alh $exec_lib    
+echo "cmd mkdir $exec_lib"
 mkdir $exec_lib
 ls -alh $exec_lib    
 cd $build_lib                  # get to right dir to do work
 
 echo "Your original PATH"
 echo $PATH
+echo
+echo "Start the copy/gen of $exec_lib"
+
+BooHoo="no"
+echo "# Message of possible INSTALL copy errors." > $exec_lib/BooHoo
+echo "  Search for 'BooHoo' to find concerns." >> $exec_lib/BooHoo
+date >> $exec_lib/BooHoo
+
 
 cpit 11asummary            # file of one line summaries
 cpit addpath               # put file a end of PATH
@@ -83,11 +168,25 @@ cpit src                   # Eric Raymond  Simple Revision Control
 cpit srcdoc                # starter notes on src                  
 cpit showpath              # show the path files
 cpit wrsum                 # document aid tool  
+cpit xyx
+echo
+echo "done with the copy/gen of $exec_lib"
 
-ls -alh $exec_lib
+if [ ".$BooHoo" == ".no" ]; then
+  echo
+  echo "exec-lib ($exec_lib) is built with NO copy errors."
+  echo "Messages are in $exec_lib/BooHoo."
+else
+  echo
+  echo "exec-lib ($exec_lib) generation HAD copy errors."
+  echo "Review messages in $exec_lib/BooHoo."
+fi
 
+echo
+ls -A $exec_lib
+echo
 echo "To activate enter  '. ~/$rchjlp/engage' "
-echo "You can back off with '. unpath $exec_lib' "
+echo "You can back off with '. delpath $exec_lib' "
 echo "Restart with existing rchtest file with  . ~/$rchjlp/engage"
 echo 
 echo "Good Luck"

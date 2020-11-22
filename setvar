@@ -31,6 +31,8 @@ it should be $0.
 file(s) to create a running system.  Currently it is thought to be
 $HOME/$build_dir.
 
+build-lib == $HOME/$build_dir
+
 -------------------------
 EOF-info
 

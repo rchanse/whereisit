@@ -29,10 +29,12 @@ pulled it down to another directory, please move it to  $HOME/whereis)
 
 cd ~/whereis            (get to the build-lib dir.
 
-. ~/setvar              (or  source ~/setvar
+. ./setvar              (or  source ./setvar
                         This will set global $rchjlp  <<====
+                        alt. cmd   '. $PWD/setvar'
+                        alt. cmd   '. ~/whereis/setvar'
 
-. ~/INSTALL            (or   source ~/INSTALL
+. ./INSTALL            (or   source ./INSTALL
                         create and populate exec-lib
                         remember the default will  $HOME/fubar dir.
 
