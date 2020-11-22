@@ -1,11 +1,16 @@
-head	1.2;
+head	1.3;
 access;
 symbols;
 locks
-	rchansen:1.2;
+	rchansen:1.3;
 comment	@# @;
 expand	@b@;
 
+
+1.3
+date	2020.11.21.23.42.52;	author rchansen;	state Exp;
+branches;
+next	1.2;
 
 1.2
 date	2020.11.19.18.20.43;	author rchansen;	state Exp;
@@ -22,9 +27,9 @@ desc
 @@
 
 
-1.2
+1.3
 log
-@hilight msgs for not in selected path ' dirinpath
+@Revise help doc
 @
 text
 @#!/usr/bin/env bash
@@ -37,6 +42,8 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 }
 
 function mem_check () {
+    chk_mem=$1
+    found="no"
     IFS=":"            # set Interal Field Seperator for PATH var
     ech0 $PATH
 
@@ -52,15 +59,20 @@ function mem_check () {
         p_file[$j]=$PWD
       fi
 
-      if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
+      if [ -f ${p_file[$j]}/$chk_mem ]; then  # show if found in dir.
         if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
-          echo $j  $1  is in ${p_file[$j]} 
+          echo $j  $chk_mem  is in ${p_file[$j]} 
         else
-          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
+          echo $j  $chk_mem  is in ${p_file[$j]}" <<==path-NOT-seach" 
         fi
+        found="yes"
       fi
       let j=$j+1
     done
+
+    if [ ".$found" == ".no" ]; then
+      echo "$chk_mem is NOT in your PATH"
+    fi
     
   IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
 } 
@@ -68,7 +80,12 @@ function mem_check () {
 if [ ".$1" == "." ]; then
 
 cat << "EOF"
-Here is the help/usage doc
+usage: determine which files in a directory are also in PATH file.
+syntax: dirinpath parm1
+
+parm1: NULL - shows this help
+       othe - uses other to be the specified path
+
 EOF
 
 exit 0
@@ -156,6 +173,30 @@ while  read filename rest ; do
   
 done < /tmp/lslist
 exit 0
+@
+
+
+1.2
+log
+@hilight msgs for not in selected path ' dirinpath
+@
+text
+@d11 2
+d28 1
+a28 1
+      if [ -f ${p_file[$j]}/$1 ]; then     # show if found in dir.
+d30 1
+a30 1
+          echo $j  $1  is in ${p_file[$j]} 
+d32 1
+a32 1
+          echo $j  $1  is in ${p_file[$j]}" <<==path-NOT-seach" 
+d34 1
+d38 4
+d49 6
+a54 1
+Here is the help/usage doc
+a141 11
 ls -alh /tmp/myfile*
 
 echo "Here's /tmp/myfile."
