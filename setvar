@@ -13,9 +13,12 @@ suffix=`basename $PWD`
 read -r build_dir rest < $its_dir/builddir
 
 if [ ".$suffix" != ".$build_dir" ]; then
-  echo "Mismatch found. '$suffix' not '$build_dir'"
-  echo "Please change the first word on the first line of "
-  echo "$PWD/builddir to be $suffix."
+cat <<EOF-chkbld
+  A 'Mismatch has be found '$suffis' not '$build_dir'.
+If this looks hokey, let me ask.  Did you cd to your build-lib
+directory?  If not, do so and reissue '. ./setvar'
+
+EOF-chkbld
   #exit 8
   return
 fi
@@ -66,8 +69,9 @@ EOF-execset
     echo
     echo "You may run this script multiple times."
     echo "The value for \$rchjlp will be set by the last run."
-    echo "By the way, 'rchjlp' is derive as the initial of me -"
-    echo "Robert C. Hansen  and Jean-Luc Picard."
+    echo
+    echo "By the way, 'rchjlp' is derived as the initials of "
+    echo "me - Robert C. Hansen  and Jean-Luc Picard."
 else 
   echo "answer ($answer) was other than 'y' "
   echo "I now quit for you to figure out why. "
