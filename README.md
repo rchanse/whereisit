@@ -50,6 +50,18 @@ So -- What next??
 --------- C H E C K I N G the environment
 checksys
 
+--------------- looking for some explanation.
+look at member 11asummary - my one line summary
+
+---------------- build-lib and exec-lib differences
+diff ~/fubar ~/whereis
+
+----------------- whats the deal with $rchjlp
+it points to the exec-lib  $HOME/$rchjlp
+Once you are in $HOME/$rchjlp  (our case  $HOME/fubar)
+member execdir - points also to exec-lib
+member builddir - points to build-lib
+
 ---------- setting $rchjlp ----(3 choices)
 a. from the console    'export rchjlp=fubar'
 b. before INSTALL     '. ~/whereis/rchjlp fubar'           or
@@ -58,10 +70,12 @@ c. after INSTALL      '. ~/fubar/rchjlp fubar'             or
                       '. ~/fubar/rchjlp'      respond 'fubar' to prompt
 
 ---------- (Re)Starting the environment
-( $rchjlp needs to be set.)
-. ~/fubar/engage
+This is for when INSTALL is complete, e. g. new session, login, reset
+. ~/fubar/engageq fubar
 or
-. ~/fubar/addpath0 ~/fubar
+cd ~/fubar     ( or even cd ~/whereis
+. rchjlp                       (respond fubar when asked for $rchjlp
+. ~/fubar/engage               ( similar to the INSTALL process
 
 ---------- really screwing up the environmen ------
 goof up  $rchjlp        export rchjlp=anything_but_exec-lib basenam
@@ -85,15 +99,17 @@ g q README
 g 0
 now try to go edit with g ##    ## some number between 1 and number
 of line in gnamelist
---------------------
+
+-------------------- use of g and locate
 
 locate passwd > ~/tempname
 g rep ~/tempname
 g 0
 g  pick1
----------------------
+-------------------- nano
 
 f acro nano                        (just like f but with nano not vim
+g # nano
 
 Note: you may wish to edit create a nanorc to get a better looking nano
 
@@ -103,11 +119,15 @@ set linenumbers
 set autoindent
 set showcursor
 set constantshow
------------------------------
+
+------------------------ vim haters 
+go into the f script ( ~/fubar/f  and change the default editor 
+
+-------------------------- module management
 
 enter  re_exec  or re_build   and read their help doc
 
----------------------------------------
+---------------------------- override an existing program 
   fake out ls
 1. make newtest directory     ( from cd    mkdir newtest
 2. cd newtest
@@ -121,8 +141,9 @@ make it executable   chmod +x ls
 ls                           k
 . delpath ~/newtest
 ls                    back to normal
--------------------
 
+------------------ pwd
+if . is one of your path file it means pwd
 using your current pwd  (.   or you could state it explicitly
 . addpath0 .               (make first in PATH
 . addpath  .               (make last in PATHj
