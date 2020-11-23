@@ -11,3 +11,5 @@ FF_acrolist
 mine.vim
 rchtemp*
 11asummary.out
+builddir
+execdir

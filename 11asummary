@@ -18,17 +18,19 @@ diffme - script to diff a mem of pdw  with a specified file
 dirinpath - for given directory show which path file contain each mem 
 ech0 - a debugging echo function to copy into scripts 
 ech1 - some inline echo debugging code to invoke from other scripts 
-echotest1 - show how to use ech0 if function inline
-echotest2 - show how to use echo WITHOUT function inline
+echotest1 - show how to use ech0 if function inline 
+echotest2 - show how to use echo WITHOUT function inline 
+engage - script to activate the environment during INSTALLation
+engageq - script to activate the environment AFTER INSTALLation
 execdir - file which contains the basename of the execution directory 
 execdirdoc - notes on execdir 
 f_acrolist - starter acronym list to work with f 
 g - invoke action on files by number, see 'g 0'  default editor-vim 
 ged - like g but with  editor=nano 
-get4me - grab a file to my directory
+get4me - grab a file to my directory 
 lbang - for the lazy #!/usr/bin/env bash 
 meminpath - script to see which PATHfile contain a named member 
-rchjlp - tool to (re)set the $rchjlp global variable
+rchjlp - tool to (re)set the $rchjlp global variable 
 re_build - copy a mem from either pwd or exec-lib to build-lib 
 re_exec - copy a mem from either pwd or build-lib to exec-lib 
 refresh - depreciate script, replaced by re_exec and re_build 
