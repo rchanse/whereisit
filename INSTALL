@@ -152,6 +152,8 @@ cpit execdir               # hold execution dir basename
 cpit engage                # hook in code to activate environment
 cpit engageq               # hook in after INSTALL               
 cpit f                     # go to file by acronym
+cpit ff                    # f for project groups  
+cpit f1                    # ff subfunction        
 cpit f_acrolist            # start list of acronyms
 cpit g                     # go to file by number
 cpit ged                   # like g but with nano rather than vim
