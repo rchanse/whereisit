@@ -157,6 +157,7 @@ cpit f1                    # ff subfunction
 cpit f_acrolist            # start list of acronyms
 cpit g                     # go to file by number
 cpit ged                   # like g but with nano rather than vim
+cpit getsys2               # system checking tool
 cpit get4me                # grab a copy
 # not this one -- cpit INSTALL               # this script
 cpit lbang                 # for the lazy -  #!/usr/bin/env bash
