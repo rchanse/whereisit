@@ -26,6 +26,9 @@ I N S T A L L A T I O N:
 1. Obtain the code:   git clone https://github.com/rchanse/whereis.git
 ( I'll assume you did this from $HOME be if you were cautious and
 pulled it down to another directory, please move it to  $HOME/whereis)
+Otherwise it will go to $PWD/whereis.  (You can redirect git download
+'git clone https://github.com/rchanse/whereis.git elsewhere' and have
+your result be in $PWD/elsewhere.)
 
 cd ~/whereis            (get to the build-lib dir.
 
