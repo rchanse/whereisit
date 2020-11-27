@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: rchbls - this is an aid to set the \$rchbls variable
+syntal:  . rchbls parm1
+
+parm1: NULL will lead to a prompt for \$rchbls
+       other - \$1 will be used for \$rchbls  (help not shown)
+
+EOF_usage
+echo -n "Please enter the desire value for \$rchbls :"
+read wi_parm rest
+
+else
+
+wi_parm=$1
+
+fi
+
+echo "You may also give '. export rchbls=$wi_parm' by hand."
+export rchbls=$wi_parm
+
+echo "Just checking  \$rchbls : "$rchbls
