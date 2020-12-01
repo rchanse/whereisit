@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+# this version will be a script you execute (rather than source). The
+# difference whether you have 'exit' (this one) and 'return' chkwisys2
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+# help first ( don't forget to chmod +x   unless you will source # it.
+# or name it - pound_bang, lbbang, lb_bang or (modern) hashtag
+ 
+if  [ ".$1" == ".--help" ]; then
+cat << EOF_usage
+usage: check to 'whereis' system   rchjlp, builddir and execdir    
+syntax: chkwisys parm1
+  parm1 
+    --help    - this help doc.
+    build     - cause the checking to be from point of view of builddir.
+    anyother  - cause the checking to be from the point of view of execdir
+    . or null - see anyother.
+
+EOF_usage
+exit 0          # change to return (if sourced)
+# return        # change to return (if sourced)
+fi
+
+# start here
+cat << EOF-beginning
+  This script will check and validate 
+  a. the global variable \$rchjlp
+  b. the build directory (may be referred to as build-lib).
+  c. the execution directory (may be referred to as exec-lib).
+  and position of exec-lib in your PATH
+
+  ===>> NO changes will be made by this script <<===
+
+  Directly checking \$rchjlp may be made by  'echo \$rchjlp '
+
+  Here's the deal 
+  
+EOF-beginning
+ech0 "\$rchjlp = $rchjlp"
+
+if [ ".$rchjlp" == "." ]; then
+
+cat << EOF-rchjlp-null
+  \$rchjlp is NULL.  This script will end.  The command for you
+to enter is  'export rchjlp=your/value'  where  \$HOME/your/value
+is the desired exec-lib.  Re-enter the 'chkwisys' cmd.
+
+EOF-rchjlp-null
+
+exit 0      # execute form
+#return     # sourced form
+fi
+ 
+if [ ".$1" == ".build" ]; then
+  chklib="build-lib"
+
+  # force use to cd builddir
+  echo " '. ./chkwisys build' is usually ONLY between setvar and INSTALL."
+  echo "You are currently in $PWD which MUST be your build-lib."
+  echo -n "Are in your build-lib directory?? (y/Y) to continue:"
+  read answer rest
+  if [ ".$answer" == ".y" ] || [ "$anser" == ".Y" ] ; then
+    read exec_dir rest < $PWD/execdir
+    read build_dir rest < $PWD/builddir
+    echo "So far, '. ./chkwisys build' indicates "
+    echo " \$rchjlp = $rchjlp "
+    echo " build-lib is $HOME/$build_dir."
+    echo " exec-lib  is $HOME/$exec_dir."
+    if [ ! -e $HOME/$exec_dir ]; then
+      echo
+      echo "$HOME/$exec_dir does NOT exist YET."
+      echo
+    fi
+    exit 4     # exit form
+    #return    # sourced form
+  else
+    echo "answer ($answer) not 'y' or 'Y', exiting."
+    echo "Please 'cd' to your build-lib  and retry."
+    exit 4     # exit form
+    #return    # sourced form
+  fi
+else
+  chklib="exec-lib"
+fi
+ech0
+ech0 "\$chklib = $chklib" 
+ech0
+
+# exec-lib according to $rchjlp exists?
+if [ -d $HOME/$rchjlp ]; then
+  echo
+  echo "$HOME/$rchjlp EXISTs, so far so good"
+  echo "i. e. directory indicated by \$rchjlp exists."
+else
+  echo
+  echo "exec-lib ($HOME/$rchjlp) indicated by \$rchjlp does not exist."
+  echo "This is OK before INSTALL is run."
+  echo "You can try  'chkwisys build' cmd."
+  echo "===>> check again after INSTALL. <<==="
+  exit 4
+  #return
+fi
+ 
+echo "after exec-lib check"
+# if you are here  exec-lib exists and this is not 'build' req
+
+read build_dir rest < $HOME/$rchjlp/builddir
+read exec_dir  rest < $HOME/$rchjlp/execdir
+echo " chkwisys cmd. ( in some form ).  No 'build' parm."
+echo 
+echo "Info from globals andthe exec-lib"
+echo "\$rchjlp = $rchjlp."
+echo "$HOME/$rchjlp/execdir says exec-lib is $HOME/$exec_dir"
+echo "$HOME/$rchjlp/builddir says build-lib is $HOME/$build_dir"
+
+exit 0            #used in exec version
+# return          #used in source version

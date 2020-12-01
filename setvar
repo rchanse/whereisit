@@ -7,16 +7,15 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
-thefile=$0
-its_dir=`dirname $thefile`
 suffix=`basename $PWD`
-read -r build_dir rest < $its_dir/builddir
+read -r build_dir rest < $PWD/builddir
 
 if [ ".$suffix" != ".$build_dir" ]; then
 cat <<EOF-chkbld
-  A 'Mismatch has be found '$suffis' not '$build_dir'.
-If this looks hokey, let me ask.  Did you cd to your build-lib
-directory?  If not, do so and reissue '. ./setvar'
+  A 'Mismatch has be found.  $suffix is not the same as
+the first word of the first line of builddir mbr.  You should
+cd to the build-lib directory and then make them match.
+Please fix and reissue '. ./setvar'
 
 EOF-chkbld
   #exit 8
@@ -24,8 +23,6 @@ EOF-chkbld
 fi
 
 cat << EOF-info
-  This is the initial script to setup the 'whereis' project.
-it should be $0.
 
   The build directory for 'whereis' contains the script(s) and parm
 file(s) to create a running system.  Currently it is thought to be
@@ -50,20 +47,20 @@ cat << EOF-execset
 
 EOF-execset
 
-    read -r default rest < $its_dir/execdir
+    read -r default rest < $PWD/execdir
     echo "The current default is "$default
     echo -n "Enter the value for \$rchjlp variable(CR for default): "
     read mychoice rest
 
     if [ ".$mychoice" == "." ]; then        # take the default
     echo "You have chosen to take the default : "$default
-    echo "FYI - this is word 1 in line 1 of "$its_dir/execdir
+    echo "FYI - this is word 1 in line 1 of "$PWD/execdir
     mychoice=$default
     fi
 
     # (re)set the execute dir base
-    echo "$mychoice" > $its_dir/execdir
-#   date >> $its_dir/execdir      # include timestamp in exedir
+    echo "$mychoice" > $PWD/execdir
+#   date >> $PWD/execdir      # include timestamp in exedir
 
     export rchjlp=$mychoice
     echo
