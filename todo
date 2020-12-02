@@ -1,0 +1,87 @@
+Wed 02 Dec 2020 06:15:50 AM CST
+What to do to make wherebls as build-lib (currently it is
+globalvar  $rchbls = fubarbls
+build-lib - $HOME/wherebls
+exec-lib  - $HOME/fubarbls
+
+make local backup
+1.  by local using copy
+cp -rv ~/wherebls/. ~/blswhere
+
+verify by  match every file output  with match every file having
+the word 'identical' output
+
+diff -rs ~/wherebls ~/blswhere | wc
+diff -rs ~/wherebls ~/blswhere | grep 'identical' | wc
+  --------------------------------------------------------
+2. Use git on local dir
+(gotten by history > file  (remember the nice history cmd)
+ 
+
+ ( create a local place to put the data)
+ 2238  cd wherebls
+ 2239  git remote -v
+ 2241  git remote add online ~/whereblsgitsave
+ 2242  git remote -v
+ 2243  mkdir ~/whereblsgitsave
+
+ ( prep the new directory )
+ 2244  cd whereblsgitsave
+ 2245  cd 
+ 2246  cd whereblsgitsave
+ 2247  git init --bare
+
+ ( PUSH all commited data)
+ 2248  cd ~/wherebls
+ 2249  git push -u online
+ ( check the results )
+ 2250  cd
+ 2251  git clone ~/whereblsgitsave whereblsextra
+ ( verify ) 
+ 2253  diff -rs ~/wherebls ~/whereblsextra | wc
+ 2254  diff -rs ~/wherebls ~/whereblsextra | grep 'identical' | wc
+
+ Oh NO they don't mathch.    Let me think.
+ Oh yet  I only pushed up the commited data not changes
+
+do a  'git status' 
+
+On branch master
+Your branch is up to date with 'whereis/master'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   .src/setvar,v
+	modified:   11asummary
+	modified:   INSTALL
+	modified:   al
+	modified:   builddir
+	modified:   checksys
+	modified:   checkvar
+	modified:   chksys2
+	modified:   chkvar
+	modified:   chkwisys
+	modified:   engage
+	modified:   engageq
+	modified:   execdir
+	modified:   execdirdoc
+	modified:   f
+	modified:   f1
+	modified:   ff
+	modified:   g
+	modified:   ged
+	deleted:    rchjlp
+	modified:   re_build
+	modified:   re_exec
+	modified:   setvar
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	myvar
+	setvalold
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
