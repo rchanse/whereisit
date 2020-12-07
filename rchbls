@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+echo
+echo "Current value of \$rchbls = $rchbls"
+echo
 # Show only
 if [ ".$1" == ".." ]; then
   if [ ".$rchbls" == "." ]; then
     echo "The value of \$rchbls = (NULL)(NADA)(NONE)."
   else
-    echo "The value of \$rchbls = $rchbls                   
+    echo "The value of \$rchbls = $rchbls "                  
   fi
   echo "Quiting, no change."
   return
@@ -26,8 +29,15 @@ parm1: NULL - show this help  AND  lead to a prompt for \$rchbls
                No verifiction
 
 EOF_usage
+echo "CR in following prompt will retain original value"
 echo -n "Please enter the desire value for \$rchbls :"
+
+save_rchbls=$rchbls
 read wi_parm rest
+if [ ".$wi_parm" == "." ]; then
+  wi_parm=$save_rchbls
+fi
+
 
 else
 
