@@ -8,22 +8,48 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 }
 
 function cpit () {
-  echo "cp -p $1 $exec_lib/$1" >> $exec_lib/BooHoo
-  cp -p $1 $exec_lib/$1
-  copyrc=$?
-  if [ $copyrc -eq 0 ]; then
-    echo "$1 copied (OK) to "$exec_lib >>$exec_lib/BooHoo
+  passed_val=$@
+  ech0 "\$passed_val === $passed_val"
+  read first_word rest <<< $passed_val
+# echo "$first_word   ${first_word:0:1}"
+  if [ ".${first_word:0:1}" == ".#" ]; then
+    echo "comment:$passed_val" >> $rchbls/BooHoo
+    BooHoo="yes"              # mark that cp was failure
+    return
+  fi
+  
+   # do the copy
+   echo "$passed_val" >> $rchbls/BooHoo
+   if [ ! -e $first_word ]; then
+     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
+     return
+   fi
+
+   echo "cp -v $first_word $rchbls/$first_word" >> $rchbls/BooHoo
+   cp -v $first_word $rchbls/$first_word
+   ccrc=$?
+#  echo "$ccrc" >> $rchbls/BooHoo
+
+  if [ $ccrc -eq 0 ]; then
+    echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
   else
-    echo "BooHoo -- cp ret code ($copyrc) check $1" >> $exec_lib/BooHoo
+    echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
     BooHoo="yes"
   fi
-}
-echo "Checking ..."
-ech0 "\$rchjlp is $rchjlp"
 
-if [ ".$rchjlp" == "." ]; then
-  echo "\$rchjlp is NOT set, please fix. "
-  echo "Use 'export rchjlp=xxx' where xxx is desired exec-lib dir."
+  return
+}
+
+##  end of internal functions
+
+## start of executable code
+
+echo "Checking ..."
+ech0 "\$rchbls is $rchbls"
+
+if [ ".$rchbls" == "." ]; then
+  echo "\$rchbls is NOT set, please fix. "
+  echo "Use 'export rchbls=xxx' where xxx is desired exec-lib dir."
   echo "Leaving -- no work done."
   return
 fi
@@ -35,13 +61,11 @@ if [ ! -e $PWD/builddir ]; then       # weak test to see if right dir.
   return
 fi
 
-current_dir_base=`basename $PWD`
-ech0 "current_dir_base = $current_dir_base"
 read build_dir rest < $PWD/builddir
-ech0 "build_dir = $build_dir"
+echo "build_dir = $build_dir"
 read exec_dir rest < $PWD/execdir
 
-if [ ".$build_dir" != ".$current_dir_base" ]; then
+if [ ".$build_dir" != ".$PWD" ]; then
   echo
   echo "build-lib indicator ($build_dir) is NOT this dir. ($PWD)"
   echo "Correct this in  $PWD/builddir. "
@@ -49,16 +73,16 @@ if [ ".$build_dir" != ".$current_dir_base" ]; then
   return
 fi
 
-#echo "Execution lib dir is : "$HOME/$exec_dir
-build_lib=$HOME/$build_dir
-exec_lib=$HOME/$exec_dir 
-echo "\$rchjlp is $rchjlp"
-echo "Build     lib dir is : "$HOME/$build_dir
+#echo "Execution lib dir is : "$rchbls/$exec_dir
+echo "\$rchbls is $rchbls"
+build_lib=$build_dir
+exec_lib=$exec_dir 
+echo "Build     lib dir is : "$build_dir
 
 # now check to insure exec-lib will be correct.
-if [ ".$exec_dir" == ".$rchjlp" ]; then
-  # $rchjlp matchs first word of first line of build-lib/execdir
-  ech0 " parm var ($exec_dir) EQUALs  global var \$rchjlp ($rchjlp)"
+if [ ".$exec_dir" == ".$rchbls" ]; then
+  # $rchbls matchs first word of first line of build-lib/execdir
+  ech0 " parm var ($exec_dir) EQUALs  global var \$rchbls ($rchbls)"
   echo "Execution lib dir is : "$exec_lib"  (Yet to be built.)"
 else
 cat << EOF-exec-lib
@@ -67,11 +91,11 @@ Execution lib dir is : "$exec_lib"  (Yet to be built.)
 
   MIS-MATCH   MIS-MATCH      global var and parm value
 
-  Correct by setting \$rchjlp (now $rchjlp) to be the same 
+  Correct by setting \$rchbls (now $rchbls) to be the same 
 as the first word on the first line of $build_lib/execdir
 which is now ($exec_dir).
 
-Use 'export rchjlp=(appropriate)     and/or"
+Use 'export rchbls=(appropriate)     and/or"
 edit $build_lib/execdir.
 
 Leaving - no work done.
@@ -113,8 +137,7 @@ else
   echo "On we go, allocate, populate and rePATH  $exec_lib."
 fi 
 
-#echo "another early out"
-#return
+
 ls -alh $exec_lib    
 echo "cmd mkdir $exec_lib"
 mkdir $exec_lib
@@ -126,53 +149,20 @@ echo $PATH
 echo
 echo "Start the copy/gen of $exec_lib"
 
+#echo "another early out"
+#return
+
 BooHoo="no"
 echo "# Message of possible INSTALL copy errors." > $exec_lib/BooHoo
 echo "  Search for 'BooHoo' to find concerns." >> $exec_lib/BooHoo
 date >> $exec_lib/BooHoo
 
+while read parm_line ; do
+# echo "$parm_line"  >> $exec_lib/BooHoo
+# echo "cpit $parm_line "
+  cpit "$parm_line"
+done < INSTALLmbrs
 
-cpit 11asummary            # file of one line summaries
-cpit addpath               # put file a end of PATH
-cpit al                    # some semi-useful aliases
-cpit addpath0              # put file at start of PATH
-cpit builddir              # hold build director basename
-cpit c                     # director quick change by acronym
-cpit checksys              # aid to show rchjlp, bld-lib exec-lib
-cpit checkvar              # aid to show rchjlp
-cpit chkvar                # check the rchjlp variable        
-cpit COPYING               # MIT license
-cpit delpath               # remove file from PATH 
-cpit diffme                # short cut script to diff mems in pdw
-cpit dirinpath             # chk all dir file where in path
-cpit ech0                  # debugging echo function
-cpit ech1                  # debugging echo inline
-cpit execdir               # hold execution dir basename
-'date' >> $HOME/$rchjlp/execdir # time stamp the gen
-cpit engage                # hook in code to activate environment
-cpit engageq               # hook in after INSTALL               
-cpit f                     # go to file by acronym
-cpit ff                    # f for project groups  
-cpit f1                    # ff subfunction        
-cpit f_acrolist            # start list of acronyms
-cpit g                     # go to file by number
-cpit ged                   # like g but with nano rather than vim
-cpit getsys2               # system checking tool
-cpit get4me                # grab a copy
-# not this one -- cpit INSTALL               # this script
-cpit lbang                 # for the lazy -  #!/usr/bin/env bash
-cpit meminpath             # show which path files have mem (compare
-cpit rchjlp                # tool to set $rchjlp
-cpit README.md             # notes like a 'typical' README
-cpit re_build              # copy from pwd/exec-lib to build-lib    
-cpit re_exec               # copy from pwd/build-lib to exec-lib    
-cpit refresh               # not used replace by re_exec or re_build
-# not this one -- cpit setvar                # set the rchjlp                         
-cpit src                   # Eric Raymond  Simple Revision Control  
-cpit srcdoc                # starter notes on src                  
-cpit showpath              # show the path files
-cpit wrsum                 # document aid tool  
-cpit xyx
 echo
 echo "done with the copy/gen of $exec_lib"
 
@@ -182,15 +172,15 @@ if [ ".$BooHoo" == ".no" ]; then
   echo "Messages are in $exec_lib/BooHoo."
 else
   echo
-  echo "exec-lib ($exec_lib) generation HAD copy errors."
+  echo "exec-lib ($exec_lib) generation HAD copy errors. <<=====:"
   echo "Review messages in $exec_lib/BooHoo."
 fi
 
 echo
 ls -A $exec_lib
 echo
-echo "To activate enter  '. ~/$rchjlp/engage' "
+echo "To activate enter  '. ~/$rchbls/engage' "
 echo "You can back off with '. delpath $exec_lib' "
-echo "Restart with existing rchtest file with  . ~/$rchjlp/engage"
+echo "Restart with existing rchtest file with  . ~/$rchbls/engage"
 echo 
 echo "Good Luck"

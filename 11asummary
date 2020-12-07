@@ -1,7 +1,7 @@
 #member description add as ' - comments '
 11asummary - me, myself and I  the one line summary stmts. 
 COPYING - MIT license 
-INSTALL - build-lib (only) script to create the exec-lib (need $rchjlp) 
+INSTALL - build-lib (only) script to create the exec-lib (need $rchbls) 
 Neanderthal - :-)  or ;-( 
 README.md - Typical README file (facts, comments, direcions) 
 addpath - script to add a file to end of path  ( invoke by . or souce) 
@@ -10,9 +10,9 @@ al - some 'possibly' helpful aliases
 b4 - exec to show how to leave (exit or return) from a script 
 builddir - member contain basename of the build directory 
 c - directory quick change by acronym (invoke by .) 
-checksys - aid to show $rchjlp build-lib exec-lib 
-checkvar - stand alone exec to check/and show $rchjlp 
-chkvar - function to be put in other scrips to verify $rchjlp non-null 
+checksys - aid to show $rchbls build-lib exec-lib 
+checkvar - stand alone exec to check/and show $rchbls 
+chkvar - function to be put in other scrips to verify $rchbls non-null 
 delpath - script to remove files from PATH  (invoke by .) 
 diffme - script to diff a mem of pdw  with a specified file 
 dirinpath - for given directory show which path file contain each mem 
@@ -24,15 +24,16 @@ engage - script to activate the environment during INSTALLation
 engageq - script to activate the environment AFTER INSTALLation 
 execdir - file which contains the basename of the execution directory 
 execdirdoc - notes on execdir 
-f1 - subfuntion needed by ff
+f1 - subfuntion needed by ff 
 f_acrolist - starter acronym list to work with f 
-ff - extended f for projects
+ff - extended f for projects 
 g - invoke action on files by number, see 'g 0'  default editor-vim 
 ged - like g but with  editor=nano 
 get4me - grab a file to my directory 
 lbang - for the lazy #!/usr/bin/env bash 
 meminpath - script to see which PATHfile contain a named member 
-rchjlp - tool to (re)set the $rchjlp global variable 
+quicklook * two tiny functions to easily get to exec/build members
+rchbls - tool to (re)set the $rchbls global variable 
 re_build - copy a mem from either pwd or exec-lib to build-lib 
 re_exec - copy a mem from either pwd or build-lib to exec-lib 
 refresh - depreciate script, replaced by re_exec and re_build 

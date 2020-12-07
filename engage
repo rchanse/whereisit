@@ -8,46 +8,69 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 }
 
 
-if [ ".$rchjlp" == "." ]; then
+if [ ".$rchbls" == "." ]; then
 
 cat << EOF_var
-  The \$rchjlp is not available. Please set it from
-your console.  Enter  'export rchjlp=xxx , where xxx is
+  The \$rchbls is not available. Please set it from
+your console.  Enter  'export rchbls=xxx , where xxx is
 the basename of your execution library.  Re-enter the cmd.
 
+Based on the environmement, If you in the exec-lib directory
+\$rchbls should be $PWD.  
+If that is true answer y/Y to the prompt.  If not answer
+somethig other and quit.
 EOF_var
+echo "Is pwd pointed to your exec-lib (y/Y) : "
+read answer rest
 
+if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
+  export rchbls=$PWD
 else
+  echo "Answer not (y/Y), quitting now.  Correct and reenter."
+  return
+fi
 
-#rchjlp=$1
-#export rchjlp=$rchjlp
+fi
+#rchbls=$1
+#export rchbls=$rchbls
 
-the_dir=$HOME/$rchjlp     
-read -r exec_base rest < $the_dir/execdir
-read -r build_base rest < $the_dir/builddir
+#the_dir=$HOME/$rchbls     
+read -r exec_base rest < $rchbls/execdir
+read -r build_base rest < $rchbls/builddir
 
+ech0 "\$rchbls = $rchbls "
 ech0 exec_base $exec_base
 ech0 build_base $build_base
 
-if [ -d $HOME/$rchjlp ]; then
-  cd $HOME/$rchjlp
-  . addpath0 $HOME/$rchjlp nomsg
+if [ -d $rchbls ]; then
+  cd $rchbls
+  . addpath0 $rchbls nomsg
 else
   cd $HOME/$build_base
-  . addpath0 $HOME/$build_base nomsg
+  . addpath0 $build_base nomsg
 fi
 
-echo 
-echo "How much Neanderthal blood do you have? - Robert C Hansen"
-echo 
-echo 
-echo "'Make it so!' - Jean-Luc Picard"
-echo
-echo
-echo Your path is now:
-echo $PATH
-echo
-echo "Special variable \$rchjlp="$rchjlp
+clear
+cat << EOF-modt
+"How much Neanderthal blood do you have? - Robert C Hansen"
 
-fi
 
+"The more they overthink the plumbing, the easier it is to stop 
+up the drain." - Montgomery Scott 
+
+
+"Google is YOUR friend!" -- Phil Bunch
+
+
+"Captain, you are expecting me to work with equipment that is little
+more than bearskins and stone knives." --  Mr. Spock
+
+
+"'Make it so!' - Jean-Luc Picard"
+
+
+Your path is now: $PATH
+
+"Special variable \$rchbls="$rchbls
+
+EOF-modt

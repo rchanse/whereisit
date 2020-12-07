@@ -1,0 +1,46 @@
+# Start of file to handle with INSTALLjk
+#   the following lib should NOT be copied
+#  setvar    # install scrip to set the rchbls global vriable
+#  INSTALL  # copy appropriate file from build-lib to create exec-lib
+#  INSTALLmbrs # list of member to be move or commented upon
+#  
+11asummary       # file of one line summaries
+addpath          # put file a end of PATH
+al               # some semi-useful aliases
+addpath0         # put file at start of PATH
+builddir         # hold the name of the build-lib dir
+c                # director quick change by acronym
+checksys         # aid to show rchbls, bld-lib exec-lib
+checkvar         # aid to show rchbls
+chkvar           # check the rchbls variable        
+COPYING          # MIT license
+delpath          # remove file from PATH 
+diffme           # short cut script to diff mems in pdw
+dirinpath        # chk all dir file where in path
+ech0             # debugging echo function
+ech1             # debugging echo inline
+execdir          # hold the name of the exec-lib dir
+engage           # hook in code to activate environment
+f                # go to file by acronym
+ff               # f for project groups  
+ffdoit           # workhorse subroutine for ff (does f work 
+f1               # ff subfunction        
+f_acrolist       # start list of acronyms
+g                # go to file by number
+ged              # like g but with nano rather than vim
+getsys2          # system checking tool
+get4me           # grab a copy
+lbang            # for the lazy -  #!/usr/bin/env bash
+meminpath        # show which path files have mem (compare
+rchbls           # tool to set $rchbls
+README.md        # notes like a 'typical' README
+README.more.md        # notes like a 'typical' README
+re_build         # copy from pwd/exec-lib to build-lib    
+re_exec          # copy from pwd/build-lib to exec-lib    
+refresh          # not used replace by re_exec or re_build
+src              # Eric Raymond  Simple Revision Control  
+srcdoc           # starter notes on src                  
+showpath         # show the path files
+wrsum            # document aid tool  
+# the following member xyz does not exist - is is meant to cause err msg
+xyz              # does not exist, just cause message

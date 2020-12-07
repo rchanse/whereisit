@@ -28,11 +28,11 @@ function nop() {    # a NO-OP to make code more readable later
 
 #  Below is the acro file (name of acro filename action    file )
 acro_file=$HOME"/bin/f_acrolist"
-if [ -f $HOME/$rchjlp/f_acrolist ]; then
-  acro_file=$HOME/$rchjlp/f_acrolist
+if [ -f $rchbls/f_acrolist ]; then
+  acro_file=$rchbls/f_acrolist
 else
-  read bld_dir rest < $HOME/$rchjlp/builddir
-  acro_file=$HOME/$bld_dir/f_acrolist
+  read bld_dir rest < $rchbls/builddir
+  acro_file=$bld_dir/f_acrolist
 fi
 
 # save cmdline parms for later
