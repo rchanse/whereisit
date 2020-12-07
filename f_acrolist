@@ -8,6 +8,8 @@
 #  in this file change fubar to  your exec-lib (fubarbls ??)
 #  can use vim   :% su/fubar/fubarbls/g
 #
+build    ~/wherebls
+exec     ~/fubarbls
 profile  ~/.profile
 skelprof /etc/skel/.profile
 login    /etc/login.defs
