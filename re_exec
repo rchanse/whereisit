@@ -18,8 +18,8 @@ fi
 
 # better version coming
 
-read -r bld_dir rest < $HOME/$rchjlp/builddir
-read -r exec_dir rest < $HOME/$rchjlp/execdir
+read -r bld_dir rest < $rchbls/builddir
+read -r exec_dir rest < $rchbls/execdir
 
 # check to see if sending member exists.
 if [ ".$2" == ".." ]; then
@@ -29,8 +29,8 @@ if [ ".$2" == ".." ]; then
     exit 8
    fi
 else
-  if [ ! -e $HOME/$bld_dir/$1 ] ; then
-    echo "$HOME/$bld_dir/$1 does NOT EXIST."
+  if [ ! -e $bld_dir/$1 ] ; then
+    echo "$bld_dir/$1 does NOT EXIST."
     echo "Therefore, I quit. Nothing done."
     exit 8
    fi
@@ -38,9 +38,9 @@ fi
 
 # Display the command to be executed.
 if [ ".$2" == ".." ]; then
-  echo cp -vp $PWD/$1 $HOME/$exec_dir/$1
+  echo cp -vp $PWD/$1 $exec_dir/$1
 else
-  echo cp -vp $HOME/$bld_dir/$1 $HOME/$exec_dir/$1
+  echo cp -vp $bld_dir/$1 $exec_dir/$1
 fi
 
 echo
@@ -50,9 +50,9 @@ read answer rest
 # Execute the command on 'y' or 'Y'
 if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
     if [ ".$2" == ".." ]; then
-      cp -vp $PWD/$1 $HOME/$exec_dir/$1
+      cp -vp $PWD/$1 $exec_dir/$1
     else
-      cp -vp $HOME/$bld_dir/$1 $HOME/$exec_dir/$1
+      cp -vp $bld_dir/$1 $exec_dir/$1
     fi
 else
   echo "Answer ($answer) NOT 'y' or 'Y', Nothing done, I quit."

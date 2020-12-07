@@ -12,10 +12,10 @@ EOF_usage
 exit 0          # if needed
 
 fi
-
-echo diff $PWD/$2 $1/$2
-
-diff $PWD/$2 $1/$2
+the_mem=`basename $1`
+echo "\$the_mem $the_mem"
+echo diff $PWD/$the_mem  $1
+diff $PWD/$the_mem  $1
 drc=$?
 echo "======================="
 echo "comparison RC is $drc"

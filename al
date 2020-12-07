@@ -19,14 +19,15 @@ if [ ".$1" == ".un" ]; then   # don't seem to work ?? tbd
 else
    alias ..='cd ..'
    if [ ".$rchbls" != "." ]; then
-     echo $rchbls 
-     read build_dir rest < ~/$rchbls/builddir
-     read exec_dir  rest < ~/$rchbls/execdir
+     alias cdn='cd ~/newtest'
+     echo "\$rchbls = $rchbls"
+     read build_dir rest < $rchbls/builddir
+     read exec_dir  rest < $rchbls/execdir
      echo $build_dir  $exec_dir
-     echo "alias cdx='cd ~/$exec_dir'"
-     alias cdx='cd ~/$exec_dir'
-     echo "alias cdb='cd ~/$build_dir'"
-     alias cdb='cd ~/$build_dir'
+     echo "alias cdx='cd $exec_dir'"
+     alias cdx='cd $exec_dir'
+     echo "alias cdb='cd $build_dir'"
+     alias cdb='cd $build_dir'
    fi
    alias cnx='chmod -x '    
    alias cx='chmod +x '    
