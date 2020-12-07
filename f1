@@ -27,20 +27,20 @@ ech0 debugging is turned on
 #  ~/bin/ff_acroname_dir/member  if  ~/bin/ff_acroname contains member
 
 # code inserted to make work under 'whereis
-read exec_dir rest < ~/$rchjlp/execdir
+read exec_dir rest < $rchbls/execdir
 ech0 "\$exec_dir = $exec_dir"
  
-## nl=`wc $HOME/bin/ff_acroname | awk '{print $1}'`
-nl=`wc $HOME/$exec_dir/ff_acroname | awk '{print $1}'`
+## nl=`wc bin/ff_acroname | awk '{print $1}'`
+nl=`wc $exec_dir/ff_acroname | awk '{print $1}'`
 ech0 $nl
 if [ ".$nl" == ".0" ]; then
-##  acro_file=$HOME/bin/ff_acrolist
-  acro_file=$HOME/$exec_dir/ff_acrolist
+##  acro_file=bin/ff_acrolist
+  acro_file=$exec_dir/ff_acrolist
 else
-##  acroname=`head -n1 $HOME/bin/ff_acroname | tail -n1`
-  acroname=`head -n1 $HOME/$exec_dir/ff_acroname | tail -n1`
-##  acro_file=$HOME/bin/ff_acrolist_dir/$acroname
-  acro_file=$HOME/$exec_dir/ff_acrolist_dir/$acroname
+##  acroname=`head -n1 bin/ff_acroname | tail -n1`
+  acroname=`head -n1 $exec_dir/ff_acroname | tail -n1`
+##  acro_file=bin/ff_acrolist_dir/$acroname
+  acro_file=$exec_dir/ff_acrolist_dir/$acroname
 fi
 
 p1=$1                         # first parm

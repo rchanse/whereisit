@@ -14,8 +14,8 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 # 4. director ~/bin/ff_acrolist_dir  sub dir of acrolists
 #
 
-read exec_dir rest < ~/$rchjlp/execdir
-read bld_dir rest < ~/$rchjlp/builddir
+read exec_dir rest < $rchbls/execdir
+read bld_dir rest < $rchbls/builddir
 
 usage() {
   cat <<EOF
@@ -38,36 +38,36 @@ EOF
 ech0 "exec-dir $exec_dir,  build-dir $bld_dir "
 if [ ".$1" == "." ]; then
   usage
-## touch $HOME/bin/ff_acroname
-   touch $HOME/$exec_dir/ff_acroname
+## touch bin/ff_acroname
+   touch $exec_dir/ff_acroname
 
 
-  nl=`wc $HOME/$exec_dir/ff_acroname |  awk '{print $1}'`
+  nl=`wc $exec_dir/ff_acroname |  awk '{print $1}'`
 
 ech0 "nl $nl"
 
 # This is first time code to set the environment.
-  if [ ! -d ~/$exec_dir/ff_acrolist_dir ]; then
-    mkdir ~/$rchjlp/ff_acrolist_dir
+  if [ ! -d $exec_dir/ff_acrolist_dir ]; then
+    mkdir $rchbls/ff_acrolist_dir
     mkdircc=$?
     ech0 "\$mkdircc = $mkdircc  "
-    ls -A ~/$rchjlp/ff_acrolist_dir
-    echo "firsttime" > ~/$exec_dir/ff_acroname 
-    echo "# acro   filename" > ~/$exec_dir/ff_acrolist_dir/firsttime 
+    ls -A $rchbls/ff_acrolist_dir
+    echo "firsttime" > $exec_dir/ff_acroname 
+    echo "# acro   filename" > $exec_dir/ff_acrolist_dir/firsttime 
   fi
 
   if [ ".$nl" == ".0" ]; then
     acroname="firsttime"
-#    echo "Current acrolist is ~/$exec_dir/ff_acrolist_dir/firstname"
+#    echo "Current acrolist is $exec_dir/ff_acrolist_dir/firstname"
   else
-    acroname=`head -n1 $HOME/$rchjlp/ff_acroname | tail -n1`
+    acroname=`head -n1 $rchbls/ff_acroname | tail -n1`
   fi
   echo
-  echo "$acroname - Current acrolist is ~/$exec_dir/ff_acrolist_dir/$acroname"
+  echo "$acroname - Current acrolist is $exec_dir/ff_acrolist_dir/$acroname"
   echo
   echo "List of non-default current choices:"
 ##ls ~/bin/ff_acrolist_dir
-  ls ~/$exec_dir/ff_acrolist_dir
+  ls $exec_dir/ff_acrolist_dir
 ## simple change  
   exit
 fi
@@ -78,12 +78,12 @@ if [ ".$p1" == ".off" ]; then
 fi
 
 if [ ".$p1" == ".OFF" ]; then 
-# rm $HOME/bin/ff_acroname               # clear by deleting
-  rm $HOME/$exec_dir/ff_acroname               # clear by deleting
+# rm bin/ff_acroname               # clear by deleting
+  rm $exec_dir/ff_acroname               # clear by deleting
   sleep 1
-# touch $HOME/bin/ff_acrofile_name          # reallocate empty
-  touch $HOME/$exec_dir/ff_acrofile_name          # reallocate empty
-#  nl=`wc $HOME/bin/acrofile_name`
+# touch bin/ff_acrofile_name          # reallocate empty
+  touch $exec_dir/ff_acrofile_name          # reallocate empty
+#  nl=`wc bin/acrofile_name`
 #  ech0  $nl $nl
   exit 
 fi
@@ -98,13 +98,13 @@ if [ ".$p1" == ".ON" ]; then
    read answer   rest
    acroname=$answer  
 #  echo $acroname > ~/bin/ff_acroname
-   echo $acroname > ~/$exec_dir/ff_acroname
+   echo $acroname > $exec_dir/ff_acroname
    echo "Using : "$acroname" for ff_acrofile_dir member name."
 #  touch ~/bin/ff_acrolist_dir/$acroname
-   touch ~/$exec_dir/ff_acrolist_dir/$acroname
+   touch $exec_dir/ff_acrolist_dir/$acroname
    echo showing acroname
 #  cat ~/bin/ff_acroname
-   cat ~/$exec_lib/ff_acroname
+   cat $exec_lib/ff_acroname
    exit
 fi
 #echo acroparm is ">"$acroparm"<"
