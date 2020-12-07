@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+
+usage: rchjlp - this is an aid to set the \$rchjlp variable
+syntal:  . rchjlp 
+
+Answer the prompt as desired.  A answer of  CR  will cause
+no change to be made.
+
+EOF_usage
+
+echo "Currently \$rchjlp = $rchjlp"
+echo -n "Please enter your desired value for \$rchjlp (CR - no change):"
+read wi_parm rest
+
+else
+
+wi_parm=$1
+
+fi
+
+if [ ".$wi_parm" != "." ]; then
+  echo
+  echo "You may also give '. export rchjlp=$wi_parm' by hand."
+  export rchjlp=$wi_parm
+fi
+echo
+echo "Just checking  \$rchjlp = "$rchjlp
