@@ -4,6 +4,24 @@
 #  2. to insure edit  use   acro filename  sudo vim    
 #  3. :sort  will 'sort' this file
 #----
+#
+#  in this file change fubar to  your exec-lib (fubarbls ??)
+#  can use vim   :% su/fubar/fubarbls/g
+#
+profile  ~/.profile
+skelprof /etc/skel/.profile
+login    /etc/login.defs
+readmore ~/wherebls/README.more.md
+INSTALL  ~/wherebls/INSTALL
+11       ~/fubarbls/11asummary
+srcdoc   ~/fubarbls/srcdoc
+license  ~/fubarbls/COPYING
+boohoo   ~/fubarbls/BooHoo
+ap       ~/fubarbls/addpath
+ap0      ~/fubarbls/addpath0
+dp       ~/fubarbls/delpath
+f        ~/fubarbls/f
+pound    ~/fubarbls/#
 T        ~/tempname
 ff       ~/whereis/f
 hostname /etc/hostname
