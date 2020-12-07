@@ -23,11 +23,11 @@ else
      echo "\$rchbls = $rchbls"
      read build_dir rest < $rchbls/builddir
      read exec_dir  rest < $rchbls/execdir
-     echo $build_dir  $exec_dir
+     echo "build-dir = $build_dir, exec-dir = $exec_dir"
      echo "alias cdx='cd $exec_dir'"
-     alias cdx='cd $exec_dir'
+     alias cdx='cd $exec_dir'             # to exec-lib dir.
      echo "alias cdb='cd $build_dir'"
-     alias cdb='cd $build_dir'
+     alias cdb='cd $build_dir'            # to build-lib dir.
    fi
    alias cnx='chmod -x '    
    alias cx='chmod +x '    
@@ -37,5 +37,5 @@ else
    alias path='echo -e ${PATH//:/\\n}'
    alias v1='vim  tempname'
    alias v2='vim ~/tempname'
-   alias varshow='echo \$rchbls is $rchjlp'
+   alias varshow='echo \$rchbls is $rchbls'
 fi

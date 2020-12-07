@@ -1,13 +1,29 @@
 #!/usr/bin/env bash
 
+# Show only
+if [ ".$1" == ".." ]; then
+  if [ ".$rchbls" == "." ]; then
+    echo "The value of \$rchbls = (NULL)(NADA)(NONE)."
+  else
+    echo "The value of \$rchbls = $rchbls                   
+  fi
+  echo "Quiting, no change."
+  return
+fi
+
+# Prompt
 if [ ".$1" == "." ]; then      # default provide info if no parms
 
+echo "Current value of \$rchbls = $rchbls "
 cat << EOF_usage
-usage: rchbls - this is an aid to set the \$rchbls variable
-syntal:  . rchbls parm1
 
-parm1: NULL will lead to a prompt for \$rchbls
+usage: rchbls - this is an aid to set the \$rchbls variable
+syntax:  . rchbls parm1  or  source rchbls parm1
+
+parm1: NULL - show this help  AND  lead to a prompt for \$rchbls
+       .    - will show value of \$rchbls and terminate (no change).
        other - \$1 will be used for \$rchbls  (help not shown)
+               No verifiction
 
 EOF_usage
 echo -n "Please enter the desire value for \$rchbls :"
@@ -19,7 +35,7 @@ wi_parm=$1
 
 fi
 
-echo "You may also give '. export rchbls=$wi_parm' by hand."
+echo "You may also give 'export rchbls=$wi_parm' by hand."
 export rchbls=$wi_parm
 
 echo "Just checking  \$rchbls : "$rchbls

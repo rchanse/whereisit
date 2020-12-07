@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+echo "addpath0 start"
 IFS=
 
 if [ ".$1" == "." ]; then
@@ -12,7 +13,7 @@ usage: addpath0  -- add a file to the beginning of the PATH variable
     other - place other at front of PATH
    parm2
     nomsg - do not show msgs (before and after)
-    othe  -        show msgs (before and after)
+    other -        show msgs (before and after)
 
   note: other may or may not be a directory. PATH doesn't care.
 EOF
@@ -27,9 +28,11 @@ else
     echo
     fi
 
-    if [ ".$1" == "." ]; then
-    export PATH="$PWD:$PATH"
+    if [ ".$1" == ".." ]; then
+    echo 'export PATH="$rchbls:$PATH"'
+    export PATH="$rchbls:$PATH"
     else
+    echo 'export PATH="$1:$PATH"'
     export PATH="$1:$PATH"
     fi
 

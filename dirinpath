@@ -7,6 +7,24 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
+function showpath (){
+#!/usr/bin/env bash
+    IFSsave=$IFS         # save info
+    IFS=":"
+    read -r -a who <<< "$PATH"   # parse into who array  sep is xff
+    let ub=${#who[@]}         # put length in ub (upper bound) var
+    let j=0
+    while [ $j -lt $ub ]; do    # loop to show variable
+      if [ ".${who[$j]}" == ".." ]; then
+        who[$j]=$PWD
+        echo "found file '.' replace with pwd-value index: $j"
+      fi
+      echo $j  ${who[$j]}
+      let j=$j+1
+    done
+    IFS=$IFSsave                 # restore
+}
+
 function mem_check () {
     chk_mem=$1
     found="no"
@@ -28,8 +46,9 @@ function mem_check () {
       if [ -f ${p_file[$j]}/$chk_mem ]; then  # show if found in dir.
         if [ ".${p_file[$j]}" == ".$dir_to_check" ]; then
           echo $j  $chk_mem  is in ${p_file[$j]} 
+          true                     # satisfy if need an action
         else
-          echo $j  $chk_mem  is in ${p_file[$j]}" <<==path-NOT-seach" 
+          echo $j  $chk_mem  is in ${p_file[$j]}" <<<=<=====path-NOT-seach" 
         fi
         found="yes"
       fi
@@ -37,7 +56,7 @@ function mem_check () {
     done
 
     if [ ".$found" == ".no" ]; then
-      echo "$chk_mem is NOT in your PATH"
+      echo "*** $chk_mem is NOT in your PATH. ****"
     fi
     
   IFS=" "   # I M P O R A N T -- reset for blanks as parse sep.
@@ -59,14 +78,16 @@ fi
 
 dir_to_check=$1      # <<========= file to process
 
+
 if [ -d $dir_to_check ]; then
   echo
   echo "List of files in $dir_to_check "
   ls -A $dir_to_check                      # show it
   ls -A $dir_to_check > /tmp/lslist        # save it
 else
-  echo "$dir_to_check  NOT found. "
-  echo "I quit. "
+  echo
+  echo "Requested directory $dir_to_check does NOT exist!!!"
+  echo "Out of here."
   exit 4
 fi
 
@@ -77,37 +98,30 @@ function emptyfile () {
   else
     touch $1
   fi
-
 }
 
-# create an array of files to skip  (using temp file /tmp/skiplist)
-# 1. make empty, 2. write to temp file, 3. write back to array
+#   cat > /tmp/skiplist << EOF-skip         # 2. write to temp file
+#   f_acrolist      # list may change over time
+#   c               # inline directories may change
+#   tempname
+#   TEMPNAME
+#   EOF-skip 
 
-emptyfile /tmp/skiplist             #  1. make empty
-
-
-cat > /tmp/skiplist << "EOF"         # 2. write to temp file
-f_acrolist      # list may change over time
-c               # inline directories may change
-tempname
-TEMPNAME
-EOF
-
-let i=0                        # 3. write back to array
-while read -r who rest ; do
-    skip[$i]=$who
-    let i=$i+1
-done < /tmp/skiplist   # list of mems to skip
-let num_skip=$i        # actually one more so chk less
-
-# list the skip list
-echo
-echo "Skip list below:"
-let i=0
-while [ $i -lt $num_skip ]; do
-  echo $i ${skip[$i]}
-  let i=$i+1
-done
+#   let i=0                        # 3. write back to array
+#   while read -r who rest ; do
+#       skip[$i]=$who
+#       let i=$i+1
+#   done < /tmp/skiplist   # list of mems to skip
+##  let num_skip=$i        # actually one more so chk less
+#
+#   # list the skip list
+#   echo
+#   echo "Skip list below:"
+#   let i=0
+#   while [ $i -lt $num_skip ]; do
+#   echo $i ${skip[$i]}
+#   let i=$i+1
+#   done
 
 echo
 echo "PATH by number"
@@ -116,26 +130,11 @@ showpath
 echo
 echo "Process list for $dir_to_check"
 echo "============================================="
+
 while  read filename rest ; do
-  ech0 $filename
-
-  let j=0
-  process="yes"
-  while [ $j -lt $num_skip ] && [ ".$process" == ".yes" ]; do
-    if [ ".${skip[$j]}" == ".$filename" ]; then
-      ech0 "MATCH $j ${slip[$j]} $filename "
-      process="no"
-    else
-      ech0 "NO-MATCH $j ${slip[$j]} $filename "
-    fi
-    let j=$j+1
-  done
-
+  echo "Processing; $filename  in $dir_to_check."
+  mem_check $filename
   echo
-  echo "$filename process: $process"
-  if [ ".$process" == ".yes" ]; then
-    mem_check $filename
-  fi
-  
 done < /tmp/lslist
+echo "STOP for NOW"
 exit 0
