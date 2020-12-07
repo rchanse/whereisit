@@ -20,9 +20,9 @@ syntax: chkwisys parm1
     anyother  - cause the checking to be from the point of view of execdir
     . or null - see anyother.
 
+
 EOF_usage
-#exit 0          # change to return (if sourced)
-return          # change to return (if sourced)
+exit 2
 fi
 
 # start here
@@ -74,13 +74,12 @@ if [ ".$1" == ".build" ]; then
       echo "$HOME/$exec_dir does NOT exist YET."
       echo
     fi
-    return
+    exit 0
   else
     echo "answer ($answer) not 'y' or 'Y', exiting."
     echo "Please 'cd' to your build-lib  and retry."
     return
-  fi
-else
+  fi else
   chklib="exec-lib"
 fi
 ech0
@@ -88,35 +87,38 @@ ech0 "\$chklib = $chklib"
 ech0
 
 # exec-lib according to $rchbls exists?
-if [ -d $HOME/$rchbls ]; then
+if [ -d $rchbls ]; then
   echo
-  echo "$HOME/$rchbls EXISTs, so far so good"
+  echo "$rchbls EXISTs, so far so good"
   echo "i. e. directory indicated by \$rchbls exists."
 else
   echo
-  echo "exec-lib ($HOME/$rchbls) indicated by \$rchbls does not exist."
+  echo "exec-lib ($rchbls) indicated by \$rchbls does not exist."
   echo "This is OK before INSTALL is run."
   echo "You can try  'chkwisys build' cmd."
   echo "===>> check again after INSTALL. <<==="
-  return
+  exit 4
 fi
  
 echo "after exec-lib check"
 # if you are here  exec-lib exists and this is not 'build' req
 
-read build_dir rest < $HOME/$rchbls/builddir
-read exec_dir  rest < $HOME/$rchbls/execdir
-echo " chkwisys cmd. ( in some form ).  No 'build' parm."
-echo 
-echo "Info from globals andthe exec-lib"
-echo "\$rchbls = $rchbls."
-echo "$HOME/$rchbls/execdir says exec-lib is $HOME/$exec_dir"
-echo "$HOME/$rchbls/builddir says build-lib is $HOME/$build_dir"
+read build_dir rest < $rchbls/builddir
+read exec_dir  rest < $rchbls/execdir
 
+cat << EOF-info
+" chkwisys cmd. ( in some form ).  No 'build' parm."
  
- 
- 
- 
- 
- 
+==========="Info from globals and the exec-lib"================
+Special global variable:    \$rchbls = $rchbls
+execdir says exec-lib is:   $exec_dir
+builddir says build-lib is: $build_dir
 
+Your PATH is : $PATH 
+
+$exec_dir should be first in PATH libs UNLESS you have done
+something to explicitly change it, (e. g. used '. addpath0 some-dir'.) 
+
+
+EOF-info
+ 
