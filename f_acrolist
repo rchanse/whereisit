@@ -5,27 +5,27 @@
 #  3. :sort  will 'sort' this file
 #----
 #
-#  in this file change fubar to  your exec-lib (fubarbls ??)
-#  can use vim   :% su/fubar/fubarbls/g
+#  in this file change fubar to  your exec-lib (fubar ??)
+#  can use vim   :% su/fubar/fubar/g
 #
-build    ~/wherebls
-exec     ~/fubarbls
+build    ~/whereisit
+exec     ~/fubar
 profile  ~/.profile
 skelprof /etc/skel/.profile
 login    /etc/login.defs
-readmore ~/wherebls/README.more.md
-INSTALL  ~/wherebls/INSTALL
-11       ~/fubarbls/11asummary
-srcdoc   ~/fubarbls/srcdoc
-license  ~/fubarbls/COPYING
-boohoo   ~/fubarbls/BooHoo
-ap       ~/fubarbls/addpath
-ap0      ~/fubarbls/addpath0
-dp       ~/fubarbls/delpath
-f        ~/fubarbls/f
-pound    ~/fubarbls/#
+readmore ~/whereisit/README.more.md
+INSTALL  ~/whereisit/INSTALL
+11       ~/fubar/11asummary
+srcdoc   ~/fubar/srcdoc
+license  ~/fubar/COPYING
+boohoo   ~/fubar/BooHoo
+ap       ~/fubar/addpath
+ap0      ~/fubar/addpath0
+dp       ~/fubar/delpath
+f        ~/fubar/f
+pound    ~/fubar/#
 T        ~/tempname
-ff       ~/whereis/f
+ff       ~/whereisit/f
 hostname /etc/hostname
 hosts    /etc/hosts less 
 knr     ~/Documents/knr.pdf   atril

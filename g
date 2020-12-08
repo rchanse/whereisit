@@ -1,4 +1,10 @@
 #!/bin/bash
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
 
 function chkvar () {
 
@@ -22,13 +28,16 @@ fi
 #Set default values
 action=$1                                 # default for case
 let count=$#
+IFSsave=$IFS
+IFS=" "
+read exec_dir rest < $rchbls/execdir
+IFS=$IFSsave
+ech0 "\$exec_dir = $exec_dir"
 
 NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
 
 # start of 'whereis' addition
-chkvar
-read exec_dir rest < $HOME/$rchbls/execdir
-NAMES_list=$HOME/$exec_dir/gnamelist
+NAMES_list=$exec_dir/gnamelist
 # end of 'whereis' addition
 
 if [ -f $NAMES_list ]; then
