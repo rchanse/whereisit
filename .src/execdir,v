@@ -1,11 +1,16 @@
-head	1.2;
+head	1.3;
 access;
 symbols;
 locks
-	rchansen:1.2;
+	rchansen:1.3;
 comment	@# @;
 expand	@b@;
 
+
+1.3
+date	2020.12.06.01.19.06;	author rchansen;	state Exp;
+branches;
+next	1.2;
 
 1.2
 date	2020.11.19.17.10.04;	author rchansen;	state Exp;
@@ -22,12 +27,24 @@ desc
 @@
 
 
+1.3
+log
+@save this ver
+@
+text
+@fubarbls
+Gentime is Thu Dec  3 18:44:56 CST 2020
+@
+
+
 1.2
 log
 @set as fubar
 @
 text
-@fubar
+@d1 2
+a2 1
+fubar
 @
 
 

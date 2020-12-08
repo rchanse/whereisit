@@ -1,11 +1,21 @@
-head	1.3;
+head	1.5;
 access;
 symbols;
 locks
-	rchansen:1.3;
+	rchansen:1.5;
 comment	@# @;
 expand	@b@;
 
+
+1.5
+date	2020.12.06.06.54.25;	author rchansen;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2020.12.03.20.13.49;	author rchansen;	state Exp;
+branches;
+next	1.3;
 
 1.3
 date	2020.11.19.17.45.36;	author rchansen;	state Exp;
@@ -27,13 +37,109 @@ desc
 @@
 
 
+1.5
+log
+@working ver before change to PWD
+@
+text
+@#!/usr/bin/env bash
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@@
+  fi  
+}
+
+
+if [ ".$rchbls" == "." ]; then
+
+cat << EOF_var
+  The \$rchbls is not available. Please set it from
+your console.  Enter  'export rchbls=xxx , where xxx is
+the basename of your execution library.  Re-enter the cmd.
+
+EOF_var
+
+else
+
+#rchbls=$1
+#export rchbls=$rchbls
+
+the_dir=$HOME/$rchbls     
+read -r exec_base rest < $the_dir/execdir
+read -r build_base rest < $the_dir/builddir
+
+ech0 exec_base $exec_base
+ech0 build_base $build_base
+
+if [ -d $HOME/$rchbls ]; then
+  cd $HOME/$rchbls
+  . addpath0 $HOME/$rchbls nomsg
+else
+  cd $HOME/$build_base
+  . addpath0 $HOME/$build_base nomsg
+fi
+
+clear
+cat << EOF-modt
+
+"How much Neanderthal blood do you have? - Robert C Hansen"
+
+
+"The more they overthink the plumbing, the easier it is to stop 
+up the drain." - Montgomery Scott 
+
+
+"Google is YOUR friend!" -- Phil Bunch
+
+
+"Captain, you are expecting me to work with equipment that is little
+more than bearskins and stone knives." --  Mr. Spock
+
+
+"'Make it so!' - Jean-Luc Picard"
+
+
+Your path is now: $PATH
+
+"Special variable \$rchbls="$rchbls
+
+EOF-modt
+fi
+
+@
+
+
+1.4
+log
+@early messges of the day
+@
+text
+@d40 2
+a41 11
+echo 
+echo "How much Neanderthal blood do you have? - Robert C Hansen"
+echo 
+echo 
+echo "'Make it so!' - Jean-Luc Picard"
+echo
+echo
+echo Your path is now:
+echo $PATH
+echo
+echo "Special variable \$rchbls="$rchbls
+d43 22
+@
+
+
 1.3
 log
 @latest new ver
 @
 text
-@#!/usr/bin/env bash
-
+@d3 14
+a16 9
 if [ ".$1" == "." ]; then      # default provide info if no parms
 
 cat << EOF_usage
@@ -43,39 +149,24 @@ You must supply the execution lib dir name.  Please re-issue the
 cmd with this value.   i. e. '. ~lib-name/engage  lib-name '
 
 EOF_usage
-
-
-else
-
+d18 1
+d22 2
+a23 2
 rchjlp=$1
 export rchjlp=$rchjlp
-
+d25 1
+a25 1
 the_dir=$HOME/$rchjlp     
-read -r exec_base rest < $the_dir/execdir
-read -r build_base rest < $the_dir/builddir
-
-ech0 exec_base $exec_base
-ech0 build_base $build_base
-
+d32 3
+a34 3
 if [ -d $HOME/$rchjlp ]; then
   cd $HOME/$rchjlp
   . addpath0 $HOME/$rchjlp nomsg
-else
-  cd $HOME/$build_base
-  . addpath0 $HOME/$build_base nomsg
-fi
-
-echo 
-echo 
-echo "'Make it so!' - Jean-Luc Picard"
-echo
-echo
-echo Your path is now:
-echo $PATH
-echo
+d41 2
+d50 1
+a50 1
 echo "Special variable \$rchjlp="$rchjlp
-
-fi
+d53 1
 @
 
 

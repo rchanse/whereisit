@@ -1,11 +1,21 @@
-head	1.2;
+head	1.4;
 access;
 symbols;
 locks
-	rchansen:1.2;
+	rchansen:1.4;
 comment	@# @;
 expand	@b@;
 
+
+1.4
+date	2020.12.08.06.32.09;	author rchansen;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2020.12.03.15.08.02;	author rchansen;	state Exp;
+branches;
+next	1.2;
 
 1.2
 date	2020.11.16.20.28.54;	author rchansen;	state Exp;
@@ -22,78 +32,351 @@ desc
 @@
 
 
+1.4
+log
+@fix IFS need to parse
+@
+text
+@#!/usr/bin/env bash
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@@
+  fi  
+}
+
+function cpit () {
+  passed_val=$@@
+  ech0 "\$passed_val === $passed_val"
+  read first_word rest <<< $passed_val
+# echo "$first_word   ${first_word:0:1}"
+  if [ ".${first_word:0:1}" == ".#" ]; then
+    echo "comment:$passed_val" >> $rchbls/BooHoo
+    BooHoo="yes"              # mark that cp was failure
+    return
+  fi
+  
+   # do the copy
+   echo "$passed_val" >> $rchbls/BooHoo
+   if [ ! -e $first_word ]; then
+     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
+     return
+   fi
+
+   echo "cp -v $first_word $rchbls/$first_word" >> $rchbls/BooHoo
+   cp -v $first_word $rchbls/$first_word
+   ccrc=$?
+#  echo "$ccrc" >> $rchbls/BooHoo
+
+  if [ $ccrc -eq 0 ]; then
+    echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
+  else
+    echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
+    BooHoo="yes"
+  fi
+
+  return
+}
+
+##  end of internal functions
+
+## start of executable code
+
+echo "Checking ..."
+ech0 "\$rchbls is $rchbls"
+
+if [ ".$rchbls" == "." ]; then
+  echo "\$rchbls is NOT set, please fix. "
+  echo "Use 'export rchbls=xxx' where xxx is desired exec-lib dir."
+  echo "Leaving -- no work done."
+  return
+fi
+
+if [ ! -e $PWD/builddir ]; then       # weak test to see if right dir.
+  echo "It appears you may not have  cd-ed to build-lib "
+  echo "Please fix. "
+  echo "Leaving -- no work done."
+  return
+fi
+
+read build_dir rest < $PWD/builddir
+echo "build_dir = $build_dir"
+read exec_dir rest < $PWD/execdir
+
+if [ ".$build_dir" != ".$PWD" ]; then
+  echo
+  echo "build-lib indicator ($build_dir) is NOT this dir. ($PWD)"
+  echo "Correct this in  $PWD/builddir. "
+  echo "Leaving -- no work done."
+  return
+fi
+
+#echo "Execution lib dir is : "$rchbls/$exec_dir
+echo "\$rchbls is $rchbls"
+build_lib=$build_dir
+exec_lib=$exec_dir 
+echo "Build     lib dir is : "$build_dir
+
+# now check to insure exec-lib will be correct.
+if [ ".$exec_dir" == ".$rchbls" ]; then
+  # $rchbls matchs first word of first line of build-lib/execdir
+  ech0 " parm var ($exec_dir) EQUALs  global var \$rchbls ($rchbls)"
+  echo "Execution lib dir is : "$exec_lib"  (Yet to be built.)"
+else
+cat << EOF-exec-lib
+      
+Execution lib dir is : "$exec_lib"  (Yet to be built.)
+
+  MIS-MATCH   MIS-MATCH      global var and parm value
+
+  Correct by setting \$rchbls (now $rchbls) to be the same 
+as the first word on the first line of $build_lib/execdir
+which is now ($exec_dir).
+
+Use 'export rchbls=(appropriate)     and/or"
+edit $build_lib/execdir.
+
+Leaving - no work done.
+
+EOF-exec-lib
+  return
+fi
+
+echo
+echo -n "Is that correct?  y/Y to continue :"
+read answer rest
+
+if [ ".$answer" = ".y" ] || [ ".Sanswer" == ".Y" ]; then
+  echo "answer ($answer), On we go!"
+else
+  echo "answer ($answer) NOT 'y' or 'Y', Leaving -- nothing done."
+  return
+fi
+
+# 2 debuggin shorr-out
+#echo "EARLY OUT"
+#return
+
+
+if [ -d $exec_lib ]; then
+  echo "$exec_lib exists. Please renameit."
+  echo -n "Enter new subdirectory name (return to exit): "
+  read newname rest
+  if [ ".$newname" == "." ]; then
+    echo "Nothing done, I quit."
+    return
+  else
+    echo "mv $exec_lib $HOME/$newname"  
+    mv $exec_lib $HOME/$newname
+    echo "OK, we are ready -- rerun the INSTALL script"
+    return
+  fi
+else
+  echo "On we go, allocate, populate and rePATH  $exec_lib."
+fi 
+
+
+ls -alh $exec_lib    
+echo "cmd mkdir $exec_lib"
+mkdir $exec_lib
+ls -alh $exec_lib    
+cd $build_lib                  # get to right dir to do work
+
+echo "Your original PATH"
+echo $PATH
+echo
+echo "Start the copy/gen of $exec_lib"
+
+#echo "another early out"
+#return
+
+BooHoo="no"
+echo "# Message of possible INSTALL copy errors." > $exec_lib/BooHoo
+echo "  Search for 'BooHoo' to find concerns." >> $exec_lib/BooHoo
+date >> $exec_lib/BooHoo
+
+while read parm_line ; do
+# echo "$parm_line"  >> $exec_lib/BooHoo
+# echo "cpit $parm_line "
+  cpit "$parm_line"
+done < INSTALLmbrs
+
+echo
+echo "done with the copy/gen of $exec_lib"
+
+if [ ".$BooHoo" == ".no" ]; then
+  echo
+  echo "exec-lib ($exec_lib) is built with NO copy errors."
+  echo "Messages are in $exec_lib/BooHoo."
+else
+  echo
+  echo "exec-lib ($exec_lib) generation HAD copy errors. <<=====:"
+  echo "Review messages in $exec_lib/BooHoo."
+fi
+
+echo
+ls -A $exec_lib
+echo
+echo "To activate enter  '. ~/$rchbls/engage' "
+echo "You can back off with '. delpath $exec_lib' "
+echo "Restart with existing rchtest file with  . ~/$rchbls/engage"
+echo 
+echo "Good Luck"
+@
+
+
+1.3
+log
+@temp hold extra -d check
+@
+text
+@d11 24
+a34 5
+  echo "cp -p $1 $exec_lib/$1" >> $exec_lib/BooHoo
+  cp -p $1 $exec_lib/$1
+  copyrc=$?
+  if [ $copyrc -eq 0 ]; then
+    echo "$1 copied (OK) to "$exec_lib >>$exec_lib/BooHoo
+d36 1
+a36 1
+    echo "BooHoo -- cp ret code ($copyrc) check $1" >> $exec_lib/BooHoo
+d39 2
+d42 5
+a63 2
+current_dir_base=`basename $PWD`
+ech0 "current_dir_base = $current_dir_base"
+d65 1
+a65 1
+ech0 "build_dir = $build_dir"
+d68 1
+a68 1
+if [ ".$build_dir" != ".$current_dir_base" ]; then
+d76 1
+a76 3
+#echo "Execution lib dir is : "$HOME/$exec_dir
+build_lib=$HOME/$build_dir
+exec_lib=$HOME/$exec_dir 
+d78 3
+a80 1
+echo "Build     lib dir is : "$HOME/$build_dir
+d140 1
+a140 2
+#echo "another early out"
+#return
+d152 3
+d160 5
+a165 41
+cpit 11asummary            # file of one line summaries
+cpit addpath               # put file a end of PATH
+cpit al                    # some semi-useful aliases
+cpit addpath0              # put file at start of PATH
+cpit builddir              # hold build director basename
+cpit c                     # director quick change by acronym
+cpit checksys              # aid to show rchbls, bld-lib exec-lib
+cpit checkvar              # aid to show rchbls
+cpit chkvar                # check the rchbls variable        
+cpit COPYING               # MIT license
+cpit delpath               # remove file from PATH 
+cpit diffme                # short cut script to diff mems in pdw
+cpit dirinpath             # chk all dir file where in path
+cpit ech0                  # debugging echo function
+cpit ech1                  # debugging echo inline
+cpit execdir               # hold execution dir basename
+'date' >> $HOME/$rchbls/execdir # time stamp the gen
+cpit engage                # hook in code to activate environment
+cpit engageq               # hook in after INSTALL               
+cpit f                     # go to file by acronym
+cpit ff                    # f for project groups  
+cpit f1                    # ff subfunction        
+cpit f_acrolist            # start list of acronyms
+cpit g                     # go to file by number
+cpit ged                   # like g but with nano rather than vim
+cpit getsys2               # system checking tool
+cpit get4me                # grab a copy
+# not this one -- cpit INSTALL               # this script
+cpit lbang                 # for the lazy -  #!/usr/bin/env bash
+cpit meminpath             # show which path files have mem (compare
+cpit rchbls                # tool to set $rchbls
+cpit README.md             # notes like a 'typical' README
+cpit re_build              # copy from pwd/exec-lib to build-lib    
+cpit re_exec               # copy from pwd/build-lib to exec-lib    
+cpit refresh               # not used replace by re_exec or re_build
+# not this one -- cpit setvar                # set the rchbls                         
+cpit src                   # Eric Raymond  Simple Revision Control  
+cpit srcdoc                # starter notes on src                  
+cpit showpath              # show the path files
+cpit wrsum                 # document aid tool  
+cpit xyx
+d175 1
+a175 1
+  echo "exec-lib ($exec_lib) generation HAD copy errors."
+@
+
+
 1.2
 log
 @update members to create
 @
 text
-@#!/usr/bin/env bash
-
-
-function cpit () {
+@d3 6
+d11 2
+a12 2
   echo "cp $1 $HOME/rchtest/$1"
   cp $1 $HOME/rchtest/$1
-  copyrc=$?
-  if [ $copyrc -eq 0 ]; then
+d15 1
+a15 1
     echo "$1 copied to rchtest."
-  else
+d17 2
+a18 1
     echo "Boo Boo -- check $1"
-  fi
-}
-
+d21 65
+d87 14
+a100 3
 echo $HOME/rchtest
 if [ -d $HOME/rchtest ]; then
   echo "$HOME/rchtest exists. Please renameit."
-  echo -n "Enter new subdirectory name (return to exit): "
-  read newname rest
-  if [ ".$newname" == "." ]; then
-    echo "Nothing done, I quit."
+d105 1
+a105 1
     exit 4
-  else
+d107 4
+a110 4
     echo "mv $HOME/rchtest $HOME/$newname"  
     mv $HOME/rchtest $HOME/$newname  
     echo "OK, we are ready -- rerun the buildtest script"
     exit 2
-  fi
-else
+d113 1
+a113 1
   echo "On we go, allocate, populate and rePATH  $HOME/rchtest"
-fi 
-
+d116 7
+a122 3
 mkdir $HOME/rchtest
 ls -alh $HOME/rchtest
 cd $HOME/rchbuild              # get to right dir to do work
-
-echo "Your original PATH"
-echo $PATH
-
-cpit 11asummary            # file of one line summaries
-cpit addpath               # put file a end of PATH
-cpit addpath0              # put file at start of PATH
-cpit c                     # director quick change by acronym
+d126 8
+d137 1
+d139 1
+d141 4
+a144 1
 cpit chkvar                # check the rchjlp variable        
-cpit delpath               # remove file from PATH 
-cpit dirinpath             # chk all dir file where in path
-cpit ech0                  # debugging echo function
-cpit ech1                  # debugging echo inline
-cpit engage                # hook in code to activate environment
-cpit f                     # go to file by acronym
-cpit f_acrolist            # start list of acronyms
-cpit g                     # go to file by number
-cpit ged                   # like g but with nano rather than vim
+d146 1
+d150 2
+d153 1
+d155 2
+d160 3
+a162 1
 cpit INSTALL               # this script
-cpit lbang                 # for the lazy -  #!/usr/bin/env bash
-cpit meminpath             # show which path files have mem (compare
+d165 8
+a172 1
 cpit setvar                # set the rchjlp                         
-cpit showpath              # show the path files
-cpit wrsum                 # document aid tool  
+d175 20
+a194 6
 
 ls -alh ~/rchtest
 
 echo "To activate enter  '. ~/rchtest/engage' "
 echo "You can back off with '. unpath $HOME/rchtest' "
 echo "Restart with existing rchtest file with  . ~/rchtest/engage"
-echo 
-echo "Good Luck"
 @
 
 

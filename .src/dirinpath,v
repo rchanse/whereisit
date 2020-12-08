@@ -1,11 +1,16 @@
-head	1.3;
+head	1.4;
 access;
 symbols;
 locks
-	rchansen:1.3;
+	rchansen:1.4;
 comment	@# @;
 expand	@b@;
 
+
+1.4
+date	2020.12.06.23.37.04;	author rchansen;	state Exp;
+branches;
+next	1.3;
 
 1.3
 date	2020.11.21.23.42.52;	author rchansen;	state Exp;
@@ -27,9 +32,9 @@ desc
 @@
 
 
-1.3
+1.4
 log
-@Revise help doc
+@working but not quited right
 @
 text
 @#!/usr/bin/env bash
@@ -60,7 +65,7 @@ function mem_check () {
       fi
 
       if [ -f ${p_file[$j]}/$chk_mem ]; then  # show if found in dir.
-        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
+        if [ ".${p_file[$j]}" == ".$dir_to_check" ]; then
           echo $j  $chk_mem  is in ${p_file[$j]} 
         else
           echo $j  $chk_mem  is in ${p_file[$j]}" <<==path-NOT-seach" 
@@ -91,15 +96,15 @@ EOF
 exit 0
 fi
 
-file_to_check=$1      # <<========= file to process
+dir_to_check=$1      # <<========= file to process
 
-if [ -d $file_to_check ]; then
+if [ -d $dir_to_check ]; then
   echo
-  echo "List of files in $file_to_check "
-  ls -A $file_to_check                      # show it
-  ls -A $file_to_check > /tmp/lslist        # save it
+  echo "List of files in $dir_to_check "
+  ls -A $dir_to_check                      # show it
+  ls -A $dir_to_check > /tmp/lslist        # save it
 else
-  echo "$file_to_check  NOT found. "
+  echo "$dir_to_check  NOT found. "
   echo "I quit. "
   exit 4
 fi
@@ -148,10 +153,10 @@ echo "PATH by number"
 showpath
 
 echo
-echo "Process list for $file_to_check"
+echo "Process list for $dir_to_check"
 echo "============================================="
 while  read filename rest ; do
-  ech0 $filename
+  #ech0 $filename
 
   let j=0
   process="yes"
@@ -165,14 +170,48 @@ while  read filename rest ; do
     let j=$j+1
   done
 
-  echo
   echo "$filename process: $process"
   if [ ".$process" == ".yes" ]; then
     mem_check $filename
   fi
+  echo
   
 done < /tmp/lslist
 exit 0
+@
+
+
+1.3
+log
+@Revise help doc
+@
+text
+@d29 1
+a29 1
+        if [ ".${p_file[$j]}" == ".$file_to_check" ]; then
+d60 1
+a60 1
+file_to_check=$1      # <<========= file to process
+d62 1
+a62 1
+if [ -d $file_to_check ]; then
+d64 3
+a66 3
+  echo "List of files in $file_to_check "
+  ls -A $file_to_check                      # show it
+  ls -A $file_to_check > /tmp/lslist        # save it
+d68 1
+a68 1
+  echo "$file_to_check  NOT found. "
+d117 1
+a117 1
+echo "Process list for $file_to_check"
+d120 1
+a120 1
+  ech0 $filename
+a133 1
+  echo
+d138 1
 @
 
 

@@ -1,11 +1,21 @@
-head	1.3;
+head	1.5;
 access;
 symbols;
 locks
-	rchansen:1.3;
+	rchansen:1.5;
 comment	@# @;
 expand	@b@;
 
+
+1.5
+date	2020.12.08.06.35.22;	author rchansen;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2020.11.27.22.42.48;	author rchansen;	state Exp;
+branches;
+next	1.3;
 
 1.3
 date	2020.11.19.06.39.39;	author rchansen;	state Exp;
@@ -27,13 +37,121 @@ desc
 @@
 
 
-1.3
+1.5
 log
-@setvar as a script does not retain setting of $rchjlp because if it execed.
+@need PWD copying builddir
 @
 text
 @#!/usr/bin/env bash
 
+### Make sure you are where you want to be.
+read build_dir rest < builddir
+clear
+cat << EOF-hello
+  Hello and welcome to Robert C. Hansen (rch) 'whereis' setup.
+
+You should be starting out with your pwd being your build-lib.
+The first word of builddir member should MATCH the directory
+of the build-lib you desire.
+You are currently in '$PWD'.  
+The builddir member of this directory says '$build_dir'.
+
+EOF-hello
+echo -n "Is this your desire? (CR - to sync/go on, other quits: "
+read  answer rest
+if [ ".$answer" == "." ]; then
+  cp -p builddir /tmp/tempname$USER
+  echo "$PWD" > builddir                    # write build_dir
+  date >> builddir                          # timestamp it
+  cat /tmp/tempname$USER >> builddir        # put back orig at end
+# echo "==============="
+# cat builddir
+# echo "==============="
+# echo "GOOD GOOD,  Onward. "
+else
+  echo "answer ($answer) not 'CR'.  No Changes made."
+  echo "Please reset and  'cd appropriate' "
+  echo "OK, now I really quit."
+  return
+fi
+
+read build_dir rest < $PWD/builddir
+echo "builddir member indicate build-dir is $build_dir."
+echo "This is word 1 on line 1 of $build_dir/builddir."
+
+if [ ".$PWD" != ".$build_dir" ]; then
+  echo "Mismatch MISmatch MISMATCH misMATCH mismatch"
+  echo "Please edit $PWD/builddir and correct."
+  echo "Then you can rerun '. ./setvar' "
+  echo "Nothing done, I quit."
+  return
+fi
+
+read -r default rest < $build_dir/execdir
+cat << EOF-execset
+    
+    You will now set the single global variable used by this
+ 'whereis' system ( \$rchbls ).  It will ALSO be the directory
+ for the execution library.  The current value is $default.
+ Should you want $HOME/$default hit CR at the prompt.  Other
+ key in the FULL desired directory name.
+
+EOF-execset
+echo -n "Enter the value for \$rchbls variable(CR for default): "
+read mychoice rest
+
+if [ ".$mychoice" == "." ]; then        # take the default
+  echo "You have chosen to take the default : "$HOME/$default
+  thechoice=$HOME/$default
+else
+  thechoice=$mychoice
+fi
+
+# Setting global variable $rchbls
+cp $build_dir/execdir /tmp/tempname$USER   #save orig
+echo "$thechoice" > $build_dir/execdir     #set value
+echo "Gentime is "`date` >> $build_dir/execdir    # timestamp
+cat /tmp/tempname$USER >> $build_dir/execdir # put back in old
+    echo
+#   echo "\$rchbls = $rchbls,\$thechoice = $thechoice  BEFORE "
+    echo "\$rchbls = $rchbls                      BEFORE "
+    read rchbls rest < $build_dir/execdir      # get it
+    export rchbls=$thechoice                   # set it $rchbls
+    echo
+    echo "and now \$rchbls is : $rchbls"
+    echo
+    echo "You may run this script multiple times."
+    echo "The value for \$rchbls will be set by the last run."
+    echo
+    echo "By the way, 'rchbls' is derived as the initials of "
+    echo "me - Robert C. Hansen  and Benjamin Lafayette Sisko."
+
+read build_dir rest < $build_dir/builddir
+read exec_dir rest  < $build_dir/execdir
+cat << EOF-setvar
+
+  You should now be set up to create the exec-lib.
+
+  \$rchbls = $rchbls
+  build-lib = $build_dir
+  exec-lib = $exec_dir
+EOF-setvar
+
+if [ ! -d  $exec_dir ]; then
+  echo "$exec_dir does NOT exist YET, go onto  '. ./INSTALL' "
+else
+  echo "$exec_dir EXISTs, best look at it. Might be empty."
+fi
+@
+
+
+1.4
+log
+@old version was working
+@
+text
+@d3 30
+a32 17
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
@@ -47,12 +165,16 @@ suffix=`basename $PWD`
 read -r build_dir rest < $its_dir/builddir
 
 if [ ".$suffix" != ".$build_dir" ]; then
-  echo "Mismatch found. '$suffix' not '$build_dir'"
-  echo "Please change the first word on the first line of "
-  echo "$PWD/builddir to be $suffix."
-  exit 8
-fi
-
+cat <<EOF-chkbld
+  A 'Mismatch has be found '$suffis' not '$build_dir'.
+If this looks hokey, let me ask.  Did you cd to your build-lib
+directory?  If not, do so and reissue '. ./setvar'
+d34 9
+a42 2
+EOF-chkbld
+  #exit 8
+d46 1
+a46 19
 cat << EOF-info
   This is the initial script to setup the 'whereis' project.
 it should be $0.
@@ -60,6 +182,8 @@ it should be $0.
   The build directory for 'whereis' contains the script(s) and parm
 file(s) to create a running system.  Currently it is thought to be
 $HOME/$build_dir.
+
+build-lib == $HOME/$build_dir
 
 -------------------------
 EOF-info
@@ -70,17 +194,15 @@ read answer rest
 if [ ".$answer" == ".y" ]; then
   echo "On we go."
 
-cat << EOF-execset
-    
-    You will now set the single global variable used by this
- 'whereis' system ( \$rchjlp ).  It will ALSO be the directory
+d51 3
+a53 1
  for the execution library.
-
-EOF-execset
-
+d56 2
+d59 6
+a64 14
     read -r default rest < $its_dir/execdir
     echo "The current default is "$default
-    echo -n "Enter the value for \$rchjlp variable(CR for default): "
+    echo -n "Enter the value for \$rchbls variable(CR for default): "
     read mychoice rest
 
     if [ ".$mychoice" == "." ]; then        # take the default
@@ -90,21 +212,59 @@ EOF-execset
     fi
 
     # (re)set the execute dir base
-    echo $mychoice > $its_dir/execdir
-    date >> $its_dir/execdir      # include timestamp in exedir
-
-    export rchjlp=$mychoice
-    echo "and now \$rchjlp is $rchjlp"
-    echo
-    echo "You may run this script multiple times."
-    echo "The value for \$rchjlp will be set by the last run."
-    echo "By the way, 'rchjlp' is derive as the initial of me -"
-    echo "Robert C. Hansen  and Jean-Luc Picard."
+    echo "$mychoice" > $its_dir/execdir
+#   date >> $its_dir/execdir      # include timestamp in exedir
+d66 10
+a75 1
+    export rchbls=$mychoice
+d83 17
+a99 6
+    echo "me - Robert C. Hansen  and Jean-Luc Picard."
 else 
   echo "answer ($answer) was other than 'y' "
   echo "I now quit for you to figure out why. "
+  #exit 4
+  return
+a100 1
+echo "That's all, folks."
+@
+
+
+1.3
+log
+@setvar as a script does not retain setting of $rchjlp because if it execed.
+@
+text
+@d16 8
+a23 4
+  echo "Mismatch found. '$suffix' not '$build_dir'"
+  echo "Please change the first word on the first line of "
+  echo "$PWD/builddir to be $suffix."
+  exit 8
+d34 2
+d48 1
+a48 1
+ 'whereis' system ( \$rchjlp ).  It will ALSO be the directory
+d55 1
+a55 1
+    echo -n "Enter the value for \$rchjlp variable(CR for default): "
+d65 2
+a66 2
+    echo $mychoice > $its_dir/execdir
+    date >> $its_dir/execdir      # include timestamp in exedir
+d68 3
+a70 2
+    export rchjlp=$mychoice
+    echo "and now \$rchjlp is $rchjlp"
+d73 4
+a76 3
+    echo "The value for \$rchjlp will be set by the last run."
+    echo "By the way, 'rchjlp' is derive as the initial of me -"
+    echo "Robert C. Hansen  and Jean-Luc Picard."
+d80 2
+a81 1
   exit 4
-fi
+d83 1
 @
 
 

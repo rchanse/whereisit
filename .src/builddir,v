@@ -1,0 +1,59 @@
+head	1.2;
+access;
+symbols;
+locks
+	rchansen:1.2;
+comment	@# @;
+expand	@b@;
+
+
+1.2
+date	2020.12.06.01.18.59;	author rchansen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2020.12.05.23.28.44;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@save this ver
+@
+text
+@whereis
+
+  The first word in the first line (by default 'whereis') is
+the directory which contains build code. 
+
+So default build library is   $HOME/whereis
+
+If you change the value to 'xxxx' then you should be in
+$HOME/xxx/builddir
+
+Obtained by: git clone https://github.com/rchanse/whereis.git
+
+To get the xxx lib you can issue
+ git clone https://github.com/rchanse/whereis.git xxx
+
+IMPORTANT: if you changed the build lib make the change in line 1.
+This build lib is only used in INSTALL and refresh.
+
+@
+
+
+1.1
+log
+@save orig
+@
+text
+@d1 1
+a1 1
+wherebls
+@
