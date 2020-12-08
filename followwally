@@ -1,0 +1,51 @@
+    1  ls -alh
+    2  echo $PATH
+    3  git clone https://github.com/rchanse/whereisit.git
+    4  cp /home/popeye/.vimrc .vimrc -v
+    5  cd whereisit
+    6  ./dirinpath ~/whereisit
+    7  ./dirinpath ~/whereisit | less
+    8  ./dirinpath ~/whereisit > ~/tempname
+    9  vim dirinpath
+   10  ./dirinpath ~/whereisit > ~/tempname
+   11  vim ~/tempname
+   12  clear
+   13  ls
+   14  T="~/tempname"
+   15  ls -al $T
+   16  ls > $T
+   17  T=~/tempname
+   18  ls -al $T
+   19  vim $T
+   20  dirinpath ~/whereisit > $T
+   21  ./dirinpath ~/whereisit > $T
+   22  vim $T
+   23  clear
+   24  history | grep touch
+   25  rm -v $T
+   26  ./dirinpath ~/whereisit > $T
+   27  vim $T
+   28  chkwisys
+   29  showpath
+   30  echo $rchbls
+   31  ls  ../
+   32  . ./setvar
+   33  . ./INSTALL
+   34  diff ~/fubar ~/whereisit
+   35  showpath
+   36  ./showpath
+   37  .   ~/fubar/engage
+   38  showpath
+   39  f  .
+   40  f booboo
+   41  f boohoo
+   42  f build
+   43  f exec
+   44  g q fubar
+   45  g 0
+   46  sudo updatedb
+   47  g q whereisit
+   48  g 0
+   49  g 24
+   50  hidtory > ~/4gary
+   51  history > ~/4gary
