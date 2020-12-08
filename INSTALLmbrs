@@ -13,6 +13,7 @@ c                # director quick change by acronym
 checksys         # aid to show rchbls, bld-lib exec-lib
 checkvar         # aid to show rchbls
 chkvar           # check the rchbls variable        
+# chkwisys       # left out on purpose to demo errmsg
 COPYING          # MIT license
 delpath          # remove file from PATH 
 diffme           # short cut script to diff mems in pdw

@@ -16,12 +16,13 @@ EOF-hello
 echo -n "Is this your desire? (CR - to sync/go on, other quits: "
 read  answer rest
 if [ ".$answer" == "." ]; then
-  cp -p builddir /tmp/tempname$USER
+  cp -p $PWD/builddir /tmp/tempname$USER
   echo "$PWD" > builddir                    # write build_dir
   date >> builddir                          # timestamp it
-  cat /tmp/tempname$USER >> builddir        # put back orig at end
+  cat /tmp/tempname$USER >> $PWD/builddir   # put back orig at end
 # echo "==============="
 # cat builddir
+# return
 # echo "==============="
 # echo "GOOD GOOD,  Onward. "
 else
@@ -98,3 +99,4 @@ if [ ! -d  $exec_dir ]; then
 else
   echo "$exec_dir EXISTs, best look at it. Might be empty."
 fi
+
