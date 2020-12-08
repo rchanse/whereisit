@@ -10,10 +10,10 @@ al               # some semi-useful aliases
 addpath0         # put file at start of PATH
 builddir         # hold the name of the build-lib dir
 c                # director quick change by acronym
-checksys         # aid to show rchbls, bld-lib exec-lib
-checkvar         # aid to show rchbls
-chkvar           # check the rchbls variable        
-# chkwisys       # left out on purpose to demo errmsg
+# checksys  gone!  # aid to show rchbls, bld-lib exec-lib
+# checkvar  gone!  # aid to show rchbls
+# chkvar    gone!  # check the rchbls variable        
+# chkwisys       # left out ON PURPOSE to demo errmsg
 COPYING          # MIT license
 delpath          # remove file from PATH 
 diffme           # short cut script to diff mems in pdw
@@ -28,7 +28,7 @@ ffdoit           # workhorse subroutine for ff (does f work
 f1               # ff subfunction        
 f_acrolist       # start list of acronyms
 g                # go to file by number
-ged              # like g but with nano rather than vim
+# ged    gone!     # like g but with nano rather than vim
 getsys2          # system checking tool
 get4me           # grab a copy
 lbang            # for the lazy -  #!/usr/bin/env bash
@@ -44,4 +44,4 @@ srcdoc           # starter notes on src
 showpath         # show the path files
 wrsum            # document aid tool  
 # the following member xyz does not exist - is is meant to cause err msg
-xyz              # does not exist, just cause message
+xyz              # does NOT exist, just cause message
