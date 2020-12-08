@@ -2,13 +2,13 @@
 
 function chkvar () {
 
-echo "The rchjlp variable is: $rchjlp"
+echo "The rchbls variable is: $rchbls"
 
-if [ ".$rchjlp" == "." ] ; then
+if [ ".$rchbls" == "." ] ; then
 
 cat << EOF-var
-  The value for \$rchjlp seems to be lost.  The script will be
-terminated.  Reset \$rchjlp from your console - 'export rchjlp=xxx'
+  The value for \$rchbls seems to be lost.  The script will be
+terminated.  Reset \$rchbls from your console - 'export rchbls=xxx'
 where xxx is the base name of your exection lib.  Try again, good luck.
 
 EOF-var
@@ -27,7 +27,7 @@ NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
 
 # start of 'whereis' addition
 chkvar
-read exec_dir rest < $HOME/$rchjlp/execdir
+read exec_dir rest < $HOME/$rchbls/execdir
 NAMES_list=$HOME/$exec_dir/gnamelist
 # end of 'whereis' addition
 

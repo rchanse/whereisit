@@ -29,6 +29,7 @@ else
      echo "alias cdb='cd $build_dir'"
      alias cdb='cd $build_dir'            # to build-lib dir.
    fi
+   alias cdt='cd ~/testwi'
    alias cnx='chmod -x '    
    alias cx='chmod +x '    
    alias hal='ls -alh '
