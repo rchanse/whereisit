@@ -49,3 +49,55 @@
    49  g 24
    50  hidtory > ~/4gary
    51  history > ~/4gary
+   52  vim ~/4gary
+   53  clear
+   54  showpath
+   55  . al
+   56  cdb
+   57  cdx
+   58  cat al
+   59  cd 
+   60  mkdir testwi
+   61  cdt
+   62  . addpath0 ~/testwi
+   63  vim wh
+   64  chmod +x hw
+   65  ls -al
+   66  mv wh hw
+   67  chmod +x hw
+   68  which hw
+   69  hw
+   70  meminpath hw
+   71  chkwisys
+   72  grep chkwisys ~/whereisit/INSTALLprms
+   73  grep chkwisys ~/whereisit/INSTALLmbrs
+   74  get4me ~/whereisit/chkwisys
+   75  chkwisys
+   76  re_exec 
+   77  re_exec chkwisys
+   78  re_exec chkwisys .
+   79  meminpath chkwisys
+   80  src
+   81  history > 4gary2
+   82  history > ~/4gary2
+   83  ls
+   84  cd
+   85  mkdir whereisit_gitsave
+   86  cdb
+   87  cd
+   88  cd whereisit_
+   89  cd whereisit_gitsave/
+   90  git init --bare
+   91  cdb
+   92  git remote -v
+   93  git remote add online ~/whereisit_gitsave/
+   94  git remote -v
+   95  git push online
+   96  cd
+   97  git clone ~/whereisit_gitsave/  anotherwhereisit
+   98  ls -alh
+   99  unalias ls
+  100  ls -alh
+  101  diff whereisit anotherwhereisit/
+  102  history >~/4gary2
+
