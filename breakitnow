@@ -1,0 +1,16 @@
+function ls () {
+  echo "Sorry, you have broken ls."
+  }
+function vim() {
+  echo "vim is Not on this system!!!"
+  }
+function cat () {
+  echo "Meow  Meow ?!"
+  }
+  
+function unbreakit  () {
+  unset -f ls
+  unset -f vim
+  unset -f cat
+  unset -f unbreakit 
+  }

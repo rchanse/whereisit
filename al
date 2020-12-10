@@ -40,3 +40,4 @@ else
    alias v2='vim ~/tempname'
    alias varshow='echo \$rchbls is $rchbls'
 fi
+

@@ -111,7 +111,7 @@ echo
 echo -n "Is that correct?  y/Y to continue :"
 read answer rest
 
-if [ ".$answer" = ".y" ] || [ ".Sanswer" == ".Y" ]; then
+if [ ".$answer" = ".y" ] || [ ".$answer" == ".Y" ]; then
   echo "answer ($answer), On we go!"
 else
   echo "answer ($answer) NOT 'y' or 'Y', Leaving -- nothing done."
@@ -175,8 +175,12 @@ if [ ".$BooHoo" == ".no" ]; then
   echo "Messages are in $exec_lib/BooHoo."
 else
   echo
+  echo "**************************************************"
+  echo "**************************************************"
   echo "exec-lib ($exec_lib) generation HAD copy errors. <<=====:"
   echo "Review messages in $exec_lib/BooHoo."
+  echo "**************************************************"
+  echo "**************************************************"
 fi
 
 echo
@@ -187,4 +191,3 @@ echo "You can back off with '. delpath $exec_lib' "
 echo "Restart with existing rchtest file with  . $rchbls/engage"
 echo 
 echo "Good Luck"
-

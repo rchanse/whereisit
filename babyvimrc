@@ -1,0 +1,23 @@
+"set nocompatible              " required
+"filetype off                  " required
+set autoindent         "ai  autoindent
+set nobackup             "bk  take a backup before changes
+set history=500  " length of history buffer
+set laststatus=2            "rch tryit "Thu 25 Dec 2014 05:41:00 PM CST
+set mouse=a
+set number
+set ruler        " show where I am
+set showcmd      " show commands
+set showmatch
+"set tabstop=4    " indenting set
+:set statusline=%f\ %m\ [ASCII=%b]\[Hex=%B]\ line:\ %l,%v%8L\[%P]\ Buf:\%n
+"
+set hlsearch           " hls  nohls  uhighlignt the search string
+set incsearch          " is  show search as it happens
+set ignorecase         " ic
+set smartcase          " scs
+set noswapfile
+set background=light
+inoremap jk <Esc>
+syntax off
+

@@ -1,13 +1,14 @@
 function ef () {
   read mydir rest < ~/wherebls/execdir
-  vim $mydir/$1
+  vim ~/$mydir/$1
   }
 function bf () {
   read mydir rest < ~/wherebls/builddir
-  vim $mydir/$1
+  echo $mydir
+  vim ~/$mydir/$1
   }
-unhooklook () {
+unlook () {
   unset -f ef
   unset -f bf
-  unset -f unhooklook
+  unset -f unlook
   }

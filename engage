@@ -7,50 +7,83 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
+if [ ".$1" == ".--help" ] || [ ".$rchbls" == "." ]; then
 
-if [ ".$rchbls" == "." ]; then
+cat << EOF-help
 
-cat << EOF_var
-  The \$rchbls is not available. Please set it from
-your console.  Enter  'export rchbls=xxx , where xxx is
-the basename of your execution library.  Re-enter the cmd.
+  This is the startup command the requirments are:
+  the following should Match (all the same.
 
-Based on the environmement, If you in the exec-lib directory
-\$rchbls should be $PWD.  
-If that is true answer y/Y to the prompt.  If not answer
-somethig other and quit.
-EOF_var
-echo "Is pwd pointed to your exec-lib (y/Y) : "
-read answer rest
+  1. Your pwd is the directory of your exec-lib
+  2. The variable \$rchbls =  exec-lib
+  3. The first word in  exec-lib/execdir 
 
-if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
-  export rchbls=$PWD
+  Currently  1. \$PWD = $PWD
+             2. \$rchbls = $rchbls
+             3. (in a moment.) 
+
+  For example had you used the defaults of  whereisit/fubar
+  Setting the above.
+1. By cd -- your \$PWD is  /home/yourid/fubar (/home/$USER/fubar) 
+
+2. You can set \$rchbls may be set by export command.
+  export rchbls=/home/yourid/fubar    or
+  export rchbls=/home/$USER/fubar     or
+  export rchbls=~/fubar
+
+3. Edit  exec-lib/exec-dir
+EOF-help
+return
+fi
+
+if [ ".$rchbls" == ".$PWD" ]; then
+  ech0 "Das is gut!"
+# return
 else
-  echo "Answer not (y/Y), quitting now.  Correct and reenter."
+  echo "Mismatch "
+
+  echo "Currently  \$rchbls = $rchbls"
+  echo "           \$PWD = $PWD"
+  echo "try  . ./engage --help "
+
   return
 fi
 
-fi
-#rchbls=$1
-#export rchbls=$rchbls
 
-#the_dir=$HOME/$rchbls     
+IFSsave=$IFS
+IFS=" "
 read -r exec_base rest < $rchbls/execdir
 read -r build_base rest < $rchbls/builddir
+IFS=$IFSsave
 
 ech0 "\$rchbls = $rchbls "
-ech0 exec_base $exec_base
-ech0 build_base $build_base
+ech0 "exec_base $exec_base"
+ech0 "build_base $build_base"
 
-if [ -d $rchbls ]; then
-  cd $rchbls
-  . addpath0 $rchbls nomsg
+if [ ".$exec_base" == ".$rchbls" ]; then
+  ech0 "Also good"
 else
-  cd $HOME/$build_base
-  . addpath0 $build_base nomsg
+  echo "Mismatch"
+  echo "pwd       $PWD "
+  echo "rchbls    $rchbls "
+  echo "exec_base $exec_base "
+  echo "Quiting.   Please read  '. ./engage --help'"
+  return
 fi
 
-clear
+#safety
+export rchbls=$rchbls
+cd  $rchbls
+#source  addpath0 $rchbls  nomsg
+source  addpath0 .  nomsg
+cd                                  # back home dir
+#source  addpath0 $rchbls nomsg
+#else
+# cd $HOME/$build_base
+# . addpath0 $build_base nomsg
+#fi
+
+# clear
 cat << EOF-modt
 "How much Neanderthal blood do you have? - Robert C Hansen"
 
@@ -74,3 +107,4 @@ Your path is now: $PATH
 "Special variable \$rchbls="$rchbls
 
 EOF-modt
+#--------------------------------------
