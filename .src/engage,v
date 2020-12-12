@@ -1,11 +1,16 @@
-head	1.5;
+head	1.6;
 access;
 symbols;
 locks
-	rchansen:1.5;
+	rchansen:1.6;
 comment	@# @;
 expand	@b@;
 
+
+1.6
+date	2020.12.12.04.33.27;	author rchansen;	state Exp;
+branches;
+next	1.5;
 
 1.5
 date	2020.12.06.06.54.25;	author rchansen;	state Exp;
@@ -37,9 +42,9 @@ desc
 @@
 
 
-1.5
+1.6
 log
-@working ver before change to PWD
+@almost ready need PWD prompt
 @
 text
 @#!/usr/bin/env bash
@@ -51,39 +56,84 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
+if [ ".$1" == ".--help" ] || [ ".$rchbls" == "." ]; then
 
-if [ ".$rchbls" == "." ]; then
+cat << EOF-help
 
-cat << EOF_var
-  The \$rchbls is not available. Please set it from
-your console.  Enter  'export rchbls=xxx , where xxx is
-the basename of your execution library.  Re-enter the cmd.
+  This is the startup command the requirments are:
+  the following should Match (all the same.
 
-EOF_var
+  1. Your pwd is the directory of your exec-lib
+  2. The variable \$rchbls =  exec-lib
+  3. The first word in  exec-lib/execdir 
 
-else
+  Currently  1. \$PWD = $PWD
+             2. \$rchbls = $rchbls
+             3. (in a moment.) 
 
-#rchbls=$1
-#export rchbls=$rchbls
+  For example had you used the defaults of  whereisit/fubar
+  Setting the above.
+1. By cd -- your \$PWD is  /home/yourid/fubar (/home/$USER/fubar) 
 
-the_dir=$HOME/$rchbls     
-read -r exec_base rest < $the_dir/execdir
-read -r build_base rest < $the_dir/builddir
+2. You can set \$rchbls may be set by export command.
+  export rchbls=/home/yourid/fubar    or
+  export rchbls=/home/$USER/fubar     or
+  export rchbls=~/fubar
 
-ech0 exec_base $exec_base
-ech0 build_base $build_base
-
-if [ -d $HOME/$rchbls ]; then
-  cd $HOME/$rchbls
-  . addpath0 $HOME/$rchbls nomsg
-else
-  cd $HOME/$build_base
-  . addpath0 $HOME/$build_base nomsg
+3. Edit  exec-lib/exec-dir
+EOF-help
+return
 fi
 
-clear
-cat << EOF-modt
+if [ ".$rchbls" == ".$PWD" ]; then
+  ech0 "Das is gut!"
+# return
+else
+  echo "Mismatch "
 
+  echo "Currently  \$rchbls = $rchbls"
+  echo "           \$PWD = $PWD"
+  echo "try  . ./engage --help "
+
+  return
+fi
+
+
+IFSsave=$IFS
+IFS=" "
+read -r exec_base rest < $rchbls/execdir
+read -r build_base rest < $rchbls/builddir
+IFS=$IFSsave
+
+ech0 "\$rchbls = $rchbls "
+ech0 "exec_base $exec_base"
+ech0 "build_base $build_base"
+
+if [ ".$exec_base" == ".$rchbls" ]; then
+  ech0 "Also good"
+else
+  echo "Mismatch"
+  echo "pwd       $PWD "
+  echo "rchbls    $rchbls "
+  echo "exec_base $exec_base "
+  echo "Quiting.   Please read  '. ./engage --help'"
+  return
+fi
+
+#safety
+export rchbls=$rchbls
+cd  $rchbls
+#source  addpath0 $rchbls  nomsg
+source  addpath0 .  nomsg
+cd                                  # back home dir
+#source  addpath0 $rchbls nomsg
+#else
+# cd $HOME/$build_base
+# . addpath0 $build_base nomsg
+#fi
+
+# clear
+cat << EOF-modt
 "How much Neanderthal blood do you have? - Robert C Hansen"
 
 
@@ -106,6 +156,57 @@ Your path is now: $PATH
 "Special variable \$rchbls="$rchbls
 
 EOF-modt
+#--------------------------------------
+@
+
+
+1.5
+log
+@working ver before change to PWD
+@
+text
+@d10 1
+d12 1
+a12 1
+if [ ".$rchbls" == "." ]; then
+d14 2
+a15 4
+cat << EOF_var
+  The \$rchbls is not available. Please set it from
+your console.  Enter  'export rchbls=xxx , where xxx is
+the basename of your execution library.  Re-enter the cmd.
+d17 3
+a19 1
+EOF_var
+d21 21
+d43 5
+d49 2
+a50 2
+#rchbls=$1
+#export rchbls=$rchbls
+d52 13
+a64 10
+the_dir=$HOME/$rchbls     
+read -r exec_base rest < $the_dir/execdir
+read -r build_base rest < $the_dir/builddir
+
+ech0 exec_base $exec_base
+ech0 build_base $build_base
+
+if [ -d $HOME/$rchbls ]; then
+  cd $HOME/$rchbls
+  . addpath0 $HOME/$rchbls nomsg
+d66 6
+a71 2
+  cd $HOME/$build_base
+  . addpath0 $HOME/$build_base nomsg
+d74 13
+a86 1
+clear
+a87 1
+
+d110 1
+a110 2
 fi
 
 @
