@@ -1,103 +1,289 @@
-    1  ls -alh
-    2  echo $PATH
-    3  git clone https://github.com/rchanse/whereisit.git
-    4  cp /home/popeye/.vimrc .vimrc -v
-    5  cd whereisit
-    6  ./dirinpath ~/whereisit
-    7  ./dirinpath ~/whereisit | less
-    8  ./dirinpath ~/whereisit > ~/tempname
-    9  vim dirinpath
-   10  ./dirinpath ~/whereisit > ~/tempname
-   11  vim ~/tempname
-   12  clear
-   13  ls
-   14  T="~/tempname"
-   15  ls -al $T
-   16  ls > $T
-   17  T=~/tempname
-   18  ls -al $T
-   19  vim $T
-   20  dirinpath ~/whereisit > $T
-   21  ./dirinpath ~/whereisit > $T
-   22  vim $T
-   23  clear
-   24  history | grep touch
-   25  rm -v $T
-   26  ./dirinpath ~/whereisit > $T
-   27  vim $T
-   28  chkwisys
-   29  showpath
-   30  echo $rchbls
-   31  ls  ../
-   32  . ./setvar
-   33  . ./INSTALL
-   34  diff ~/fubar ~/whereisit
-   35  showpath
-   36  ./showpath
-   37  .   ~/fubar/engage
-   38  showpath
-   39  f  .
-   40  f booboo
-   41  f boohoo
-   42  f build
-   43  f exec
-   44  g q fubar
-   45  g 0
-   46  sudo updatedb
-   47  g q whereisit
-   48  g 0
-   49  g 24
-   50  hidtory > ~/4gary
-   51  history > ~/4gary
-   52  vim ~/4gary
-   53  clear
-   54  showpath
-   55  . al
-   56  cdb
-   57  cdx
-   58  cat al
-   59  cd 
-   60  mkdir testwi
-   61  cdt
-   62  . addpath0 ~/testwi
-   63  vim wh
-   64  chmod +x hw
-   65  ls -al
-   66  mv wh hw
-   67  chmod +x hw
-   68  which hw
-   69  hw
-   70  meminpath hw
-   71  chkwisys
-   72  grep chkwisys ~/whereisit/INSTALLprms
-   73  grep chkwisys ~/whereisit/INSTALLmbrs
-   74  get4me ~/whereisit/chkwisys
-   75  chkwisys
-   76  re_exec 
-   77  re_exec chkwisys
-   78  re_exec chkwisys .
-   79  meminpath chkwisys
-   80  src
-   81  history > 4gary2
-   82  history > ~/4gary2
-   83  ls
-   84  cd
-   85  mkdir whereisit_gitsave
-   86  cdb
-   87  cd
-   88  cd whereisit_
-   89  cd whereisit_gitsave/
-   90  git init --bare
-   91  cdb
-   92  git remote -v
-   93  git remote add online ~/whereisit_gitsave/
-   94  git remote -v
-   95  git push online
-   96  cd
-   97  git clone ~/whereisit_gitsave/  anotherwhereisit
-   98  ls -alh
-   99  unalias ls
-  100  ls -alh
-  101  diff whereisit anotherwhereisit/
-  102  history >~/4gary2
+    1  exit
+    2  cd
+    3  ls -alh
+    4  alias
+    5  unalias ls            (my color blindness)
+    6  alias
+    7  echo $PATH
+    8  whoami
+**  9  git clone https://github.com/rchanse/whereisit.git
+
+Look arround before the actual stuff
+
+   10  ls -alh
+   11  ls whereis -alh
+   12  ls whereisit -alh
+   13  ./dirinpath ~/whereisit
+** 14  cd whereisit
+   15  git status
+   16  git log
+   17  ./dirinpath ~/whereisit
+   18  ./dirinpath ~/whereisit | less
+   19  ./dirinpath ~/whereisit > ~/tempname
+ (  discuss tempname  )
+   20  vim ~/tempname
+   21  ls
+   22  cp babyvimrc ~/.vimrc
+   23  vim ~/tempname
+   24  nano ~/tempname
+   25  cp babynanorc ~/.nanorc
+   26  nano ~/tempname
+   27  nano ~/.vimrc
+   28  vim ~/nanorc
+   29  vim ~/.nanorc
+   30  T=~/tempname
+   31  vim $T
+   32  t=tempname
+T  33  vin $t
+   34  vim $t
+   35  ls -al
+   36  nano 11asummary          (one liners)
+T  37  showpath
+   38  ./showpath
+   39  ./chkwisys               (not enough info yet)
+
+Now the actual install and setup, taking the defaults
+build-lib will be  $HOME/whereisit      ( where you are now)
+exec-lib  will be  $HOME/fubar
+$rchbls (special need variable) set up
+
+   40  . ./setvar                    (set g-var $rchbls )
+                                     sets  $rchbls
+                                     set  build-lib/builddir
+                                     set  build-lib/execdir
+   41  . ./INSTALL                    ( populate the exec-lib)
+                               sets exec-lib/builddir
+                               sets exec-lib/execdir
+                               populates exec-lib from INSTALLmbrs
+
+   42  . ~/fubar/engage     ver
+   43  cd ~/fubar
+   44  . ./engage
+   45  . setvar --help
+   46  . engage --help
+   47  cd ~/fubar
+   48  . al                   (grap some aliases)
+   49  showpath
+   50  alias
+   51  ls 
+   52  vim al
+   53  cdb                       cd  buildlib dir
+   54  cdx                       cd  execlib dir
+   55  cdb
+   56  source breakitnow
+   57  cbx
+   58  cdx
+   59  ls
+   60  vim breakitnow
+   61  cat breakitnow
+   62  nano breakitnow
+   63  cdb
+** 64  meminpath breakitnow      tell where is member in my path
+   65  nano breakitnow
+   66  which vim
+   67  /usr/bin/vim breakitnow
+   68  type breakit
+   69  type vim
+   70  type ls
+   71  which nano
+   72  /bin/nano breakitnow
+   73  unbreakit                repair
+   74  ls
+   75  echo $rchbls
+( OK lets make a back to be save  (a git repo  not just copy)
+   76  cd
+   77  ls -alh
+   78  mkdir whereisit.git
+   79  cd whereisit.git/
+   80  git init --bare             try   git help init  and O^O 
+                                      btw   O^O  == reading glasses
+
+   81  cdb                        remember alias for   cd ~/whereisit
+   82  git remote -v
+   83  git remote add online ~/whereisit.git
+   84  git remote -v
+   85  push online
+   86  git push online
+   87  git clone ~/whereisit.git  whereisnew
+   88  ls -al
+   89  cd
+   90  diff whereisit whereisnew 
+   91  ls whereisnew
+   92  cd whereisit
+   93  ls
+   94  ls whereisnew
+   95  rm whereisnew -vfr           (optional get rid of new  build-lib
+   96  clear
+   97  cd
+   98  pwd
+   99  ls
+  100  git clone ~/whereisit.git  whereisextra
+  101  ls
+  102  diff whereisextra whereisit
+  103  diff whereisextra whereisit -rs      ( the point )
+  104  ls -alh
+  105  cd whereisextra
+  106  git status
+  107  git remote -v
+  108  cd ~/whereisit
+  109  git remote -v
+  110  git status
+  111  ef builddir                     (too early)
+  112  cd
+  113  cdt                          alias for   cd ~/testwi
+  114  mkdir testwi
+  115  cdt
+  116  meminpath helloworld           remember  member in path
+  117  meminpath hw
+  118  nano hw               start of CTRL-Z   (stop nano to background
+  119  ls -hal hw
+  120  cx hw                cx alias for   chmod +x 
+  121  ls -hal hw
+  122  ./hw            do  hw in my $PWD (which is  ~/testwi
+  123  fg               bring   nano hw back  and finish it off
+  124  hw                command not found
+  125  showpath            because  ~/testwi is not in $PATH
+  
+  126  . addpath0 ~/testwi     "Make it so"
+  127  hw                          and now you find it
+  128  src                  intro to eric ramsey 'mini source control' 
+                              need package rsc (maybe sccs) and big
+                              honking  src  python pgm I gave you.
+  129  src help commit
+  130  src help commit | less
+  131  src commit -m 'original helloworld' hw    (this is MAKE A BKUP
+  132  src log
+T 133  src l
+  134  src ls                      (what members is src watcing over
+  135  ls -al
+  136  ls -alR
+  137  vim '.src/hw,v'             in the .src  dir 
+  138  vim .src/hw,v 
+  139  src
+  140  src help intro | less
+  141  meminpath hw
+  142  re_exec
+  143  re_exec hw
+  144  re_exec hw .
+  145  meminpath hw
+  146  rm hw
+  147  meminpath hw
+  148  which hw
+  149  cdx
+  150  vim hw
+  151  hw
+  152  which hw
+  153  hw
+  154  . delpath ~/testwi      ( remove ~/testwi  from $PATH
+  155  hw
+  156  . addpath0 ~/testwi
+  157  hw
+  158  src help checkout
+  159  cdt
+  160  ls
+  161  ls -alh
+  162  src log hw
+  163  src co 1 hw             (get  hw  ver 1 back
+  164  ls -alh
+  165  which hw
+  166  hw
+  167  . addpath .             your $PWD is at bottom of $PATH
+  168  hw
+  169  showpath
+  170  . delpath .
+  171  meminpath hw
+  172  re_build
+  173  re_build hw .         send hw to buildlib from  $PDW
+  174  cdb
+  175  git status
+  176  vim .gitignore
+  177  git status
+  178  vim quicklook         show it and fix it 
+  179  source quicklook
+  180  type ef
+  181  ef hw
+  182  bf hw
+  183  git status
+  184  bf builddir
+  185  bf execdir
+  186  git add .               ( we are going to do all changes
+  187  git commit                  Nice try
+  188  git config --global user.email "Wally@somewhere.com"
+  189  git config --global user.name "Wally"
+                     ( go see  $HOME/.gitconfig
+  190  git commit        now it works
+  191  git log
+  192  git remote -v
+  193  git push online
+  194  cd
+**195  f .
+  196  f boohoo
+  197  cdb
+  198  grep xyz *
+  199  vim INSTALLmbrs 
+  200  git status
+  201  chkwisys
+  202  grep chkwisys *
+  203  vim INSTALLmbrs 
+  204  git add INSTALLmbrs      fix the member build to exec list
+  205  git commit
+  206  git status
+  207  git push online
+  208  show path
+  209  showpath
+  210  cd
+  211  . delpath ~/testwi
+  212  dir ~/testwi
+  213  dirinpath ~/testwi    like meminpath  but every mem in dir
+  214  get4me ~/fubar/hw
+  215  rm hw
+  216  cdt
+  217  showpath
+  218  . addpath0 ~/testwi
+  219  ls -al
+T 220  get4m ~/fubar/dirinpath
+  221  get4me ~/fubar/dirinpath
+  222  which dirinpath
+  223  vim dirinpath               fix  seach to search
+  224  dirinpath ~/testwi
+  225  re_exec dirinpath .     cp mem to execlib from . $PWD
+                               so I can use it now
+  226  re_build dirinpath .    cp mem to buildlib from . $PWD
+                               so I can use it next gen
+  227  cdb
+  228  git status
+  229  git add dirinpath      add
+  230  git commit            commit save
+  231  push online
+  232  git push online
+  233  cd
+  234  g
+  235  g q README
+  236  g 0
+  237  g 13
+  238  g 13 a b c d
+  239  g 13 nano
+  240  g 22
+  241  f .
+  242  f license
+  243  f .
+  244  ff             generalize f
+  245  git status
+  246  showpath
+  247  cdt
+  248  get4me ~/fubar/engage
+  249  vim engage
+  250  cde
+  251  cdx        remember this is alias for  cd fubar (cd 'execlib'
+  252  clear       (optional)
+  253  . ./engage   'make it so'
+  254  cdx                cd fubar
+  255  . engage           will ONLY work is ~/fubar is in your $PATH
+  ( Good number to stop on)
+  
+  didn't mention   ech0
+  didn't mention   c     (cd by acronym)
+  whereisit/fubar  are not sacred
+  didn't mention   gg
+  how to make your own ( don't need all this other 'stuff'
 
