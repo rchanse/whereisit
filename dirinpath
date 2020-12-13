@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "start here"
+
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
@@ -48,7 +50,8 @@ function mem_check () {
           echo $j  $chk_mem  is in ${p_file[$j]} 
           true                     # satisfy if need an action
         else
-          echo $j  $chk_mem  is in ${p_file[$j]}" <<<=<=====path-NOT-seach" 
+          echo $j  $chk_mem  is in ${p_file[$j]}" <<<==possible onflict===" 
+          let conflict_count=$conflict_count+1
         fi
         found="yes"
       fi
@@ -83,7 +86,7 @@ if [ -d $dir_to_check ]; then
   echo
   echo "List of files in $dir_to_check "
   ls -A $dir_to_check                      # show it
-  ls -A $dir_to_check > /tmp/lslist        # save it
+  ls -A $dir_to_check > /tmp/lslist$USER   # save it
 else
   echo
   echo "Requested directory $dir_to_check does NOT exist!!!"
@@ -131,10 +134,23 @@ echo
 echo "Process list for $dir_to_check"
 echo "============================================="
 
+let conflict_count=0
 while  read filename rest ; do
   echo "Processing; $filename  in $dir_to_check."
   mem_check $filename
   echo
-done < /tmp/lslist
+done < /tmp/lslist$USER
+echo
+if [ $conflict_count -ne 0 ] ; then
+  echo "*==========================================================*"
+  echo "*==========================================================*"
+fi
+echo "There were $conflict_count members in PATH libs other than"
+echo "$dir_to_check that might be conflicts."
+if [ $conflict_count -ne 0 ] ; then
+  echo "*==========================================================*"
+  echo "*==========================================================*"
+fi
+echo
 echo "STOP for NOW"
 exit 0

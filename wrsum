@@ -24,10 +24,10 @@ item=$1         # the element to make info about
 found='no'
 
 # files involved
-ls_list="/tmp/ls_list"                  # list of files in this dir
+ls_list="/tmp/ls_list$USER"                  # list of files in this dir
 doc_info=$PWD"/11asummary"              # the one line summary file
-file_temp2="/tmp/temp2"                 # sum of above two lists
-file_sumout="/tmp/11asummary.out"       # rebuild sum plus new item
+file_temp2="/tmp/temp2$USER"                 # sum of above two lists
+file_sumout="/tmp/11asummary.out$USER"       # rebuild sum plus new item
 
 ls -a > $ls_list                        # gen list of file
 cat $doc_info $ls_list > $file_temp2    # combine the file

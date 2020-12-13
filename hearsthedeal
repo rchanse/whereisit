@@ -1,0 +1,47 @@
+This project born out of inability to type, remember, and laziness.
+
+It has three parts.
+ a. A library of piece to make (build) the running system (buildlib)
+    It's name is (when built) the first word in member  builddir.
+ b. A library of 'executing' code (execlib).  It's name is (when
+    built) the first word in member  execdir.
+ c. A single global variable set during the build.  It is $rchbls.
+    This will allow the 'system' to find it's way arround the
+    software.  Gotta have some kind of anchor and I choose  $rchbls
+    (rch - Robert C. Hansen    bls - Benjamin Lafayette Sisco )
+    (and NO - I decided NOT to use Ben Sisco - making  $rchbs   )
+
+There are two main function (and their generalizations)
+ a. f - used to find files by user chosen acronyms.
+ b. g - used to find files by number.
+
+There will also be some modest amount of 'git'  and a baby soure 
+maintenance system called 'src' provided by ESR (Eric S Raymond
+author of 'The Cathedral and the Bazaar' which you may google and
+download for 'free'.  ESR is always a 'fun' read.   'src' is a
+fairly sizeable python )
+
+INSTALLation
+1. down load the git repository which you have like done to get here.
+    git clone https://github.com/rchanse/whereisit.git
+2. 'cd whereisit'        (this will be the builddir
+3. '. ./setvar'
+4. '. ./INSTALL'
+5. 'cd to-the-execlib-dir   ( default is  'cd ~/fubar'
+6. '. ./engage'
+   ( you are now started and ready to go) 
+
+Srart the whereis system after Installation
+1.  'cd  execdir'        (again default is  'cd ~/fubar'
+2.  '. ./engage'
+
+OK - lets go and doit
+
+BTW: "Here's the deal!" seems to most recently associated with
+Joseph Biden.  FWIW.
+
+
+
+
+
+

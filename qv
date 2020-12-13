@@ -1,0 +1,13 @@
+function qv() {
+  echo "vim $qdir/$1"
+  vim $qdir/$1
+  }
+function ql() {
+  echo "Issuing 'ls $qdir'"
+  ls $qdir
+  }
+function unqv () {
+  unset -f qv
+  unset -f ql
+  unset -f unqv  
+  }
