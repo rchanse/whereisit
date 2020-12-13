@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
@@ -7,7 +7,7 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
-if [ ".$1" == ".--help" ] || [ ".$rchbls" == "." ]; then
+if [ ".$1" == ".--help" ] ; then
 
 cat << EOF-help
 
@@ -35,6 +35,22 @@ cat << EOF-help
 EOF-help
 return
 fi
+
+echo -n "Your pwd is $PWD, is this your exec-lib ( y/Y ) ?? : "
+IFSsave=$IFS
+IFS=" "
+read answer rest
+IFS=$IFSsave
+if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
+  export rchbls=$PWD
+else
+  echo "Answer ( $answer ) is NOT  'y' or 'Y' "
+  echo "Make sure you did 'cd your-execlib' "
+  echo "You may wish to try  '. ./engage --help' "
+  echo "Quiting, NO changes made. "
+  return
+fi
+
 
 if [ ".$rchbls" == ".$PWD" ]; then
   ech0 "Das is gut!"
@@ -83,7 +99,7 @@ cd                                  # back home dir
 # . addpath0 $build_base nomsg
 #fi
 
-# clear
+clear
 cat << EOF-modt
 "How much Neanderthal blood do you have? - Robert C Hansen"
 
@@ -103,8 +119,6 @@ more than bearskins and stone knives." --  Mr. Spock
 
 
 Your path is now: $PATH
-
-"Special variable \$rchbls="$rchbls
-
 EOF-modt
 #--------------------------------------
+

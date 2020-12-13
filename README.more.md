@@ -47,7 +47,9 @@ cd ~/whereis            (get to the build-lib dir.
                         create and populate exec-lib
                         remember the default will  $HOME/fubar dir.
 
-. ~/fubar/engage        (hook the exec-lib into your environment
+cd ~/fubar              (get to the exec-lib
+
+. ~/engage        (hook the exec-lib into your environment
 
 That's it.
 
@@ -72,22 +74,20 @@ member execdir - points also to exec-lib
 member builddir - points to build-lib
 
 ---------- setting $rchbls ----(3 choices)
-a. from the console    'export rchbls=fubar'
+a. from the console    'export rchbls=~/fubar'
 b. before INSTALL     '. ~/whereis/rchbls fubar'           or
-                      '. ~/whereis/rchbls'    respond 'fubar' to prompt
-c. after INSTALL      '. ~/fubar/rchbls fubar'             or
-                      '. ~/fubar/rchbls'      respond 'fubar' to prompt
+                      '. ~/whereis/rchbls'    respond '~/fubar' to prompt
+c. after INSTALL      '. ~/fubar/rchbls ~/fubar'             or
+                      '. ~/fubar/rchbls'      respond '~/fubar' to prompt
 
 ---------- (Re)Starting the environment
 This is for when INSTALL is complete, e. g. new session, login, reset
-. ~/fubar/engageq fubar
-or
-cd ~/fubar     ( or even cd ~/whereis
-. rchbls                       (respond fubar when asked for $rchbls
-. ~/fubar/engage               ( similar to the INSTALL process
+ 
+cd ~/fubar 
+. ./engage     ( similar to the INSTALL process
 
 ---------- really screwing up the environmen ------
-goof up  $rchbls        export rchbls=anything_but_exec-lib basenam
+goof up  $rchbls        export rchbls=anything_but_exec-lib 
 
 
 
