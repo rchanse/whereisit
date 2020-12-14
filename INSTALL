@@ -185,9 +185,17 @@ fi
 
 echo
 ls -A $exec_lib
-echo
-echo "To activate enter  '. $rchbls/engage' "
-echo "You can back off with '. delpath $exec_lib' "
-echo "Restart with existing rchtest file with  . $rchbls/engage"
-echo 
-echo "Good Luck"
+cat << EOF-exit
+
+  You are now ready to activate the 'whereisit' environment.
+   a.  cd  your-execlib path             (  cd $rchbls )
+   b.  '. ./engage'                       that's it.
+
+   You may back off the environment with '. delpath $exec_lib '
+
+   To later re-invoke the environment,  a. and b. above.
+
+Welcome, Good Luck and Thanks
+Robert C. Hansen
+EOF-exit
+return
