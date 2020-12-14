@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+if [ ! -e  $PWD/builddir ]; then
+clear
+cat << EOF-nobuilddir
+  There seems to be no builddir member of your current pwd.
+You are in  $PWD.
+
+  Please cd to your desired build-lib and reissue  '. ./setvar'
+
+  Quiting, nothing changed.
+EOF-nobuilddir
+return
+fi
+
+
 ### Make sure you are where you want to be.
 read build_dir rest < builddir
 clear
@@ -7,10 +21,12 @@ cat << EOF-hello
   Hello and welcome to Robert C. Hansen (rch) 'whereis' setup.
 
 You should be starting out with your pwd being your build-lib.
-The first word of builddir member should MATCH the directory
-of the build-lib you desire.
 You are currently in '$PWD'.  
-The builddir member of this directory says '$build_dir'.
+
+The first word of builddir member should MATCH the directory
+of the build-lib you desire.  The builddir member of this 
+directory says '$build_dir'.  CR/Enter to the following prompt
+will synchronize value. 
 
 EOF-hello
 echo -n "Is this your desire? (CR - to sync/go on, other quits: "
@@ -99,4 +115,5 @@ if [ ! -d  $exec_dir ]; then
 else
   echo "$exec_dir EXISTs, best look at it. Might be empty."
 fi
+
 

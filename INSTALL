@@ -168,6 +168,8 @@ done < INSTALLmbrs
 
 echo
 echo "done with the copy/gen of $exec_lib"
+echo
+ls -A $exec_lib
 
 if [ ".$BooHoo" == ".no" ]; then
   echo
@@ -183,8 +185,6 @@ else
   echo "**************************************************"
 fi
 
-echo
-ls -A $exec_lib
 cat << EOF-exit
 
   You are now ready to activate the 'whereisit' environment.
@@ -199,3 +199,4 @@ Welcome, Good Luck and Thanks
 Robert C. Hansen
 EOF-exit
 return
+
