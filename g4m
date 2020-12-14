@@ -1,0 +1,5 @@
+#!/usr/bin/env  bash
+
+  echo "cp $2/$1 . -v"
+  cp $2/$1 . -v
+

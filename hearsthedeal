@@ -19,7 +19,9 @@ There will also be some modest amount of 'git'  and a baby soure
 maintenance system called 'src' provided by ESR (Eric S Raymond
 author of 'The Cathedral and the Bazaar' which you may google and
 download for 'free'.  ESR is always a 'fun' read.   'src' is a
-fairly sizeable python )
+fairly sizeable python.   You might wish to listen ESR on Hacking,
+Open Source and The Cathedral and the Bazaar at
+https://www.youtube.com/watch?v=begtMFD7vyI  .
 
 INSTALLation
 1. down load the git repository which you have like done to get here.
