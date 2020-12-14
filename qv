@@ -1,12 +1,15 @@
 function qv() {
+# qv -quick vim
   echo "vim $qdir/$1"
   vim $qdir/$1
   }
 function ql() {
+# quick ls 
   echo "Issuing 'ls $qdir'"
   ls $qdir
   }
 function unqv () {
+# unqv bail out
   unset -f qv
   unset -f ql
   unset -f unqv  

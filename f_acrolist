@@ -10,6 +10,7 @@
 #
 build    ~/whereisit
 exec     ~/fubar
+git      ~/.gitconfig
 profile  ~/.profile
 skelprof /etc/skel/.profile
 login    /etc/login.defs
