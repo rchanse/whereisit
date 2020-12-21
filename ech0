@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # IMPORTANT # # This code is to be use if you are invoking ech0 
 # within a # script which has not internal  ech0 function.
 #
