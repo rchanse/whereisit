@@ -58,6 +58,7 @@ orig=$1
 action=$2
 acro=$3
 newdir=$4
+   echo "orig=$orig, action=$action, acro=$acro, newdir=$newdir."
    if [ ".$action" == ".show" ]; then  # if part just lists the acro / file
       echo $acro $newdir 
    else
@@ -65,8 +66,15 @@ newdir=$4
 	     echo "change to "$newdir
          OLDPWD=$PWD               # remember where I came from
                                    # in case I want to go back
+         echo "cd $newdir"                         
+         # handle ~ so ~/anything becomes /home/$USER/anything
+         if [ ${newdir:0:1} == "~" ]; then
+           lead=$HOME
+           tailend=${newdir:1}
+           newdir=$lead$tailend
+        fi
          cd  $newdir   
-	     pwd
+         echo "pwd=$PWD"
 	     found="yes"
       else
          return
@@ -76,7 +84,8 @@ newdir=$4
 # end of function godo
 
 # Start of real code
-vhich c                    # we are interested in the 'c' script
+search_acro=$1
+vhich d                    # we are interested in the 'c' script
 ech0 "\$First_find = $First_find"
 
 
@@ -121,7 +130,8 @@ found="nope"
 # special case to edit the list of acronyms
 if [ ".$1" == ".." ] ; then 
   echo " editing the 'c' script to view/alter the list "
-  vim $c_dir/c      # <<<-- this much change  org was cd0
+# vim $c_dir/c      # <<<-- this much change  org was cd0
+  vim $c_dir/c_acrolist      # <<<-- this much change  org was cd0
   found="yes"
   return
 fi
@@ -140,26 +150,29 @@ else
   return
 fi
 
-#  godo $1 $action    
-#     orig action acro      newdir
-#ocdit $1 $action chard      ~/blp/c_the_hard_way
-gocdit $1 $action wi      ~/whereisit
-gocdit $1 $action wally    /home/wally
-gocdit $1 $action fu      ~/fubar       
-gocdit $1 $action apache   /etc/apache2
-gocdit $1 $action apachedoc /usr/share/doc/apache2
-gocdit $1 $action bin        ~/bin
-gocdit $1 $action binl       ~/.local/bin
-gocdit $1 $action binlocal   ~/.local/bin
-gocdit $1 $action bintest    ~/bintest
-gocdit $1 $action bt         ~/bintest
-gocdit $1 $action dc     ~/Documents
-gocdit $1 $action dl     ~/Downloads
-gocdit $1 $action down   ~/Downloads
-gocdit $1 $action py27       /usr/lib/python2.7
-gocdit $1 $action py34       /usr/lib/python3.4
-gocdit $1 $action vimcolor  ~/.vim/colors
-# sample   :63,125 sort
+acro_found="no"
+line_item=''
+ech0 "\$line_item = $line_item."
+ech0 "orig=$orig"
+while [ ".$acro_found" == ".no" ] && 
+ read line_item  ; do
+# while  read line_item  ; do
+  ech0 $line_item
+  IFSsave=$IFS
+  IFS=" "
+  read acro_item dir_new_item <<< $line_item
+  IFS=$IFSsave
+  ech0 "dir_new_item=$dir_new_item, arco_item=$acro_item,
+  orig=$search_acro"
+if [ ".$acro_item" == ".$search_acro" ]; then
+  acro_found="yes"
+  ech0 "MATCH MATCH $acro_item  $search_acro"
+  gocdit $search_acro $action $acro_item $dir_new_item 
+  echo "PWD=$PWD"
+else
+  ech0 ".$arco_item. <> .$search_acro. "
+fi
+done <   $c_dir/c_acrolist      # <<<-- this much change  org was cd0
 
 
 if [ ".x" == ".a" ]; then
@@ -175,3 +188,4 @@ else
      dummy="None"
    fi
 fi
+
