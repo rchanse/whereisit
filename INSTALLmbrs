@@ -10,6 +10,7 @@ al               # some semi-useful aliases
 addpath0         # put file at start of PATH
 builddir         # hold the name of the build-lib dir
 c                # director quick change by acronym
+c_acrolist       # parmlib for new ver of c
 # checksys  gone!  # aid to show rchbls, bld-lib exec-lib
 # checkvar  gone!  # aid to show rchbls
 # chkvar    gone!  # check the rchbls variable        

@@ -2,7 +2,7 @@
 11asummary - me, myself and I  the one line summary stmts. 
 COPYING - MIT license 
 INSTALL - build-lib (only) script to create the exec-lib (need $rchbls) 
-Neanderthal - :-)  or ;-( 
+Neanderthal - reality check time    :-)  or ;-( 
 README.md - Typical README file (facts, comments, direcions) 
 addpath - script to add a file to end of path  ( invoke by . or souce) 
 addpath0 - script to add a file at start of path (invoke by .) 

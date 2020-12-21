@@ -1,0 +1,18 @@
+#     orig action acro      newdir
+wi      ~/whereisit
+wally    /home/wally
+fu      ~/fubar       
+apache   /etc/apache2
+apachedoc /usr/share/doc/apache2
+bin        ~/bin
+binl       ~/.local/bin
+binlocal   ~/.local/bin
+bintest    ~/bintest
+xt         ~/bintest
+dc     ~/Documents
+dl     ~/Downloads
+down   ~/Downloads
+py27       /usr/lib/python2.7
+py34       /usr/lib/python3.4
+vimcolor  ~/.vim/colors
+
