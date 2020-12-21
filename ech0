@@ -1,6 +1,17 @@
-# function to copy at top and use ech0 (rather than ech1
-function ech0 () {     # turn on debugging with  export ech0=ON
+#!/usr/bin/env bash
+# IMPORTANT # # This code is to be use if you are invoking ech0 
+# within a # script which has not internal  ech0 function.
+#
+# To use ech0 and an internal function within a script
+# 1. copy it to the script   :r ech0   ( :r correct-dir/ech0 )
+# 2. uncomment the last line of this block of comments.
+# 3. uncomment the single  #}
+#   2. and 3. will make an internal function eth0.
+#
+# 4. (OPTIONAL: remove the remaining comment lines.
+#
+# function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
     echo $@
   fi  
-}
+#}
