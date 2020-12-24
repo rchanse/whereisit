@@ -1,1 +1,5 @@
-fubar
+/home/$USER/fubar
+
+The first word on the first line is:
+  a. the value of the $rchbls variable
+  b. the name of the exec-lib for whereis system.

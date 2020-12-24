@@ -1,6 +1,6 @@
 #!/usr/bin/env bash 
 
-# function to copy at top and use ech0 (rather than ech1
+# function to copy at top and use ech0 
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
     echo $@

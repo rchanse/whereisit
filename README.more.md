@@ -21,7 +21,7 @@ Benjamin Lafayette Sisko.
 3. a library which has the running code (ref as exec-dir or exec-lib.
 
 Assumptions:
- a. the default build-lib will be in directory   $HOME/whereis
+ a. the default build-lib will be in directory   $HOME/whereisit
  b. the default exec-lib will be in directory    $HOME/fubar
  c. you (or some software) are not otherwise using $rchbls
 ( there will be a note below on how to override a. and b.  BUT
@@ -29,19 +29,19 @@ Assumptions:
 
 I N S T A L L A T I O N:
 
-1. Obtain the code:   git clone https://github.com/rchanse/whereis.git
+1. Obtain the code:   git clone https://github.com/rchanse/whereisit.git
 ( I'll assume you did this from $HOME be if you were cautious and
-pulled it down to another directory, please move it to  $HOME/whereis)
+pulled it down to another directory, please move it to  $HOME/whereisit)
 Otherwise it will go to $PWD/whereis.  (You can redirect git download
 'git clone https://github.com/rchanse/whereis.git elsewhere' and have
 your result be in $PWD/elsewhere.)
 
-cd ~/whereis            (get to the build-lib dir.
+cd ~/whereisit            (get to the build-lib dir.
 
 . ./setvar              (or  source ./setvar
                         This will set global $rchbls  <<====
                         alt. cmd   '. $PWD/setvar'
-                        alt. cmd   '. ~/whereis/setvar'
+                        alt. cmd   '. ~/whereisit/setvar'
 
 . ./INSTALL            (or   source ./INSTALL
                         create and populate exec-lib
@@ -65,7 +65,7 @@ checksys
 look at member 11asummary - my one line summary
 
 ---------------- build-lib and exec-lib differences
-diff ~/fubar ~/whereis
+diff ~/fubar ~/whereisit
 
 ----------------- whats the deal with $rchbls
 it points to the exec-lib  $HOME/$rchbls
@@ -75,8 +75,8 @@ member builddir - points to build-lib
 
 ---------- setting $rchbls ----(3 choices)
 a. from the console    'export rchbls=~/fubar'
-b. before INSTALL     '. ~/whereis/rchbls fubar'           or
-                      '. ~/whereis/rchbls'    respond '~/fubar' to prompt
+b. before INSTALL     '. ~/whereisit/rchbls fubar'           or
+                      '. ~/whereisit/rchbls'    respond '~/fubar' to prompt
 c. after INSTALL      '. ~/fubar/rchbls ~/fubar'             or
                       '. ~/fubar/rchbls'      respond '~/fubar' to prompt
 
@@ -104,6 +104,7 @@ f .                                (shows a list of preset acronyms
 now after you have seen them, try f someacro
 
 -----------------
+g 
 g q README                       
 g 0
 now try to go edit with g ##    ## some number between 1 and number

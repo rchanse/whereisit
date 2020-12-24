@@ -1,11 +1,26 @@
-head	1.1;
+head	1.4;
 access;
 symbols;
 locks
-	rchansen:1.1;
+	rchansen:1.4;
 comment	@# @;
 expand	@b@;
 
+
+1.4
+date	2020.12.24.18.07.37;	author rchansen;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2020.12.21.04.22.58;	author rchansen;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2020.12.21.03.46.28;	author rchansen;	state Exp;
+branches;
+next	1.1;
 
 1.1
 date	2020.11.16.01.51.31;	author rchansen;	state Exp;
@@ -17,36 +32,177 @@ desc
 @@
 
 
-1.1
+1.4
 log
-@original with hard coded ~/bin/c
+@just in case
 @
 text
 @#!/bin/bash 	
-# IMPORTANT  this is fall through exec  because it must be activated by .
-# this mean you stay in the same shell and the use if exit closes the window
-# for this reason the code in kind of goofy
-# the variable found  is need to determine whether to produce the last msg
-# also cannot use $0 this becomes bash
-vimfnt=~/bin/c                   # need to change as edit needed
-# quick goback to previous pw  (made typo)
-if [ "$1" == "old" ] || [ "$1" == "back" ]; then
-   echo Remember old and back are special to return to calling cd dir
-   echo returning to $OLDPWD
-   cd $OLDPWD
+# functions first
+
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@@
+  fi  
+}
+
+function vhich () {
+# This  is almost the same code as meminpath - it tells which
+# library in $PATH that $1 (of the function) is found.
+  acro_to_check=$1
+  First_find=NONE              # default is not found (NONE)
+  action=cd
+
+# parse the $PATH into an array (who)   note the sep char is ':'
+  FSsave=$IFS
+  IFS=":"
+  read -r -a who <<< $PATH
+  IFS=$IFSsave
+  let ub=${#who[@@]}         # number of elt in array  (based 0)jjj
+#	echo $ub
+
+  found="no"                 # none found yet
+  let j=0                    # remember array start at 0 not 1
+
+  while [ $j -lt $ub ] && [ ".$found" == ".no" ]; do
+
+    if [ ".${who[$j]}" == ".." ]; then
+      who[$j]=$PWD
+    fi
+
+    if [ -f ${who[$j]}/$acro_to_check ]; then
+      ech0 "$j $acro_to_check  is in ${who[$j]}."
+      First_find=${who[j]}     # <<<======== indicate where found
+      found="yes"
+    fi
+
+    let j=$j+1
+  done
+
+####################################################################
+# Leaving the function vhich  $First_found is 1st-lib  or  NONE
+####################################################################
+}
+
+# # testing
+# ech0="ON"
+# ech0 "\$1=<$1>, \$2=<$2> "
+# ech0="Off"
+# echo -n "view input parm, hit enter to go onward:"
+# read whocares
+
+#  first make sure there is a parm
+if [ ".$1" == "." ] ; then
+  found="yes"
+  cat << EOF-usage
+usage: quick change to another director by acronym
+
+syntax;
+ . c  parm
+   parm1  null - this help info
+          .    - edit on this script to view/alter the acronym list
+	      - , old, back - all act like  cd -  back prev dir \$OLDDIR
+	                  Note this is a toggle  prev-dir and current-dir
+          other - search c_acrolist to see which dir. to use in cd 
+
+EOF-usage
+return
+fi
+if [ "$1" == "old" ] || [ "$1" == "back" ] || [ "$1" == "-" ]; then
+   echo "Remember '-', 'old' and 'back' are special to return to the" 
+   echo "calling cd-dir, so  returning to $OLDPWD"
+   cd -
+$  cd $OLDPWD
    return
 fi
 
-function gocdit
- {
-   if [ $2 == "show" ]; then  # if part just lists the acro / file
-      echo $3 $4 
+echo "c_dir = $c_dir
+found="nope"
+# special case to edit the list of acronyms
+if [ ".$1" == ".." ] ; then 
+  echo " editing the 'c' script to view/alter the list "
+# vim $c_dir/c      # <<<-- this much change  org was cd0
+  vim $c_dir/c_acrolist      # <<<-- this much change  org was cd0
+  found="yes"
+  return
+fi
+
+acro_found="no"
+line_item=''
+ech0 "\$line_item = $line_item."
+while [ ".$acro_found" == ".no" ] && 
+  read line_item  ; do
+  ech0 $line_item
+  IFSsave=$IFS
+  IFS=" "
+  read acro_item dir_new_item <<< $line_item
+  IFS=$IFSsave
+
+#   gocdit $acro_to_check $action $acro_item $dir_new_item 
+  ech0 "acro_to_check $acro_to_check ?? acro_item $a                                                                         
+  if [ ".$acro_to_check" == ".$acro_item" ]; then  # go find the acroo
+    acro_found="yes"
+    echo "change to "$newdir
+    OLDPWD=$PWD               # remember where I came from
+                            # in case I want to go back
+    echo "$action $newdir"                         
+    $action $newdir
+    return
+  fi
+
+done <   $c_dir/c_acrolist      # <<<-- this much change  org was cd0
+
+# fall through to message that cd path not found 
+if [ ".$found"  == ".no" ]; then
+     echo "$acro_to_check NOT FOUND  as an cd path "
+     echo "Check your typing  or look  '. c .'"
+fi
+@
+
+
+1.3
+log
+@working (?} c with c_acrolist
+@
+text
+@d2 2
+a3 1
+#
+a9 1
+
+d13 1
+a13 1
+  file_to_check=$1
+d15 1
+d34 2
+a35 2
+    if [ -f ${who[$j]}/$file_to_check ]; then
+      ech0 "$j $file_to_check  is in ${who[$j]}."
+a42 10
+#if [ ".$found" == ".no" ]; then
+#  echo "$file_to_check is not in your PATH."
+#else
+#  echo "$file_to_check is first found in PATH-lib $First_find."
+#fi
+#export First_find=$First_find
+#echo "export \$First_find = $First_find"
+#
+#echo "before \First_find = $first_find."
+
+a46 33
+function gocdit () {
+orig=$1
+action=$2
+acro=$3
+newdir=$4
+   if [ ".$action" == ".show" ]; then  # if part just lists the acro / file
+      echo $acro $newdir 
    else
-      if [ "$1" == "$3" ]; then        # go find the acroo
-	     echo "change to "$4
+      if [ ".$orig" == ".$acro" ]; then        # go find the acroo
+	     echo "change to "$newdir
          OLDPWD=$PWD               # remember where I came from
                                    # in case I want to go back
-         cd  $4   
+         cd  $newdir   
 	     pwd
 	     found="yes"
       else
@@ -55,36 +211,57 @@ function gocdit
    fi
  }
 # end of function godo
- 
-found="nope"
 
-#  first make sure there is a parm
-if [ "$1" == "" ] ; then
-  found="yes"
-  echo "You must enter a value  ( '. show' - to list,  - to edit )"
-fi
+# Start of real code
+vhich c                    # we are interested in the 'c' script
+ech0 "\$First_find = $First_find"
 
-# special case to edit the list of acronyms
-if [ "$1" == "-" ] ; then 
-  echo " editing the $0 file itself "
-  vim $vimfnt      # <<<-- this much change  org was cd0
-  found="yes"
-fi
 
+# IMPORTANT  this is fall through exec  because it must be activated by .
+# this mean you stay in the same shell and the use if exit closes the window
+# for this reason the code in kind of goofy
+# the variable found  is need to determine whether to produce the last msg
+# also cannot use $0 this becomes bash
+c_dir=$First_find
+d50 1
+a50 1
+# ech0 "\$1=<$1>, \$2=<$2>, \$3=<$3>, \$4=<$4> "
+d65 1
+a65 2
+	  show - show the list of known acronym-dir pairs
+	  - , old, back - all act like  cd -  back prev dir \$OLDDIR
+d67 2
+d75 2
+a76 1
+   cd $OLDPWD
+d80 1
+d85 2
+a86 1
+  vim $c_dir/c      # <<<-- this much change  org was cd0
+d91 10
+a100 1
 # set the second parm and make certain only certain one are used
-
-if [ "$2" == "" ]; then
-   action="cd"
-elif [ "$2" == "show" ]; then
-   action="show"
-   found="yes"
+d102 10
+a111 5
+if [ ".$2" == "." ]; then
+  action="cd"
+  if [ ".$1" == ".show" ]; then
+     action="show"
+     found="yes"
+a112 5
 else
-   echo "need proper action in parm 2 - null  or show"
-   found="yes"     # kill end  not found mismessage
+  echo "need proper action in parm 2 - null"
+  found="yes"     # kill end  not found mismessage
+  return
 fi
-
+d114 1
+a114 20
 #  godo $1 $action    
+#     orig action acro      newdir
 #ocdit $1 $action chard      ~/blp/c_the_hard_way
+gocdit $1 $action wi      ~/whereisit
+gocdit $1 $action wally    /home/wally
+gocdit $1 $action fu      ~/fubar       
 gocdit $1 $action apache   /etc/apache2
 gocdit $1 $action apachedoc /usr/share/doc/apache2
 gocdit $1 $action bin        ~/bin
@@ -99,22 +276,116 @@ gocdit $1 $action py27       /usr/lib/python2.7
 gocdit $1 $action py34       /usr/lib/python3.4
 gocdit $1 $action vimcolor  ~/.vim/colors
 # sample   :63,125 sort
-#  cd /home/rchansen/Downloads/hp_printing/hplip-3.14.6
+a115 4
 
-
-# fall through to message that cd path not found 
-#echo $found "found"
-if [ $found  == "yes" ]; then
+if [ ".x" == ".a" ]; then
+  echo lfjs
+fi
+d117 3
+a119 8
+if [ ".$found"  == ".yes" ]; then
   dummy="None"
 else
-   if [ "$1" != "old" ]; then   # suppress due to $OLDPWD
-     echo $1 "not found as an cd path "
+   if [ ".$1" != "old" ]; then   # suppress due to $OLDPWD
+     echo "$1 NOT FOUND  as an cd path "
    else
      dummy="None"
    fi
+@
+
+
+1.2
+log
+@working old inline version of c
+@
+text
+@d2 61
+a62 25
+# IMPORTANT  this is fall through exec  because it must be activated by .
+# this mean you stay in the same shell and the use if exit closes the window
+# for this reason the code in kind of goofy
+# the variable found  is need to determine whether to produce the last msg
+# also cannot use $0 this becomes bash
+vimfnt=~/bin/c                   # need to change as edit needed
+
+if [ -f $HOME/rchtest/c ]; then
+  vimfnt=$HOME/rchtest/c
+else
+  vimfnt=$HOME/rchbuild/c
 fi
 
+# quick goback to previous pw  (made typo)
+if [ "$1" == "old" ] || [ "$1" == "back" ]; then
+   echo Remember old and back are special to return to calling cd dir
+   echo returning to $OLDPWD
+   cd $OLDPWD
+   return
+fi
+
+function gocdit
+ {
+   if [ $2 == "show" ]; then  # if part just lists the acro / file
+      echo $3 $4 
+d64 2
+a65 2
+      if [ "$1" == "$3" ]; then        # go find the acroo
+	     echo "change to "$4
+d68 1
+a68 1
+         cd  $4   
+d77 19
+a95 2
+ 
+found="nope"
+d98 1
+a98 1
+if [ "$1" == "" ] ; then
+d100 18
+a117 1
+  echo "You must enter a value  ( '. show' - to list,  - to edit )"
+d120 1
+d122 3
+a124 3
+if [ "$1" == "-" ] ; then 
+  echo " editing the $0 file itself "
+  vim $vimfnt      # <<<-- this much change  org was cd0
+d126 1
+d131 6
+a136 5
+if [ "$2" == "" ]; then
+   action="cd"
+elif [ "$2" == "show" ]; then
+   action="show"
+   found="yes"
+d138 3
+a140 2
+   echo "need proper action in parm 2 - null  or show"
+   found="yes"     # kill end  not found mismessage
+d144 1
+d146 3
+a162 1
+#  cd /home/rchansen/Downloads/hp_printing/hplip-3.14.6
+d165 3
+d169 1
+a169 2
+#echo $found "found"
+if [ $found  == "yes" ]; then
+d172 2
+a173 2
+   if [ "$1" != "old" ]; then   # suppress due to $OLDPWD
+     echo $1 "not found as an cd path "
+a177 4
 
 
 
+
+@
+
+
+1.1
+log
+@original with hard coded ~/bin/c
+@
+text
+@d8 7
 @

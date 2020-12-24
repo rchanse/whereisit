@@ -1,7 +1,7 @@
 # IMPORTANT # # This code is to be use if you are invoking ech0 
 # within a # script which has not internal  ech0 function.
 #
-# To use ech0 and an internal function within a script
+# To use ech0 as an internal function within a script
 # 1. copy it to the script   :r ech0   ( :r correct-dir/ech0 )
 # 2. uncomment the last line of this block of comments.
 # 3. uncomment the single  #}

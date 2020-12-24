@@ -1,0 +1,87 @@
+head	1.1;
+access;
+symbols;
+locks
+	rchansen:1.1;
+comment	@# @;
+expand	@b@;
+
+
+1.1
+date	2020.12.24.20.52.44;	author rchansen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@not sure but don't lose
+@
+text
+@#!/bin/bash 	
+#
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@@
+  fi  
+}
+
+
+function vhich () {
+# This  is almost the same code as meminpath - it tells which
+# library in $PATH that $1 (of the function) is found.
+  file_to_check=$1
+  First_find=NONE              # default is not found (NONE)
+
+# parse the $PATH into an array (who)   note the sep char is ':'
+  FSsave=$IFS
+  IFS=":"
+  read -r -a who <<< $PATH
+  IFS=$IFSsave
+  let ub=${#who[@@]}         # number of elt in array  (based 0)jjj
+#	echo $ub
+
+  found="no"                 # none found yet
+  let j=0                    # remember array start at 0 not 1
+
+  while [ $j -lt $ub ] && [ ".$found" == ".no" ]; do
+
+    if [ ".${who[$j]}" == ".." ]; then
+      who[$j]=$PWD
+    fi
+
+    if [ -f ${who[$j]}/$file_to_check ]; then
+      ech0 "$j $file_to_check  is in ${who[$j]}."
+      First_find=${who[j]}     # <<<======== indicate where found
+      found="yes"
+    fi
+
+    let j=$j+1
+  done
+
+####################################################################
+# Leaving the function vhich  $First_found is 1st-lib  or  NONE
+####################################################################
+}
+function gocdit () {
+orig=$1
+action=$2
+if [ ".$orig" == ".$acro" ]; then        # go find the acroo
+  echo "change to "$newdir
+  OLDPWD=$PWD               # remember where I came from
+                            # in case I want to go back
+  echo "cd $newdir"                         
+                            # also cannot use $0 this becomes bash
+
+# # testing
+# ech0="ON"
+# ech0 "\$1=<$1>, \$2=<$2> "
+# ech0="Off"
+# echo -n "view input parm, hit enter to go onward:"
+# read whocares
+}
+@
