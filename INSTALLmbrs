@@ -20,17 +20,17 @@ delpath          # remove file from PATH
 diffme           # short cut script to diff mems in pdw
 dirinpath        # chk all dir file where in path
 ech0             # debugging echo function
-ech1             # debugging echo inline
+# goneech1             # debugging echo inline
 execdir          # hold the name of the exec-lib dir
 engage           # hook in code to activate environment
 f                # go to file by acronym
 ff               # f for project groups  
-ffdoit           # workhorse subroutine for ff (does f work 
+# gone ffdoit           # workhorse subroutine for ff (does f work 
 f1               # ff subfunction        
 f_acrolist       # start list of acronyms
 g                # go to file by number
 # ged    gone!     # like g but with nano rather than vim
-getsys2          # system checking tool
+# gon etsys2          # system checking tool
 get4me           # grab a copy
 lbang            # for the lazy -  #!/usr/bin/env bash
 meminpath        # show which path files have mem (compare
@@ -45,4 +45,4 @@ srcdoc           # starter notes on src
 showpath         # show the path files
 wrsum            # document aid tool  
 # the following member xyz does not exist - is is meant to cause err msg
-xyz              # does NOT exist, just cause message
+# gone xyz        # does NOT exist, just cause message

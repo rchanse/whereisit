@@ -1,3 +1,90 @@
 #!/usr/bin/env bash
 
-echo "this script has been replaced by re_exec and re_build."
+back=back
+
+exec_back=$rchbls$back
+
+if [ -d $rchbls ]; then
+  echo "$rchbls EXISTs"
+else
+  echo "$rchbls DOES NOT Exist."
+fi
+
+if [ -d $exec_back ]; then
+  echo "$exec_back EXISTs"
+else
+  echo "$exec_back DOES NOT Exist."
+fi
+
+if [ -d $rchbls ] && [ -d $exec_back ]; then
+
+cat << EOF-bk
+$rchbls EXISTs.
+$exec_back EXISTS.
+
+This 'refresh' script will make a backup of $rchbls it
+one does not exist.  BUT if $rchbls and 
+$exec_back BOTH exist then it will stop.  Determine which 
+directory you wish and delete the other.
+Either   'rm -vfr $rchbls'  or  'rm -vfr $exec_back'. 
+Most likely the former since the first run make good backup and
+you want to keep it.
+
+Then restart
+
+EOF-bk
+
+exit
+fi
+
+if [ -d $rchbls ]; then
+  echo "Moving $rchbls to $exec_back for backup."
+  mv $rchbls $exec_back
+  moverc=$?
+  if [ $moverc -eq 0 ]; then
+    echo "Move/Backup sucessful."
+  fi
+fi
+
+if [ ! -d $rchbls ] && [ ! -d $exit_back ]; then
+  echo "Got NO backup, we wil go with the refresh."
+fi
+
+mkdir $rchbls
+
+while read line_item  ; do
+
+  IFSsave=$IFS
+  IFS=" "
+  read filename rest <<< $line_item
+  IFS=$IFSsave
+  if [ ".${filename:0:1}" != ".#" ]; then
+    echo "==copy it:: $line_item"
+    echo "_           cp -vp $filename  $rchbls/$filename"
+    cp -vp $filename  $rchbls/$filename
+    copyrc=$?
+    echo "_           Copy ret code was $copyrc"
+    if [ $copyrc -ne 0 ]; then
+      echo "ERROR in $filename COPY !!! "
+      echo "refresh script stops here."
+      echo "Please resolve and rerun."
+      echo "you probably will want to keep $exec_back"
+      echo "If so then  'rm -vfr $rchbls'  "
+      exit 8
+    fi
+  else
+    echo "A comment:: $line_item"
+  fi
+done < $PWD/INSTALLmbrs
+
+echo " DONE DONE DONE ---- finally."
+echo " gold star for patience."
+echo
+echo "You can see difference by"
+echo "  diff $rchbls  $exec_back"
+
+exit 0          # if needed
+
+fi
+
+
