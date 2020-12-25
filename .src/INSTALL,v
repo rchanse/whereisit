@@ -1,11 +1,16 @@
-head	1.4;
+head	1.5;
 access;
 symbols;
 locks
-	rchansen:1.4;
+	rchansen:1.5;
 comment	@# @;
 expand	@b@;
 
+
+1.5
+date	2020.12.25.21.58.46;	author rchansen;	state Exp;
+branches;
+next	1.4;
 
 1.4
 date	2020.12.08.06.32.09;	author rchansen;	state Exp;
@@ -32,9 +37,9 @@ desc
 @@
 
 
-1.4
+1.5
 log
-@fix IFS need to parse
+@comment vs copy mbrs
 @
 text
 @#!/usr/bin/env bash
@@ -44,39 +49,6 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
     echo $@@
   fi  
-}
-
-function cpit () {
-  passed_val=$@@
-  ech0 "\$passed_val === $passed_val"
-  read first_word rest <<< $passed_val
-# echo "$first_word   ${first_word:0:1}"
-  if [ ".${first_word:0:1}" == ".#" ]; then
-    echo "comment:$passed_val" >> $rchbls/BooHoo
-    BooHoo="yes"              # mark that cp was failure
-    return
-  fi
-  
-   # do the copy
-   echo "$passed_val" >> $rchbls/BooHoo
-   if [ ! -e $first_word ]; then
-     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
-     return
-   fi
-
-   echo "cp -v $first_word $rchbls/$first_word" >> $rchbls/BooHoo
-   cp -v $first_word $rchbls/$first_word
-   ccrc=$?
-#  echo "$ccrc" >> $rchbls/BooHoo
-
-  if [ $ccrc -eq 0 ]; then
-    echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
-  else
-    echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
-    BooHoo="yes"
-  fi
-
-  return
 }
 
 ##  end of internal functions
@@ -147,7 +119,7 @@ echo
 echo -n "Is that correct?  y/Y to continue :"
 read answer rest
 
-if [ ".$answer" = ".y" ] || [ ".Sanswer" == ".Y" ]; then
+if [ ".$answer" = ".y" ] || [ ".$answer" == ".Y" ]; then
   echo "answer ($answer), On we go!"
 else
   echo "answer ($answer) NOT 'y' or 'Y', Leaving -- nothing done."
@@ -199,11 +171,39 @@ date >> $exec_lib/BooHoo
 while read parm_line ; do
 # echo "$parm_line"  >> $exec_lib/BooHoo
 # echo "cpit $parm_line "
-  cpit "$parm_line"
+# cpit "$parm_line"
+  IFSsave=$IFS
+  IFS=" "
+  read first_word rest <<< $parm_line 
+  IFS=$IFSsave
+
+# echo "$first_word   ${first_word:0:1}"
+  if [ ".${first_word:0:1}" == ".#" ]; then
+    echo "comment:$parm_line" >> $rchbls/BooHoo
+  else
+   # first check for existence of input
+   echo "copyit :$parm_line" >> $rchbls/BooHoo
+   if [ ! -e $first_word ]; then
+     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
+     BooHoo="yes"
+   else
+     echo "cp -pv $first_word $rchbls/$first_word" >> $rchbls/BooHoo
+     cp -pv $first_word $rchbls/$first_word
+     ccrc=$?
+     if [ $ccrc -eq 0 ]; then
+       echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
+     else
+       echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
+       BooHoo="yes"
+     fi
+   fi 
+ fi 
 done < INSTALLmbrs
 
 echo
 echo "done with the copy/gen of $exec_lib"
+echo
+ls -A $exec_lib
 
 if [ ".$BooHoo" == ".no" ]; then
   echo
@@ -211,10 +211,84 @@ if [ ".$BooHoo" == ".no" ]; then
   echo "Messages are in $exec_lib/BooHoo."
 else
   echo
+  echo "**************************************************"
+  echo "**************************************************"
   echo "exec-lib ($exec_lib) generation HAD copy errors. <<=====:"
   echo "Review messages in $exec_lib/BooHoo."
+  echo "**************************************************"
+  echo "**************************************************"
 fi
 
+cat << EOF-exit
+
+  You are now ready to activate the 'whereisit' environment.
+   a.  cd  your-execlib path             (  cd $rchbls )
+   b.  '. ./engage'                       that's it.
+
+   You may back off the environment with '. delpath $exec_lib '
+
+   To later re-invoke the environment,  a. and b. above.
+
+Welcome, Good Luck and Thanks
+Robert C. Hansen
+EOF-exit
+return
+
+
+
+@
+
+
+1.4
+log
+@fix IFS need to parse
+@
+text
+@a9 33
+function cpit () {
+  passed_val=$@@
+  ech0 "\$passed_val === $passed_val"
+  read first_word rest <<< $passed_val
+# echo "$first_word   ${first_word:0:1}"
+  if [ ".${first_word:0:1}" == ".#" ]; then
+    echo "comment:$passed_val" >> $rchbls/BooHoo
+    BooHoo="yes"              # mark that cp was failure
+    return
+  fi
+  
+   # do the copy
+   echo "$passed_val" >> $rchbls/BooHoo
+   if [ ! -e $first_word ]; then
+     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
+     return
+   fi
+
+   echo "cp -v $first_word $rchbls/$first_word" >> $rchbls/BooHoo
+   cp -v $first_word $rchbls/$first_word
+   ccrc=$?
+#  echo "$ccrc" >> $rchbls/BooHoo
+
+  if [ $ccrc -eq 0 ]; then
+    echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
+  else
+    echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
+    BooHoo="yes"
+  fi
+
+  return
+}
+
+d78 1
+a78 1
+if [ ".$answer" = ".y" ] || [ ".Sanswer" == ".Y" ]; then
+d130 27
+a156 1
+  cpit "$parm_line"
+d161 2
+d170 2
+d174 2
+d178 17
+a194 8
 echo
 ls -A $exec_lib
 echo
