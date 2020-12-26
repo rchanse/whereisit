@@ -29,6 +29,7 @@ else
      alias cdx='cd $exec_dir'             # to exec-lib dir.
      echo "alias cdb='cd $build_dir'"
      alias cdb='cd $build_dir'            # to build-lib dir.
+   fi  
    alias cnx='chmod -x '    
    alias cx='chmod +x '    
    alias hal='ls -alh '
