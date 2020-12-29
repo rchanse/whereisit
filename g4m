@@ -1,5 +1,20 @@
 #!/usr/bin/env  bash
 
+if [ ".$1" == "." ] || [ ".$1" == ".--help" ]; then
+cat << EOF-help
+Funny copy command - but makes good sense when used with f
+
+g4m  parm1 parm2    parm1 - membername,  parm2 - directory
+  g4m  p1/p2  is   cp p2/p1             look backward  right?
+
+  BUT   f acro g4m mem   is    g4m mem acro-related
+   which becomes  cp  acro-related/mem .
+
+   Take a slight bit of odd thinking buf if you have line in f_acrolist
+     xxx   a/b.c/d/e/f           a/b.c/d/e/f a directory then
+     f xxx g4m mem  easier to type than  cp a/b.c/d/e/f/mem .
+    
+EOF-help
+
   echo "cp $2/$1 . -v"
   cp $2/$1 . -v
-
