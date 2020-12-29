@@ -146,7 +146,7 @@ if [ $conflict_count -ne 0 ] ; then
   echo "*==========================================================*"
 fi
 echo "There were $conflict_count members in PATH libs other than"
-echo "$dir_to_check that might be conflicts."
+echo "$dir_to_check that might be conflicts.  ($conflict_count)"
 if [ $conflict_count -ne 0 ] ; then
   echo "*==========================================================*"
   echo "*==========================================================*"

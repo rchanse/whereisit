@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+if [ ".$1" == "." ]; then      # default provide info if no parms
+
+cat << EOF_usage
+usage: objhash is script to use with g to show info about a git
+object and save typing.
+1. locate  xxxxx > somewhere : xxxxx is the directory in question
+2. g rep somewhere
+3. g .   to look for
+xxxxx/object/xx/yyyyyyyyyyyyyyyyyyyyyyyyyyy
+4. out of g .   g ## objhash
+gens    git cat-file -p xxyyyyyyyyyyyyyyyyyyyy
+            cat-file -s xxyyyyyyyyyyyyyyyyyyyy
+            cat-file -t xxyyyyyyyyyyyyyyyyyyyy
+
+EOF_usage
+exit 0          # if needed
+fi
+
+ans=$1                                        # the hash plus
+echo $ans
+two=`basename $ans`                   # the yyyyyyyyyyyyyyy part
+twoa=`dirname $ans`                   # the lead/stuff/xx part
+ech0 $two $twoa
+one=`basename $twoa`                  # the xx part 
+hash=$one$two
+ech0 $hash
+git cat-file -p $hash
+git cat-file -s $hash
+git cat-file -t $hash
+
