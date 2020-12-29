@@ -21,7 +21,7 @@ changes - notes on chanages
 checksys $ aid to show $rchbls build-lib exec-lib (gone see chkwi) 
 checkvar - stand alone exec to check/and show $rchbls(gone see chkwi 
 chkvar - function to be put in other scrips to verify $rchbls non-null 
-chkwisys - show the system parms, libs, path ...
+chkwi - show the system parms, libs, path ...
 delpath - script to remove files from PATH  (invoke by .) 
 diffme - script to diff a mem of pdw  with a specified file 
 dirinpath - for given directory show which path file contain each mem 
