@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
 
 if [ ! -e  $PWD/builddir ]; then
 clear
@@ -21,15 +26,17 @@ cat << EOF-hello
   Hello and welcome to Robert C. Hansen (rch) 'whereis' setup.
 
 You should be starting out with your pwd being your build-lib.
-You are currently in '$PWD'.  
+You are currently in   '$PWD'.  
 
 The first word of builddir member should MATCH the directory
 of the build-lib you desire.  The builddir member of this 
-directory says '$build_dir'.  CR/Enter to the following prompt
-will synchronize value. 
+directory says '$build_dir'. 
+
+CR/Enter to the following prompt will synchronize values. 
 
 EOF-hello
 echo -n "Is this your desire? (CR - to sync/go on, other quits: "
+
 read  answer rest
 if [ ".$answer" == "." ]; then
   cp -p $PWD/builddir /tmp/tempname$USER
@@ -43,7 +50,7 @@ if [ ".$answer" == "." ]; then
 # echo "GOOD GOOD,  Onward. "
 else
   echo "answer ($answer) not 'CR'.  No Changes made."
-  echo "Please reset and  'cd appropriate' "
+  echo "Please reset to  'cd appropriate'  and restart."
   echo "OK, now I really quit."
   return
 fi
@@ -65,17 +72,19 @@ cat << EOF-execset
     
     You will now set the single global variable used by this
  'whereis' system ( \$rchbls ).  It will ALSO be the directory
- for the execution library.  The current value is $default.
- Should you want $HOME/$default hit CR at the prompt.  Other
- key in the FULL desired directory name.
+ for the execution library.  The current value is 
+                      $default.
+ Should you want      $default 
+ Hit CR at the prompt.  Otherwise  key in the FULL desired
+ directory name.
 
 EOF-execset
 echo -n "Enter the value for \$rchbls variable(CR for default): "
 read mychoice rest
 
 if [ ".$mychoice" == "." ]; then        # take the default
-  echo "You have chosen to take the default : "$HOME/$default
-  thechoice=$HOME/$default
+  echo "You have chosen to take the default : "$default
+  thechoice=$default
 else
   thechoice=$mychoice
 fi
@@ -88,16 +97,16 @@ cat /tmp/tempname$USER >> $build_dir/execdir # put back in old
     echo
 #   echo "\$rchbls = $rchbls,\$thechoice = $thechoice  BEFORE "
     echo "\$rchbls = $rchbls                      BEFORE "
-    read rchbls rest < $build_dir/execdir      # get it
-    export rchbls=$thechoice                   # set it $rchbls
+    read rchbls rest < $build_dir/execdir   # get it
+    export rchbls=$thechoice                # set it $rchbls
     echo
     echo "and now \$rchbls is : $rchbls"
     echo
     echo "You may run this script multiple times."
     echo "The value for \$rchbls will be set by the last run."
     echo
-    echo "By the way, 'rchbls' is derived as the initials of "
-    echo "me - Robert C. Hansen  and Benjamin Lafayette Sisko."
+  echo "By the way, 'rchbls' is derived as the initials of "
+  echo "me - Robert C. Hansen  and Benjamin Lafayette Sisko."
 
 read build_dir rest < $build_dir/builddir
 read exec_dir rest  < $build_dir/execdir
