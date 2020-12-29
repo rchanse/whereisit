@@ -17,9 +17,12 @@ g  is to find stuff in a list you have by number
 
 member(s) to look at first:
 
-a. README.more.md - more extensive doc.   The INSTALL info.
+a. go read next 'hearsthedeal'
 
 b. 11asummary - one liners about the members
+
+c. README.more.md - more extensive doc.   The INSTALL info.
+
 
 You're on you own.
 

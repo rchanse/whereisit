@@ -3,3 +3,68 @@
  2015  git commit -m 'first commit - README.md'
  2023  git remote add origin https://github.com/rchanse/whereis.git
  2025  git push --set-upstream origin master
+
+In the object sub dir of .git
+
+Blob - files
+Tree - directories and info
+Commit - versions 
+Annotated Tag - pointer to specific commit   
+
+
+git hash-object - create objects
+git cat-file - read object info
+git mktree
+
+
+echo "Hello, Git" | git hash-object --stdin -w
+
+
+git cat-file -p <hash>   contents of object
+             -s <hash>   size of object
+             -t <hash>   type of object
+
+echo "file2 in Git repository" > new.file.txt
+
+git hash-object new.file.txt -w
+
+git blobs don't have file name.
+
+  Git Object 
+Content + Object type + Object length = Hasn
+ \        |             /   
+  \       |  +======+==V+===+                         
+   \      +->|blob  | 11| \0| <<--delimiter
+    \        +==============+
+     +---->> |   Hello, Git |
+             +==============+
+              
+
+
+
+Working         Staging             Git               Remote
+directory        area             Repository           Git
+|               (index)            (local)          Repository
+|                 |                 |                       |
+|=git add=======>>|                 |                       |
+|                 |==git commit===>>|                       |
+|                 |                 |===git push==========>>|
+|                 |                 |                       |
+|       (jump to version)           |<<---git fetch---------|
+|<<-------git checkout--------------|                       |
+|                 |                 |                       |
+|<<-----------git pull---(merge change from remote )--------} 
+|                 |                 |                       |
+
+
+
+
+
+
+
+
+
+
+
+
+              
