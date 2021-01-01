@@ -90,16 +90,17 @@ cat << EOF-execset
 
 EOF-execset
 IFSsave=$IFS
-$IFS=" "
-echo -n "Enter the value for \$rchbls variable(CR for default): "
+IFS=" "
+echo "Enter the value for \$rchbls variable(CR for default): "
+echo -n "===>>:"
 read -r mychoice rest
 IFS=$IFSsave
 
-echo "\$mychoice = $mychoice"
-
+clear
 if [ ".$mychoice" == "." ]; then        # take the default
-  echo "You have chosen to take the default : "$HOME/$default
   thechoice=$HOME/$default
+  echo "You have chosen to take the default"
+  echo "default ==>>:"$thechoice
 else
   thechoice=$mychoice
 fi
@@ -110,24 +111,27 @@ export rchbls=$thechoice                # set it $rchbls
 ech0 "\$rchbls = $rchbls"
 
 # Setting execdir values         
-cp execdir zexectemp                       #save orig
-echo "$thechoice" > $build_dir/execdir     #set value
-echo "Gentime is "`date` >> $build_dir/execdir    # timestamp
-cat zexetemp  >> execdir                          # put back in old
+ze=$PWD"/zet"
+if [ ! -e $zt ]; then   # if $zt does NOT exist
+  touch $ze              # make it now exist
+fi
+cp execdir $ze      # back up execdir  
+echo "$thechoice" > execdir     #set value
+echo "Gentime is "`date` >> execdir    # timestamp
+cat $ze >> execdir                     # put back in old
 IFSsave=$IFS
-$IFS=" "
-read -r build_dir rest < $build_dir/builddir
-read -r exec_dir rest  < $build_dir/execdir
-#read -r build_dir rest < builddir
-#read -r exec_dir rest  < execdir
+IFS=" "
+#read -r build_dir rest < $build_dir/builddir
+#read -r exec_dir rest  < $build_dir/execdir
+read -r build_dir rest < builddir
+read -r exec_dir rest  < execdir
 IFS=$IFSsave
     echo
-#   echo "\$rchbls = $rchbls,\$thechoice = $thechoice  BEFORE "
-    echo
-    echo "and now \$rchbls is : $rchbls"
-    echo "build-lib: $build_dir
-    echo "exec-lib : $exec_dir
-    echo
+#   echo
+#   echo "and now \$rchbls is : $rchbls"
+#   echo "build-lib: $build_dir"
+#   echo "exec-lib : $exec_dir"
+#   echo
     echo "You may run this script multiple times."
     echo "The value for \$rchbls will be set by the last run."
     echo
@@ -138,9 +142,9 @@ cat << EOF-setvar
 
   You should now be set up to create the exec-lib.
 
-  \$rchbls = $rchbls
+  \$rchbls   = $rchbls
   build-lib = $build_dir
-  exec-lib = $exec_dir
+  exec-lib  = $exec_dir
 EOF-setvar
 
 if [ ! -d  $exec_dir ]; then
