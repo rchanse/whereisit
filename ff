@@ -14,8 +14,8 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 # 4. director ~/bin/ff_acrolist_dir  sub dir of acrolists
 #
 
-read exec_dir rest < $rchbls/execdir
-read bld_dir rest < $rchbls/builddir
+read -r exec_dir rest < $rchbls/execdir
+read -r bld_dir rest < $rchbls/builddir
 
 usage() {
   cat <<EOF
@@ -95,7 +95,7 @@ fi
 
 if [ ".$p1" == ".ON" ]; then 
    echo -n "Enter the acrolist file name : "
-   read answer   rest
+   read -r answer   rest
    acroname=$answer  
 #  echo $acroname > ~/bin/ff_acroname
    echo $acroname > $exec_dir/ff_acroname

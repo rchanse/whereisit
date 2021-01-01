@@ -33,7 +33,7 @@ echo "CR in following prompt will retain original value"
 echo -n "Please enter the desire value for \$rchbls :"
 
 save_rchbls=$rchbls
-read wi_parm rest
+read -r wi_parm rest
 if [ ".$wi_parm" == "." ]; then
   wi_parm=$save_rchbls
 fi

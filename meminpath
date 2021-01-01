@@ -59,7 +59,7 @@ fi
 
   quit="no" 
   echo -n "Compare two (enter 2 numbers CR to quit): "
-  read a b tail      
+  read -r a b tail      
   if [ ".$a" == "." ]; then
     quit="yes"
   fi
@@ -77,7 +77,7 @@ fi
     fi
     
     echo -n "Compare two (enter 2 numbers CR to quit): "
-    read a b tail
+    read -r a b tail
     if [ ".$a" == "." ]; then
       quit="yes"
     fi

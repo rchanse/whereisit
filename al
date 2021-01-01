@@ -22,8 +22,8 @@ else
      alias cdn='cd ~/newtest'
      alias cdt='cd ~/testwit'
      echo "\$rchbls = $rchbls"
-     read build_dir rest < $rchbls/builddir
-     read exec_dir  rest < $rchbls/execdir
+     read -r build_dir rest < $rchbls/builddir
+     read -r exec_dir  rest < $rchbls/execdir
      echo "build-dir = $build_dir, exec-dir = $exec_dir"
      echo "alias cdx='cd $exec_dir'"
      alias cdx='cd $exec_dir'             # to exec-lib dir.

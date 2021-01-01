@@ -3,7 +3,7 @@
 echo "BEFORE BeFore Before before"                # <<== before 
 
 echo -n "enter var (anything but 'a'): "
-read a rest
+read -r a rest
 
 if [ ".$a" == ".a" ]; then
   echo "\$a is "$a"   early out code"

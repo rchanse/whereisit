@@ -28,9 +28,9 @@ if [ ! -e $PWD/builddir ]; then       # weak test to see if right dir.
   return
 fi
 
-read build_dir rest < $PWD/builddir
+read -r build_dir rest < $PWD/builddir
 echo "build_dir = $build_dir"
-read exec_dir rest < $PWD/execdir
+read -r exec_dir rest < $PWD/execdir
 
 if [ ".$build_dir" != ".$PWD" ]; then
   echo
@@ -73,7 +73,7 @@ fi
 
 echo
 echo -n "Is that correct?  y/Y to continue :"
-read answer rest
+read -r answer rest
 
 if [ ".$answer" = ".y" ] || [ ".$answer" == ".Y" ]; then
   echo "answer ($answer), On we go!"
@@ -90,7 +90,7 @@ fi
 if [ -d $exec_lib ]; then
   echo "$exec_lib exists. Please renameit."
   echo -n "Enter new subdirectory name (return to exit): "
-  read newname rest
+  read -r newname rest
   if [ ".$newname" == "." ]; then
     echo "Nothing done, I quit."
     return
@@ -124,13 +124,13 @@ echo "# Message of possible INSTALL copy errors." > $exec_lib/BooHoo
 echo "  Search for 'BooHoo' to find concerns." >> $exec_lib/BooHoo
 date >> $exec_lib/BooHoo
 
-while read parm_line ; do
+while read -r parm_line ; do
 # echo "$parm_line"  >> $exec_lib/BooHoo
 # echo "cpit $parm_line "
 # cpit "$parm_line"
   IFSsave=$IFS
   IFS=" "
-  read first_word rest <<< $parm_line 
+  read -r first_word rest <<< $parm_line 
   IFS=$IFSsave
 
 # echo "$first_word   ${first_word:0:1}"

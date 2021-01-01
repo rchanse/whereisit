@@ -52,11 +52,11 @@ fi
 
 mkdir $rchbls
 
-while read line_item  ; do
+while read -r line_item  ; do
 
   IFSsave=$IFS
   IFS=" "
-  read filename rest <<< $line_item
+  read -r filename rest <<< $line_item
   IFS=$IFSsave
   if [ ".${filename:0:1}" != ".#" ]; then
     echo "==copy it:: $line_item"

@@ -99,7 +99,7 @@ fi
 
 if [ ".$p1" == ".ON" ]; then 
    echo -n "Enter the acroparm file name : "
-   read answer   rest
+   read -r answer   rest
    acroparm=$answer 
 #  echo $acroparm
    ech0 $acroparm   $exec_lib/bin/gg_acroname  

@@ -61,10 +61,10 @@ if [ ".$1" == ".build" ]; then
   echo " '. ./chkwisys build' is usually ONLY between setvar and INSTALL."
   echo "You are currently in $PWD which MUST be your build-lib."
   echo -n "Are in your build-lib directory?? (y/Y) to continue:"
-  read answer rest
+  read -r answer rest
   if [ ".$answer" == ".y" ] || [ "$anser" == ".Y" ] ; then
-    read exec_dir rest < $PWD/execdir
-    read build_dir rest < $PWD/builddir
+    read -r exec_dir rest < $PWD/execdir
+    read -r build_dir rest < $PWD/builddir
     echo "So far, '. ./chkwisys build' indicates "
     echo " \$rchbls = $rchbls "
     echo " build-lib is $HOME/$build_dir."
@@ -103,8 +103,8 @@ fi
 echo "after exec-lib check"
 # if you are here  exec-lib exists and this is not 'build' req
 
-read build_dir rest < $rchbls/builddir
-read exec_dir  rest < $rchbls/execdir
+read -r build_dir rest < $rchbls/builddir
+read -r exec_dir  rest < $rchbls/execdir
 
 cat << EOF-info
 " chkwisys cmd. ( in some form ).  No 'build' parm."

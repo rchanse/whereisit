@@ -31,7 +31,7 @@ acro_file=$HOME"/bin/f_acrolist"
 if [ -f $rchbls/f_acrolist ]; then
   acro_file=$rchbls/f_acrolist
 else
-  read bld_dir rest < $rchbls/builddir
+  read -r bld_dir rest < $rchbls/builddir
   acro_file=$bld_dir/f_acrolist
 fi
 

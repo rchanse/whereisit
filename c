@@ -67,12 +67,12 @@ acro_found="no"
 line_item=''
 ech0 "\$line_item = $line_item."
 while [ ".$acro_found" == ".no" ] && 
- read line_item  ; do
+ read -r line_item  ; do
 # while  read line_item  ; do
   ech0 $line_item
   IFSsave=$IFS
   IFS=" "
-  read acro_item new_dir_item <<< $line_item
+  read -r acro_item new_dir_item <<< $line_item
   IFS=$IFSsave
 # ech0 "dir_new_item=$dir_new_item, arco_item=$acro_item,
 if [ ".$acro_item" == ".$acro_to_find" ]; then

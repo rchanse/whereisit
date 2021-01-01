@@ -135,7 +135,7 @@ echo "Process list for $dir_to_check"
 echo "============================================="
 
 let conflict_count=0
-while  read filename rest ; do
+while  read -r filename rest ; do
   echo "Processing; $filename  in $dir_to_check."
   mem_check $filename
   echo

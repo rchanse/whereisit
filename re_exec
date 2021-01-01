@@ -45,7 +45,7 @@ fi
 
 echo
 echo -n "Is this OK? y/Y to approve: "
-read answer rest
+read -r answer rest
 
 # Execute the command on 'y' or 'Y'
 if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then

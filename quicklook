@@ -1,9 +1,9 @@
 function ef () {
-  read mydir rest < ~/wherebls/execdir
+  read -r mydir rest < ~/wherebls/execdir
   vim ~/$mydir/$1
   }
 function bf () {
-  read mydir rest < ~/wherebls/builddir
+  read -r mydir rest < ~/wherebls/builddir
   echo $mydir
   vim ~/$mydir/$1
   }

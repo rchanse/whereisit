@@ -30,7 +30,7 @@ action=$1                                 # default for case
 let count=$#
 IFSsave=$IFS
 IFS=" "
-read exec_dir rest < $rchbls/execdir
+read -r exec_dir rest < $rchbls/execdir
 IFS=$IFSsave
 ech0 "\$exec_dir = $exec_dir"
 

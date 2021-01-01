@@ -68,7 +68,7 @@ vim +$findline $file_sumout
 #vim +$findline 11asummary.out
 
 echo -e "Hit Enter to rewrite 11asummary "
-read value
+read-r value
 if [ ".$value" == "." ]; then
   cp $file_sumout  $doc_info 
   echo "l1asummary refreshed from 11asummary.out"
