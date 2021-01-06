@@ -14,66 +14,54 @@ function ech0 () {     # turn on debugging with  export ech0=ON
 echo "Checking ..."
 ech0 "\$rchbls is $rchbls"
 
-if [ ".$rchbls" == "." ]; then
-  echo "\$rchbls is NOT set, please fix. "
-  echo "Use 'export rchbls=xxx' where xxx is desired exec-lib dir."
+if [ ! -d $rchbls ]; then
+  echo "execlib directory ($rchbls) does not exist. "
+  echo "It should be created by 'setvar' script.  Please"
+  echo "evaluate or run 'set' var.  Quitting now, no work done."
+  return
+fi
+
+if [ ! -e $rchbls/builddir ]; then
+  echo "file $rchbls/builddir created by 'setvar' is not available"
+  echo "Please evaluate.  Quitting now, no work done."
+  return
+fi
+
+if [ ! -e $rchbls/execdir ]; then
+  echo "file $rchbls/execdir created by 'setvar' is not available"
+  echo "Please evaluate.  Quitting now, no work done."
+  return
+fi 
+
+read -r build_dir rest < $rchbls/builddir
+read -r exec_dir rest < $rchbls/execdir
+
+if [ ".$rchbls" != ".$exec_dir" ]; then
+  echo "Mismatch global var ($rchbls) and "
+  echo "           execlib  ($exec_dir)"
   echo "Leaving -- no work done."
   return
 fi
 
-if [ ! -e $PWD/builddir ]; then       # weak test to see if right dir.
-  echo "It appears you may not have  cd-ed to build-lib "
-  echo "Please fix. "
+if [ ".$PWD" != ".$build_dir" ]; then
+  echo "Mismatch   pwd      ($PWD) and "
+  echo "           buildlib ($build_dir)"
   echo "Leaving -- no work done."
   return
 fi
 
-read -r build_dir rest < $PWD/builddir
-echo "build_dir = $build_dir"
-read -r exec_dir rest < $PWD/execdir
-
-if [ ".$build_dir" != ".$PWD" ]; then
-  echo
-  echo "build-lib indicator ($build_dir) is NOT this dir. ($PWD)"
-  echo "Correct this in  $PWD/builddir. "
-  echo "Leaving -- no work done."
-  return
-fi
-
-#echo "Execution lib dir is : "$rchbls/$exec_dir
-echo "\$rchbls is $rchbls"
+cat << EOF-exec-lib
+\$rchbls is $rchbls"
 build_lib=$build_dir
 exec_lib=$exec_dir 
-echo "Build     lib dir is : "$build_dir
 
-# now check to insure exec-lib will be correct.
-if [ ".$exec_dir" == ".$rchbls" ]; then
-  # $rchbls matchs first word of first line of build-lib/execdir
-  ech0 " parm var ($exec_dir) EQUALs  global var \$rchbls ($rchbls)"
-  echo "Execution lib dir is : "$exec_lib"  (Yet to be built.)"
-else
-cat << EOF-exec-lib
-      
-Execution lib dir is : "$exec_lib"  (Yet to be built.)
-
-  MIS-MATCH   MIS-MATCH      global var and parm value
-
-  Correct by setting \$rchbls (now $rchbls) to be the same 
-as the first word on the first line of $build_lib/execdir
-which is now ($exec_dir).
-
-Use 'export rchbls=(appropriate)     and/or"
-edit $build_lib/execdir.
-
-Leaving - no work done.
+Execution lib dir is : "$exec_lib"  (about to be populated.)
 
 EOF-exec-lib
-  return
-fi
 
 echo
 echo -n "Is that correct?  y/Y to continue :"
-read -r answer rest
+read -r answer rest 
 
 if [ ".$answer" = ".y" ] || [ ".$answer" == ".Y" ]; then
   echo "answer ($answer), On we go!"
@@ -82,42 +70,13 @@ else
   return
 fi
 
-# 2 debuggin shorr-out
-#echo "EARLY OUT"
-#return
-
-
-if [ -d $exec_lib ]; then
-  echo "$exec_lib exists. Please renameit."
-  echo -n "Enter new subdirectory name (return to exit): "
-  read -r newname rest
-  if [ ".$newname" == "." ]; then
-    echo "Nothing done, I quit."
-    return
-  else
-    echo "mv $exec_lib $HOME/$newname"  
-    mv $exec_lib $HOME/$newname
-    echo "OK, we are ready -- rerun the INSTALL script"
-    return
-  fi
-else
-  echo "On we go, allocate, populate and rePATH  $exec_lib."
-fi 
-
-
-ls -alh $exec_lib    
-echo "cmd mkdir $exec_lib"
-mkdir $exec_lib
-ls -alh $exec_lib    
-cd $build_lib                  # get to right dir to do work
+#cd $build_lib                  # get to right dir to do work
 
 echo "Your original PATH"
 echo $PATH
 echo
 echo "Start the copy/gen of $exec_lib"
 
-#echo "another early out"
-#return
 
 BooHoo="no"
 echo "# Message of possible INSTALL copy errors." > $exec_lib/BooHoo
@@ -137,24 +96,24 @@ while read -r parm_line ; do
   if [ ".${first_word:0:1}" == ".#" ]; then
     echo "comment:$parm_line" >> $rchbls/BooHoo
   else
-   # first check for existence of input
-   echo "copyit :$parm_line" >> $rchbls/BooHoo
-   if [ ! -e $first_word ]; then
-     echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
-     BooHoo="yes"
-   else
-     echo "cp -pv $first_word $rchbls/$first_word" >> $rchbls/BooHoo
-     cp -pv $first_word $rchbls/$first_word
-     ccrc=$?
-     if [ $ccrc -eq 0 ]; then
-       echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
-     else
-       echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
-       BooHoo="yes"
-     fi
-   fi 
- fi 
-done < INSTALLmbrs
+    # first check for existence of input
+    echo "copyit :$parm_line" >> $rchbls/BooHoo
+    if [ ! -e $first_word ]; then
+      echo "BooHoo: $first_word does NOT exist. <<===" >> $rchbls/BooHoo
+      BooHoo="yes"
+    else
+      echo "cp -pv $first_word $rchbls/$first_word" >> $rchbls/BooHoo
+      cp -pv $first_word $rchbls/$first_word
+      ccrc=$?
+      if [ $ccrc -eq 0 ]; then
+        echo "$1 copied (rc=$ccrc) to "$exec_lib >>$exec_lib/BooHoo
+      else
+        echo "BooHoo -- cp ret code ($ccrc) check $1 <<++++" >> $exec_lib/BooHoo
+        BooHoo="yes"
+      fi
+    fi 
+  fi 
+done < $build_dir/INSTALLmbrs
 
 echo
 echo "done with the copy/gen of $exec_lib"
@@ -189,6 +148,3 @@ Welcome, Good Luck and Thanks
 Robert C. Hansen
 EOF-exit
 return
-
-
-

@@ -5,31 +5,33 @@ shopt -s expand_aliases
 if [ ".$1" == ".un" ]; then   # don't seem to work ?? tbd
     unalias ..
     unalias cdt
-    unalias cdn
     unalias cdb
+    unalias cde
     unalias cdx
     unalias cx
     unalias cnx
     unalias now
-    unalias p3
     unalias path
     unalias v1
     unalias v2
     unalias varshow
 else
    alias ..='cd ..'
-   if [ ".$rchbls" != "." ]; then
-     alias cdn='cd ~/newtest'
-     alias cdt='cd ~/testwit'
-     echo "\$rchbls = $rchbls"
+
+     alias cdt='cd ~/witest'
      read -r build_dir rest < $rchbls/builddir
-     read -r exec_dir  rest < $rchbls/execdir
-     echo "build-dir = $build_dir, exec-dir = $exec_dir"
-     echo "alias cdx='cd $exec_dir'"
-     alias cdx='cd $exec_dir'             # to exec-lib dir.
      echo "alias cdb='cd $build_dir'"
      alias cdb='cd $build_dir'            # to build-lib dir.
-   fi  
+
+     read -r exec_dir  rest < $rchbls/execdir
+     echo "alias cde='cd $exec_dir'"
+     alias cde='cd $exec_dir'             # to exec-lib dir.
+     alias cdx='cd $exec_dir'             # to exec-lib dir.
+
+     echo "\$rchbls is rchbls"
+     echo "\$build-dir = $build_dir"
+     echo "\$exec-dir = $exec_dir"
+     
    alias cnx='chmod -x '    
    alias cx='chmod +x '    
    alias hal='ls -alh '
@@ -39,3 +41,4 @@ else
    alias v2='vim ~/tempname'
    alias varshow='echo \$rchbls is $rchbls'
 fi
+

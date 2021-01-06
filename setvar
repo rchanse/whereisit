@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
+
+# debugging echo code
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
     echo $@
   fi  
 }
 
+#weak test to see if this is a build-lib
 if [ ! -e  $PWD/builddir ]; then
 clear
 cat << EOF-nobuilddir
@@ -18,7 +21,6 @@ EOF-nobuilddir
 return
 fi
 
-
 ### Make sure you are where you want to be.
 IFSsave=$IFS
 IFS=" "
@@ -26,58 +28,24 @@ read -r build_dir rest < builddir
 IFS=$IFSsave
 clear
 cat << EOF-hello
-  Hello and welcome to Robert C. Hansen (rch) 'whereis' setup.
+# Hello and welcome to Robert C. Hansen (rch) 'whereis' setup.
 
 You should be starting out with your pwd being your build-lib.
 You are currently in   '$PWD'.  
 
-To set the first word of builddir member to MATCH this directory
 answer 'y' or 'Y' to the prompt. 
 
 EOF-hello
 # remember you are in biuilddir 
 
-echo -n "Is your pwd set correctly to you desired buildlib (y/Y):"
 
 IFSsave=$IFS
 IFS=" "
+echo -n "Is your pwd set correctly to you desired buildlib (y/Y):"
 read -r  answer rest
 IFS=$IFSsave
 
 if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
-  zt=$PWD"/zbt"
-  if [ ! -e $zt ]; then   # if $zt does NOT exist
-    touch $zt              # make it now exist
-  fi
-  cp   $PWD/builddir $zt      # back up builddir
-  echo "$PWD" > builddir      # write build_dir
-  date >> builddir            # timestamp it
-
-  cat  $zt >> builddir        # put back orig at end
-else
-  echo "answer ($answer) not 'y' or 'Y'.  No Changes made."
-  echo "Please reset to  'cd appropriate'  and reissue '. ./setvar'."
-  return
-  echo "Nothing done, I quit."
-  return
-fi
-
-read -r build_dir rest < $PWD/builddir
-echo
-echo "builddir member indicate build-dir is $build_dir."
-echo "This is word 1 on line 1 of $build_dir/builddir."
-
-if [ ".$PWD" != ".$build_dir" ]; then
-  echo "Mismatch MISmatch MISMATCH misMATCH mismatch"
-  echo "Please edit $PWD/builddir and correct."
-  echo "Then you can rerun '. ./setvar' "
-  echo "Nothing done, I quit."
-  return
-fi
-
-# remember you are in builddir
-
-read -r default rest < execdir
 cat << EOF-execset
     
     You will now set the single global variable used by this
@@ -89,6 +57,13 @@ cat << EOF-execset
  directory name.
 
 EOF-execset
+else
+  echo "answer ($answer) not 'y' or 'Y'.  No Changes made."
+  echo "Please reset to  'cd appropriate'  and reissue '. ./setvar'."
+  echo "Nothing done, I quit."
+  return
+fi
+
 IFSsave=$IFS
 IFS=" "
 echo "Enter the value for \$rchbls variable(CR for default): "
@@ -96,46 +71,56 @@ echo -n "===>>:"
 read -r mychoice rest
 IFS=$IFSsave
 
-clear
+#nclear
+
 if [ ".$mychoice" == "." ]; then        # take the default
   thechoice=$HOME/$default
   echo "You have chosen to take the default"
   echo "default ==>>:"$thechoice
+  echo
 else
   thechoice=$mychoice
+  echo "You have entered:"$thechoice
+  echo
+fi
+
+if [ -e $mychoice ]; then
+  echo "$mychoice already Exists.  You will be possibly"
+  echo "overwritting existing. Quiting, nothing changed."
+  return
 fi
 
 # Setting the global variable  $rchbls
-ech0 "\$thechoice = $thechoice"
+#echo "\$thechoice = $thechoice"
 export rchbls=$thechoice                # set it $rchbls
-ech0 "\$rchbls = $rchbls"
+#echo "\$rchbls = $rchbls"
+
+mkdir -pv $rchbls                   # insure existence of execlib
+# Setting builddir values         
+echo "$PWD" > $rchbls/builddir
+echo "Gentime is "`date` >> $rchbls/builddir
+cat builddir >> $rchbls/builddir
+echo "$rchbls/builddir created."
+#echo "== $rchbls/builddir == start =========================="
+#cat $rchbls/builddir
+#echo "== $rchbls/builddir == end   =========================="
 
 # Setting execdir values         
-ze=$PWD"/zet"
-if [ ! -e $zt ]; then   # if $zt does NOT exist
-  touch $ze              # make it now exist
-fi
-cp execdir $ze      # back up execdir  
-echo "$thechoice" > execdir     #set value
-echo "Gentime is "`date` >> execdir    # timestamp
-cat $ze >> execdir                     # put back in old
+#echo "$thechoice" #> $rchbls/execdir          #set value
+echo "$thechoice" > $rchbls/execdir          #set value
+echo "Gentime is "`date` >> $rchbls/execdir  # timestamp
+cat execdir >> $rchbls/execdir               # put back in old 
+echo "$rchbls/builddir created."
+#echo "== $rchbls/execdir == start============================="
+#cat $rchbls/execdir
+#echo "== $rchbls/execdir == end  ============================="
 IFSsave=$IFS
 IFS=" "
-#read -r build_dir rest < $build_dir/builddir
-#read -r exec_dir rest  < $build_dir/execdir
-read -r build_dir rest < builddir
-read -r exec_dir rest  < execdir
+read -r build_dir rest < $rchbls/builddir
+read -r exec_dir rest  < $rchbls/execdir
 IFS=$IFSsave
-    echo
-#   echo
-#   echo "and now \$rchbls is : $rchbls"
-#   echo "build-lib: $build_dir"
-#   echo "exec-lib : $exec_dir"
-#   echo
-    echo "You may run this script multiple times."
-    echo "The value for \$rchbls will be set by the last run."
-    echo
-  echo "By the way, 'rchbls' is derived as the initials of "
+  echo "--"
+  echo "By the way,  rchbls  is derived as the initials of "
   echo "me - Robert C. Hansen  and Benjamin Lafayette Sisko."
 
 cat << EOF-setvar
@@ -145,13 +130,8 @@ cat << EOF-setvar
   \$rchbls   = $rchbls
   build-lib = $build_dir
   exec-lib  = $exec_dir
+
+Continue with '. ./INSTALL' to populate the exec-lib.
+
 EOF-setvar
-
-if [ ! -d  $exec_dir ]; then
-  echo "$exec_dir does NOT exist YET, go onto  '. ./INSTALL' "
-else
-  echo "$exec_dir EXISTs, best look at it. Might be empty."
-fi
-
 return
-
