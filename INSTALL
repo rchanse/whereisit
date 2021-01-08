@@ -50,12 +50,15 @@ if [ ".$PWD" != ".$build_dir" ]; then
   return
 fi
 
-cat << EOF-exec-lib
-\$rchbls is $rchbls"
 build_lib=$build_dir
 exec_lib=$exec_dir 
 
-Execution lib dir is : "$exec_lib"  (about to be populated.)
+cat << EOF-exec-lib
+\$rchbls is $rchbls
+\$build_lib=$build_dir
+\$exec_lib=$exec_dir 
+
+Execution lib dir is : "$exec_dir"  (about to be populated.)
 
 EOF-exec-lib
 

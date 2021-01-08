@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-back=back
+back=".back"
 
 exec_back=$rchbls$back
 
@@ -8,13 +8,21 @@ if [ -d $rchbls ]; then
   echo "$rchbls EXISTs"
 else
   echo "$rchbls DOES NOT Exist."
+  echo "Quiting, you must reinstall"
+  exit
 fi
 
 if [ -d $exec_back ]; then
   echo "$exec_back EXISTs"
+  echo "Backup already exists!!"
+  echo "Quiting no work done."
+  exit
 else
   echo "$exec_back DOES NOT Exist."
 fi
+read -r my_exec rest < $rchbls/execdir
+read -r my_build rest < $rchbls/builddir
+mv $rchbls $exec_back -v
 
 if [ -d $rchbls ] && [ -d $exec_back ]; then
 
@@ -23,18 +31,14 @@ $rchbls EXISTs.
 $exec_back EXISTS.
 
 This 'refresh' script will make a backup of $rchbls it
-one does not exist.  BUT if $rchbls and 
-$exec_back BOTH exist then it will stop.  Determine which 
-directory you wish and delete the other.
-Either   'rm -vfr $rchbls'  or  'rm -vfr $exec_back'. 
-Most likely the former since the first run make good backup and
-you want to keep it.
-
-Then restart
+ 1. Move $rchbls to $exec_back as a backup.
+ 2. Reallocate the $rchbls directory.
+ 3. reestablish necessary first word in builddir and execdir.
+ 4. recopy rest of $rchbls members.
 
 EOF-bk
 
-exit
+echo test exit
 fi
 
 if [ -d $rchbls ]; then
@@ -46,12 +50,14 @@ if [ -d $rchbls ]; then
   fi
 fi
 
-if [ ! -d $rchbls ] && [ ! -d $exit_back ]; then
-  echo "Got NO backup, we wil go with the refresh."
-fi
-
 mkdir $rchbls
 
+echo $my_exec > $rchbls/execdir
+date >> $rchbls/execdir
+echo "Refresh exec-lib name" >> $rchbls/execdir
+
+echo $my_build > $rchbls/builddir
+echo  test exit 2
 while read -r line_item  ; do
 
   IFSsave=$IFS
@@ -61,7 +67,7 @@ while read -r line_item  ; do
   if [ ".${filename:0:1}" != ".#" ]; then
     echo "==copy it:: $line_item"
     echo "_           cp -vp $filename  $rchbls/$filename"
-    cp -vp $filename  $rchbls/$filename
+    cp -vp $my_build/$filename  $rchbls/$filename
     copyrc=$?
     echo "_           Copy ret code was $copyrc"
     if [ $copyrc -ne 0 ]; then
@@ -75,7 +81,7 @@ while read -r line_item  ; do
   else
     echo "A comment:: $line_item"
   fi
-done < $PWD/INSTALLmbrs
+done < $my_build/INSTALLmbrs
 
 echo " DONE DONE DONE ---- finally."
 echo " gold star for patience."
@@ -84,7 +90,3 @@ echo "You can see difference by"
 echo "  diff $rchbls  $exec_back"
 
 exit 0          # if needed
-
-fi
-
-

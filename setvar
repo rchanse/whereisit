@@ -46,6 +46,7 @@ read -r  answer rest
 IFS=$IFSsave
 
 if [ ".$answer" == ".y" ] || [ ".$answer" == ".Y" ]; then
+read -r default rest < execdir
 cat << EOF-execset
     
     You will now set the single global variable used by this
@@ -84,8 +85,8 @@ else
   echo
 fi
 
-if [ -e $mychoice ]; then
-  echo "$mychoice already Exists.  You will be possibly"
+if [ -e $thechoice ]; then
+  echo "$thechoice already Exists.  You will be possibly"
   echo "overwritting existing. Quiting, nothing changed."
   return
 fi
