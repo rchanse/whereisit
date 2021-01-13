@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# debugging I left in the debugging echos but left off 
+# uncomment it to turn them on  BEFORE issuing ff  issue
+
+#   export ech0=ON  
+function ech0 () {               # debugging echo
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+function nop() {    # a NO-OP to make code more readable later
+#  VERY helpful making easier to aid in  if-then-else-fi blocks
+#  if condition ; then         remember   if cond ; then
+#     nop                                    code
+#  else                                   else
+#     nop                                 fi      will gen synax error
+#  fi
+#
+  return 0
+}
+
+# newcessary for this to work
+# script gg - this guy
+# script g1 - modified version of g 
+# directory ~/bin/gg_acrolist_dir - directory containing list
+# file ~/bin/gg_acroname  - file contain member in directory
+# file ~/bin/g1_acrolist - default g1 file
+
+# insure file with name of list of files exists
+if [ -f $HOME/bin/gg_acroname ]; then
+    ech0 "filename with list of names exists"
+else
+    ech0 "creating file for filename"
+    touch $HOME/bin/gg_acroname
+fi
+
+if [ -d $HOME/bin/gg_acrolist_dir ]; then
+    ech0 "subdir exists"
+else
+    ech0 "create the necessary subdir" 
+    mkdir $HOME/bin/gg_acrolist_dir
+fi
+gg_acroname=$HOME/bin/gg_acroname
+gg_acrolist_dir=$HOME/bin/gg_acrolist_dir
+
+
+if [ ".$1" == "." ]; then
+  echo "Activate/Inactivate the name of the acronyn file"
+  echo "found in directory ~/bin/g_acrolist_dir"
+  echo " on  - prompts for the name"
+  echo " off - clears the filename "
+  echo " null - display help and filename"
+  echo "  .   - vim to the acrofile_name"
+  echo " other - act like g  up to three parms"
+echo " "
+
+# fi
+# nl=`wc $HOME/bin/g_acroname |  awk '{print $1}'`
+  nl=`wc $gg_acroname |  awk '{print $1}'`
+  ech0 "nl is "$nl
+  acronam=""
+  if [ ".$nl" == ".0" ]; then
+    echo $gg_acroname " is NULL"
+  else
+    acroname=`head -n1 $gg_acroname | tail -n1`
+    echo "$HOME/gg_acrolist_dir/"$acroname "is the list to search."
+  fi
+  echo
+  echo Possible member to choose.
+  ls $HOME/bin/gg_acrolist_dir
+  exit
+fi
+
+ech0  got here
+p1=$1
+if [ ".$p1" == ".off" ]; then 
+  p1="OFF"
+fi
+
+if [ ".$p1" == ".OFF" ]; then 
+  rm $HOME/bin/gg_acroname
+  sleep 1
+  touch $HOME/bin/gg_acroname
+  exit 
+fi
+
+
+if [ ".$p1" == ".on" ]; then
+  p1="ON" 
+fi
+
+if [ ".$p1" == ".ON" ]; then 
+   echo -n "Enter the acroparm file name : "
+   read answer   rest
+   acroparm=$answer 
+#  echo $acroparm
+   ech0 $acroparm   $HOME/bin/gg_acroname  
+   echo $acroparm > $HOME/bin/gg_acroname  
+   echo "Using >"$acroparm"< for acro list name."
+   cat $HOME/bin/gg_acroname
+   exit
+fi
+#echo acroparm is ">"$acroparm <"
+
+echo go do g1 $1 $2 $3
+g1 $1 $2 $3
+
+

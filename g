@@ -85,19 +85,16 @@ echo "List of names file " $NAMES_list "has" $nl "entries"
  }
 
 # end of functions
-# start of mainline
-# if [ $# = 0 ]; then            # alternate setup for help
-#    echo "print the help info"
-#    action=help
-# fi
 
-if [ ".$1" == "." ] || [ ".$1" == ".." ]; then 
+# start of mainline
+
+if [ ".$1" == "." ] || [ ".$1" == ".--help" ]; then 
    action=help
 fi
 if [ "$1" == "show" ]; then
   action=show
 fi
-if [ ".$1" == ".0" ]; then 
+if [ ".$1" == ".0" ] || [ ".$1" == ".." ]; then 
   action=vimit
 fi
 
@@ -124,14 +121,17 @@ case "$action" in
   ;;
 
 "help" )   # provide syntax     no parms or parm1=help
+  clear
   echo "  list file is $NAMES_list                 "
   echo "                                           "
   echo "     parm1  parm2 (maybe more)             "
-  echo "  g  (none) or .  - show this help/syntax  "
+  echo "  g    NULL       - show this help/syntax  "
+  echo "      --help      - show this help/syntax  "
   echo "       rep  file  - overlay list with file "
   echo "       add  file  - concat file to list    "
   echo "       show       - enumerat entire list   "
   echo "       show  n    - 10 entries in list  starting at n "
+  echo "        .         - vim $NAMES_list        "
   echo "        0         - vim $NAMES_list        "
   echo "        n         - vim entry n (unless parms 2, 3, 4 "
   echo "                   - are provided they override the vim cmd "
@@ -190,7 +190,3 @@ fi
   ;;
 esac
 exit 0
-
-
-
-
