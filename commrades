@@ -1,0 +1,54 @@
+
+Grouping of exec-lib by association      Thanks, James Conroy
+---installation------------------------
+           /rchbls       global var $rchbls
+setvar*-----builddir     build-lib (the parts)
+           \execdir      exec-lib  (running code) 
+            setvar
+INSTALL* INSTALLmbr*--- exec and list to get from build
+                         BooHoo
+engage
+al
+--doc.----------------------------------
+followwally**  cmds looking around
+README.md            hearsthedeal (has install instr)
+README.more.md
+11asummary     one-line descriptors
+wrsum          writing to 11asummary
+COPYING        MIT license
+--PATH management-----------------------
+addpath     add to end
+addpath0    add to start
+delpath     remove a path mem
+showpath
+--move file-----------------------------
+get4me     get for me
+re_build   exec -> build
+re_exec    build -> exec
+refresh    best do a reinstall after saving you acro-s
+diffme     diff tool
+dirinpath  which members of dir are in PATH
+meminpath  this member is where in your PATH
+chkwi
+--quick cd------------------------------
+c     quick cd change by acro
+--file by acronym--------------------------------------
+f
+f1        part of old ver of ff
+f_acrolist  you list of acro/dsn
+ff      extended f to projects
+ff_acrolist_dir  sub dir for projects
+ff_acroname  current member in use
+--file by number--------------------------------------
+g
+g1        part of old ver of gg
+gg        extended g to projects
+gg_acrolist_dir  sub dir for projects
+gg_acroname  current member in use
+gnamelist  list of file
+--misc----------------------------------
+ech0    debugging
+lbang   lazy
+--Eric Rj-------------------------------
+src      python wrapper for rcs (sccs)
+srcdoc   notes

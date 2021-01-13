@@ -1,27 +1,18 @@
-#  member description add as ' - comments '
-# seperator # indicate $rchbls required
-11asummary $ me, myself and I  the one line summary stmts. 
+#member description add as ' - comments '
 COPYING - MIT license 
-INSTALL $ build-lib (only) script to create the exec-lib (need $rchbls) 
-INSTALLmbrs $ list of member copied from buildlib to execlib
 Neanderthal - reality check time    :-)  or ;-( 
 README.md - Typical README file (facts, comments, direcions) 
-README.more.md $ README.md extension
-addpath $ script to add a file to end of path  ( invoke by . or souce) 
-addpath0 $ script to add a file at start of path (invoke by .) 
-al $ some 'possibly' helpful aliases 
 b4 - exec to show how to leave (exit or return) from a script 
-babynanorc - minimal config file for nano(install as ~/.nanorc
-babyvimrc - minimal config file for vim ( ~/.vimrc  or ~/.vim/vimrc
-breakitnow - tiny mess up with source
+babynanorc - minimal config file for nano(install as ~/.nanorc 
+babyvimrc - minimal config file for vim ( ~/.vimrc  or ~/.vim/vimrc 
+breakitnow - tiny mess up with source 
 builddir - member contain basename of the build directory 
 c - directory quick change by acronym (invoke by .) 
-c_acrolist - starter sample list of acronym/directories for c
-changes - notes on chanages
-checksys $ aid to show $rchbls build-lib exec-lib (gone see chkwi) 
+c_acrolist - starter sample list of acronym/directories for c 
+changes - notes on chanages 
 checkvar - stand alone exec to check/and show $rchbls(gone see chkwi 
 chkvar - function to be put in other scrips to verify $rchbls non-null 
-chkwi - show the system parms, libs, path ...
+chkwi - show the system parms, libs, path ... 
 delpath - script to remove files from PATH  (invoke by .) 
 diffme - script to diff a mem of pdw  with a specified file 
 dirinpath - for given directory show which path file contain each mem 
@@ -29,36 +20,23 @@ ech0 - a debugging echo function to copy into scripts(updated)
 ech1 - inline echo debugging code to invoke from other scripts(gone 
 echotest1 - show how to use ech0 if function inline 
 echotest2 - show how to use echo WITHOUT function inline 
-engage $ script to activate the environment during INSTALLation 
-execdir $ file which contains the basename of the execution directory 
 execdirdoc - notes on execdir 
-f $ vim to a file by acronym (and extensions)
-f1 $ the f part of ff script (kind of subroutine)
 f_acrolist - starter acronym list to work with f 
-ff $ extended f for projects 
-followwally $ a session on how to use this material
-g $ invoke action on files by number, see 'g 0'  default editor-vim 
-g1 $ the g part of the old gg script
-g4m - use for help with f
+g - quick find by number
+g4m - use for help with f 
 ged - like g but with  editor=nano 
 get4me - grab a file to my directory 
-gg $ extended g script for projects
-git_notes - misc extra notes
-hearsthedeal $ Here's the deal (read after README.md)
+gg - extended g to projects (one big script no external call)
+ggold - old version on g (two parts) gg and g1  chmod +x 
+git_notes - misc extra notes 
 lbang - for the lazy #!/usr/bin/env bash 
-ls - cause simple error
+ls - cause simple error 
 meminpath - script to see which PATHfile contain a named member 
-quicklook * two tiny functions to easily get to exec/build members
-qv - quick vim on a directory (a function) find by type
-rchbls $ tool to (re)set the $rchbls global variable 
-re_build $ copy a mem from either pwd or exec-lib to build-lib 
-re_exec $ copy a mem from either pwd or build-lib to exec-lib 
-refresh $ depreciate script, replaced by re_exec and re_build 
-setvar $ instlation scrip which set gvar, buildlib, execlib
+qv - quick vim on a directory (a function) find by type 
 showpath - show the files in your PATH 
 src - Eric Raymond's Simple Revision Control 
 srcdoc - starting point for src 
 tempname - comes and goes scratchwork file. 
-todo - thing to do
-whatsthedeal - tbd
+todo - thing to do 
+whatsthedeal - tbd 
 wrsum - documentation aid tool to write in this file 

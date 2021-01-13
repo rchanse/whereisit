@@ -14,7 +14,7 @@ c_acrolist       # parmlib for new ver of c
 # checksys  gone!  # aid to show rchbls, bld-lib exec-lib
 # checkvar  gone!  # aid to show rchbls
 # chkvar    gone!  # check the rchbls variable        
-# chkwisys       # left out ON PURPOSE to demo errmsg
+chkwisys         # check out the wi system 
 COPYING          # MIT license
 delpath          # remove file from PATH 
 diffme           # short cut script to diff mems in pdw
@@ -29,8 +29,7 @@ ff               # f for project groups
 f1               # ff subfunction        
 f_acrolist       # start list of acronyms
 g                # go to file by number
-gg
-g1
+gg               # expanded g for groups
 # ged    gone!     # like g but with nano rather than vim
 # gon etsys2          # system checking tool
 get4me           # grab a copy
