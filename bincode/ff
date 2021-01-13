@@ -1,0 +1,309 @@
+#!/usr/bin/env bash
+
+# function to copy at top and use ech0 (rather than ech1
+function ech0 () {     # turn on debugging with  export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+
+# Notes and needs for this script
+# 1. script f1 for this to call  ( like f with acrolist  f1_acrolist
+# 2. file ~/bin/f1_acrolist   default
+# 3. file ~/bin/acrofile_name   holds the member-name across calls
+# 4. director ~/bin/ff_acrolist_dir  sub dir of acrolists
+#
+
+#read -r exec_dir rest < $rchbls/execdir
+#read -r bld_dir rest < $rchbls/builddir
+exec_dir=$HOME/bin
+
+usage() {
+  cat <<EOF
+:: usage :::::::::::::::::::::::::::::::::::::::::::::::::::  
+Name: ff  found in $0
+Description: driver for f-type routine where the acronym list
+  is in $exec_dir/ff_acrolist_dir/<member-name>
+   
+parm
+  null - shows this help information and current member-name.
+  .    - enter the new acronym list file
+  on   - prompt/set the  ~/bin/ff_acrolist_dir/ member-name
+  off  - clear the member-name
+  otherwise acts like f with up to three parms.
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::: usage :  
+EOF
+}
+
+########################################### start of ffwork
+
+
+function ech0 () {     # turn on debugging - export ech0=ON
+  if [ ".$ech0" == ".ON" ]; then
+    echo $@
+  fi  
+}
+function nop() {    # a NO-OP to make code more readable 
+#  VERY helpful  aid in  if-then-else-fi blocks
+#  if condition ; then  remember   if cond ; then
+#     nop                            code
+#  else                            else
+#     nop                            fi will gen synax error
+#  fi
+#              Using  TRUE is EASIER
+  return 0
+}
+
+### actual start of ffwork code
+function ffwork ()  {
+ech0 " ffwork $1 $2 $3 $4 $5"
+acroname=$1   # the sub dir to use
+sub1=$2      # the acro passed to ff
+sub2=$3      # override parm1
+sub3=$4      # override parm2
+sub4=$5      # override parm3
+
+co=""
+ech0 "\$co = 0$co,"
+if [ ".$sub2" != "." ]; then co="$sub2";fi
+ech0 "\$co = 1$co,"
+if [ ".$sub3" != "." ]; then co="$sub2 $sub3";fi
+ech0 "\$co = 2$co,"
+if [ ".$sub4" != "." ]; then co="$sub2 $sub3 $sub4";fi
+ech0 "\$co = 3$co,"
+cmd_override="$sub2 $sub3 $sub4"
+ech0 "\cmd_override = [$cmd_override]"
+# code inserted to make work under 'whereis
+#read -r exec_dir rest < $rchbls/execdir
+exec_dir=$HOME/bin
+ech0 "\$exec_dir = $exec_dir"
+ 
+acro_file=$exec_dir/ff_acrolist_dir/$acroname
+echo "\$acro_file  $acro_file"
+
+#read -r ansxxx
+
+#p1=$1                         # first parm
+#if [ ".$sub2" == "." ]; then     #  more than one parm ??
+#	sub2=""                     # nope
+#else
+#    orig2=$sub1          # prep for check of  f acro sudo
+#    orig3=$sub2         #   when third parm is null
+#	shift
+#	sub2=$@                     # obtain rest of cmdline
+#fi
+
+
+if [ ".$sub1" == ".." ] ; then    # use  f .  to get to the acro file
+	vim $acro_file 
+	exit
+fi
+
+echo "Processing $acro_file  looking for $sub1"
+found="no"   
+
+# logic is processing a file looking for acronym to associate with a
+# file and then take action.
+
+#  while  line in file ; do
+#     the processing (see comments below
+#  done < acro-file
+
+while read -r aline; do
+read -r acro filename a1 a2 a3 rest <<< $aline
+read -r acro filename rest <<< $aline
+ech0 acro $acro filename $filename a1 $a1 a2 $a2 a3 $a3 rest $rest
+
+#  if null-line skip it  (debug msg as null/blank line.)
+#     if char1 of acro is #  skip it  (debug msg as comment
+#        if passed-val is acro  mark found to bail 
+#           if command_line(3) is null  process acrofile override
+#                else if command_line(2)=sudo and (3)=null  sudo vim file
+#                           else command_line(2+) is override_cmd
+
+if [ "." != ".$acro" ]; then        # null acro => blank line
+  if [ ${acro:0:1}  != "#" ]; then  # char(1) of acro => comment
+    # nop
+    if [ "$sub1" == "$acro" ] ; then  # matching acro ??
+      found='yes'
+      ech0 "found is now yes for " $acro  $filename
+      ech0 $aline
+      ech0 "process IT"
+      ech0 pre break  ">"$line_action"<>"$command_override"<"
+      break        # exit loop if found
+
+    else
+      nop
+      ech0 $aline
+      ech0 "No acro match,Onto the next line "
+    fi
+  else
+    ech0 $aline
+    ech0 comment line
+  fi
+else
+  ech0 $aline
+  ech0 blank line
+fi
+done < $acro_file        # end read loop from given acro file 
+
+echo "acro  $acro"
+echo "filename $filename"
+echo "rest $rest"
+
+# NOT found msg and exit
+if [ "$found" == "no" ] ; then
+	echo "::                                               "
+	echo ::  acronym  $sub1  NOT found try . for acrolist 
+	echo "::                                               "
+	exit 4  
+fi
+#return
+
+
+
+# The actual line to work on 
+
+# Handle ~/whoever   to become     /home/$USER/whoever
+if [ ".${filename:0:1}" == ".~" ] ; then
+	lead=$HOME              # now is /home/$USER   or   /root
+	tailend=${filename:1}   # peel off the ~
+	filename=$lead$tailend  # provide actual name 
+fi
+parm_ov=$rest
+cmd_ov=$cmd_override
+read -r o1 o2 o3  rest <<< $cmd_override
+echo ",$o1,$o2,$03,"
+if [ ".$o3" != "." ]; then
+  cmd_ov="$o1 $o2 $o3"
+       echo "3 ($cmd_ov)"
+  else
+   if [ ".o2" != "." ]; then
+     echo 2
+     cmd_ov="$o1 $o2"
+       echo "2 ($cmd_ov)"
+     else
+     if [ ".$o1" != "." ]; then
+       cmd_ov=$o1
+       echo "1 ($cmd_ov)"
+     else
+       cmd_ov=""
+       echo "0 ($cmd_ov)"
+     fi
+   fi
+  fi
+echo "acro line override:"$parm_ov
+echo "cmdline override:" $cmd_ov
+echo "co      override:" $co
+echo "acro:"$sub1", filename:"$filename
+
+# Set the cmd_action value        
+cmd_action="vim "                      #  set the default
+echo "================================================"
+echo "default          cmd_action = "$cmd_action
+ech0 "1 $cmd_action  >"$line_action"<"
+if [ ".$parm_ov" != "." ]; then
+  cmd_action=$parm_ov             # parm lib override
+fi
+echo "after parm eval  cmd_action = "$cmd_action
+ech0 "2 $cmd_action"
+ech0 "\cmd_ov = ($cmd_ov)"
+#if [ ".$cmd_ov" != ".NOPE" ]; then     # commandline override
+#  cmd_action=$cmd_ov
+#fi
+ech0 "after cmdline    cmd_action = "$cmd_action
+ech0 "3 $cmd_action"
+echo "\co = ($co)"
+if [ ".$co" != "." ]; then     # commandline override
+  cmd_action=$co
+fi
+echo "after co         cmd_action = "$cmd_action
+echo $cmd_action $filename
+$cmd_action $filename
+}
+
+########################################### end   of ffwork
+ech0 "default          cmd_action = "$cmd_action
+ech0 "after parm eval  cmd_action = "$cmd_action
+ech0 "after cmdline    cmd_action = "$cmd_action
+ech0 "after co         cmd_action = "$cmd_action
+########################################### end   of ffwork
+
+## Actual start of mainline ff is here <<<=============
+# copy parms
+p1=$1
+p2=$2
+p3=$3
+p4=$4
+#ech0 "exec-dir $exec_dir,  build-dir $bld_dir "
+ech0 "exec-dir $exec_dir    #,  build-dir $bld_dir "
+
+## insure the curren member exists  (else make & set it)
+
+# This is first time code to set the environment.
+
+# set the file with the current usage mem to firsttime
+if [ ! -f $exec_dir/ff_acroname ]; then
+  echo "firsttime" > $exec_dir/ff_acroname
+else
+  read -r acroname rest < $exec_dir/ff_acroname
+fi
+
+# create the subdir and its member firsttime , populate it
+if [ ! -d $exec_dir/ff_acrolist_dir ]; then
+  mkdir $rchbls/ff_acrolist_dir
+  mkdircc=$?
+  echo "# acro   filename" > $exec_dir/ff_acrolist_dir/firsttime 
+fi
+
+if [ ".$p1" == "." ] || [ ".$p1" == ".--help" ]; then
+  clear
+  usage
+
+  # in general
+  read -r acroname < $exec_dir/ff_acroname
+  echo
+  echo "Current acrolist ==>> $acroname <<==, found in"
+  echo "directory $exec_dir/ff_acrolist_dir"
+  echo
+  echo "List of non-default current choices:"
+  ls -A $exec_dir/ff_acrolist_dir
+  exit 0
+fi
+
+if [ ".$p1" == ".off" ]; then 
+  p1="OFF"
+fi
+
+if [ ".$p1" == ".OFF" ]; then 
+# rm bin/ff_acroname               # clear by deleting
+  rm $exec_dir/ff_acroname               # clear by deleting
+  sleep 1
+# touch bin/ff_acrofile_name          # reallocate empty
+  echo "firsttime" > $exec_dir/ff_acroname
+  exit 
+fi
+
+
+if [ ".$p1" == ".on" ]; then
+  p1="ON" 
+fi
+
+if [ ".$p1" == ".ON" ]; then 
+   echo -n "Enter the acrolist file name : "
+   read -r answer   rest
+   acroname=$answer  
+   echo $acroname > $exec_dir/ff_acroname
+   echo "Using : "$acroname" for ff_acrofile_dir member name."
+   if [ ! -f $exec_dir/ff_acrolist_dir/$acroname ]; then
+     echo "# acro   filename" > $exec_dir/ff_acrolist_dir/$acroname 
+   fi
+   exit 
+fi
+
+echo ffwork $acroname  $p1 $p2 $p3 $p4
+ffwork $acroname  $p1 $p2 $p3 $p4
+echo "return to end of main"
+
+

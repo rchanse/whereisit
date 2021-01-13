@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# Notes and needs for this script
+# 1. script f1 for this to call  ( like f with acrolist  f1_acrolist
+# 2. file ~/bin/f1_acrolist   default
+# 3. file ~/bin/acrofile_name   holds the member-name across calls
+# 4. director ~/bin/ff_acrolist_dir  sub dir of acrolists
+#
+
+usage() {
+  cat <<EOF
+:: usage ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
+Name: ff  found in $0
+Description: driver for aternative-f routine where the acronym list
+  is set as a member of ~/bin/ff_acrolist_dir/<member-name>
+   
+parm
+  null - shows this help information and current value of member-name.
+  .    - enter the new acronym list file
+  on   - prompt(s) and set(s) the  ~/bin/ff_acrolist_dir/ member-name
+  off  - clear the member-name
+  otherwise acts like f with up to three parms.
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: usage :  
+EOF
+}
+
+
+if [ ".$1" == "." ]; then
+  usage
+  touch $HOME/bin/ff_acroname
+
+
+  nl=`wc $HOME/bin/ff_acroname |  awk '{print $1}'`
+
+#  acroname=""
+  if [ ".$nl" == ".0" ]; then
+    echo "Current acrolist is ~/bin/ff_acrolist"
+  else
+    acroname=`head -n1 $HOME/bin/ff_acroname | tail -n1`
+    echo "$acroname - Current acrolist is ~/bin/ff_acrolist_dir/$acroname"
+  fi
+
+  echo "List of non-default current choices:"
+  ls ~/bin/ff_acrolist_dir
+  
+  exit
+fi
+
+p1=$1
+if [ ".$p1" == ".off" ]; then 
+  p1="OFF"
+fi
+
+if [ ".$p1" == ".OFF" ]; then 
+  rm $HOME/bin/ff_acroname               # clear by deleting
+  sleep 1
+  touch $HOME/bin/ff_acrofile_name          # reallocate empty
+#  nl=`wc $HOME/bin/acrofile_name`
+#  echo  $nl $nl
+  exit 
+fi
+
+
+if [ ".$p1" == ".on" ]; then
+  p1="ON" 
+fi
+
+if [ ".$p1" == ".ON" ]; then 
+   echo -n "Enter the acrolist file name : "
+   read answer   rest
+   acroname=$answer  
+   echo $acroname > ~/bin/ff_acroname
+   echo "Using : "$acroname" for ff_acrofile_dir member name."
+   touch ~/bin/ff_acrolist_dir/$acroname
+   echo showing acroname
+   cat ~/bin/ff_acroname
+   exit
+fi
+#echo acroparm is ">"$acroparm"<"
+
+echo f1 $1 $2 $3
+f1 $1 $2 $3
+
+
