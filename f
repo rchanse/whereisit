@@ -27,13 +27,18 @@ function nop() {    # a NO-OP to make code more readable later
 }
 
 #  Below is the acro file (name of acro filename action    file )
-acro_file=$HOME"/bin/f_acrolist"
+acro_file=$HOME"/bin/f_acrolist"     # made for ~/bin use
+
+# start of code to use for 'whereis'  just override ~/bin 
+
 if [ -f $rchbls/f_acrolist ]; then
   acro_file=$rchbls/f_acrolist
 else
   read -r bld_dir rest < $rchbls/builddir
   acro_file=$bld_dir/f_acrolist
 fi
+# end of code for converting to  whereis
+
 
 # save cmdline parms for later
 p1=$1                         # first parm
