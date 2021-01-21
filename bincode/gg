@@ -1,9 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# debugging I left in the debugging echos but left off 
-# uncomment it to turn them on  BEFORE issuing ff  issue
+# set my editor as global variable
+export myeditor="vim"
+# export myeditor="mousepad"
+# export myeditor="nano"
 
-#   export ech0=ON  
+# debugging I left in the debugging echos but left off,
+# to turn them on  BEFORE issuing ff  issue export ech0=ON  
 function ech0 () {               # debugging echo
   if [ ".$ech0" == ".ON" ]; then
     echo $@
@@ -14,6 +17,9 @@ function nop() {    # a NO-OP to make code more readable later
 #  VERY helpful making easier to aid in  if-then-else-fi blocks
 #  if condition ; then         remember   if cond ; then
 #     nop                                    code
+
+# NOTE:NOTE - much easier to use true  NOTE:NOTE 
+
 #  else                                   else
 #     nop                                 fi      will gen synax error
 #  fi
@@ -21,90 +27,258 @@ function nop() {    # a NO-OP to make code more readable later
   return 0
 }
 
-# newcessary for this to work
-# script gg - this guy
-# script g1 - modified version of g 
-# directory ~/bin/gg_acrolist_dir - directory containing list
-# file ~/bin/gg_acroname  - file contain member in directory
-# file ~/bin/g1_acrolist - default g1 file
+# the code below is a function to do the g - work
+# note it has several internal subfunctions.
+function ggwork () {
 
-# insure file with name of list of files exists
-if [ -f $HOME/bin/gg_acroname ]; then
-    ech0 "filename with list of names exists"
-else
-    ech0 "creating file for filename"
-    touch $HOME/bin/gg_acroname
+# list functions
+
+# checking for an integer type value  found linuxquestion
+function is_integer() {
+  printf "%d" $1 > /dev/null 2>&1
+  return $?
+}
+
+# checking for an integer is in range  between 1 and nl
+function in_range() {
+  if [ $1 -ge 1 ] && [ $1 -le $nl ] ; then
+    return 0
+  else
+    return 1 
+  fi
+}
+
+# used in show option to list NAMES_list entries and their assoc number
+function list_by_number() { 
+echo "List of names file " $NAMES_list "has" $nl "entries"
+
+  while read -r line_info ; do
+    echo $line_info
+  done < $NAMES_list
+  exit
+ }
+
+# end of functions
+
+# start of ggwork code
+ech0 " ggwork  $1 $2 $3 $4 $5 $6"
+#gwork $assoc_file $mkey $mp1 $mp2 $mp3 $mprest
+read -r assoc_file mkey mp1 mp2 mp3 mprest <<< $@
+assocparm=`basename $assoc_file`
+assocparm_dir=`dirname $assoc_file`
+assoc_file=$1
+sub1=$2
+sub2=$3
+sub3=$4
+sub4=$5
+ech0 " 1 $sub1, 2 $sub2, 3 $sub3, 4 $sub4"
+#read -r exec_lib rest < $rchbls/execdir  #<<comment
+echo "gnamelist is  ===>>$assoc_file<<====="
+echo "in $assocparm_dir"
+#exec_lib/gg_assoclist_dir/$assocparm "
+
+# shorten gnamelist to $NAMES_list
+NAMES_list=$assoc_file
+nl=`wc $NAMES_list | awk '{print $1}'`
+ech0 "\$nl $nl - size of $NAMES_list"
+ech0 "\$NAMES_list $NAMES_list"
+ech0 "\$sub1 $sub1"
+if [ "$sub1" == "show" ]; then
+  action=show
+fi
+if [ ".$sub1" == ".0" ] || [ ".$sub1" == ".." ]; then 
+  action=vimit
 fi
 
-if [ -d $HOME/bin/gg_acrolist_dir ]; then
-    ech0 "subdir exists"
+if [ "$sub1" == "rep" ]; then
+  action=overlay
+  ech0 $action
+fi
+
+if [ "$sub1" == "add" ]; then
+  action=extend
+fi
+
+if [ ".$sub1" == ".q" ]; then
+     ech0 "locate $sub2"
+     locate $sub2 > ~/tempname
+     touch ~/tempname
+     echo "gg rep ~/tempname  "    # note NESTED call
+     gg rep ~/tempname      # NOTE!!!!    NESTED call
+     action=noop
+fi
+echo "\$action $action"
+
+case "$action" in
+
+"noop" )
+  ;;
+
+"vimit" )
+  $myeditor $NAMES_list       # /home/$USER/bin/gnamelistM
+  ;;
+
+"show" )
+  list_by_number  $assoc_file
+  ;;
+
+"overlay" )
+  echo "Replacing "$NAMES_list" with "$mp1
+  echo "cat $mp1 > $NAMES_list"
+  cat $mp1 > $NAMES_list
+  ;;
+
+"extend" )
+  echo "Extend "$NAMES_list" with "$mp1
+  cat $mp1 >> $NAMES_list
+  ;;
+
+ * )  # The default action i 
+
+if  is_integer $mkey; then
+  if in_range $mkey; then
+    theline=`head -n$mkey $NAMES_list  | tail -n1`
+    read -r thefile q1 q2 q3 rest <<< $theline
+    ech0 "theline $thefile $q1 $q2 $q3" 
+    
+    # handle the ~
+    if [ ".${thefile:0:1}" == ".~" ] ; then
+      tailend=${thefile:1}
+      thefile=$HOME$tailend
+    fi
+    
+    # handle the parmlib override  q1 q2 q3
+    parm_ov=""
+    if [ ".$q1" != "." ]; then parm_ov="$parm_ov $q1";fi
+    if [ ".$q2" != "." ]; then parm_ov="$parm_ov $q2";fi
+    if [ ".$q3" != "." ]; then parm_ov="$parm_ov $q3";fi
+
+    #handle the cmdline override
+    cmd_ov=""
+    if [ ".$mp1" != "." ]; then cmd_="$cmd_ov $mp1";fi
+    if [ ".$mp2" != "." ]; then cmd_ov="$cmd_ov $mp2";fi
+    if [ ".$mp3" != "." ]; then cmd_ov="$cmd_ov $mp3";fi
+    
+    cmd_action="$myeditor"        # the default
+    echo "default       : $cmd_action"
+    echo "parm override : $parm_ov"
+    echo "cmd  override : $cmd_ov"
+    
+    if [ ".$parm_ov" != "." ]; then cmd_action=$parm_ov;fi
+    if [ ".$cmd_ov" != "." ]; then cmd_action=$cmd_ov;fi
+
+    echo "Created command : $cmd_action $thefile"
+    $cmd_action $thefile
+    #     vim $thefile     # <<=== poor default
+  else
+    echo "$parm1 is NOT in RANGE  1 .. $nl"
+  fi
+else
+  echo "$parm1 is NOT an integer"
+  echo "you hit the default - handle what is left"
+  echo "how to handle  $parm1  is unknown "
+fi
+  ;;
+esac
+
+return       # back to gg wrapper call
+}
+########## end of ggwork function <<============
+
+
+#start of gg code <<====================
+# collect and remember command line values fro $@ 
+read -r mkey mp1 mp2 mp3 mprest <<< $@
+
+# # # # # # # # # # # # # #
+# There are two block of code below  one for wi-system and
+# the the other for file in your personal bin library
+# Uncommit the block you wish to use and comment the other.
+# # # # # # # # # # # # # #
+
+
+## wi code ##
+# IFSsave=$IFS
+# IFS=" "
+# read -r exec_lib rest < $rchbls/execdir
+# read -r build_lib rest < $rchbls/builddir
+# IFS=$IFSsave
+## wi code ##
+ 
+
+## bin code                     <<+++  code for bin
+exec_lib=$HOME/bin
+## bin code
+
+# # # # # # # # # # # # # #  STOP HERE
+
+# insure directory of separate members. exists."
+if [ -d $exec_lib/gg_assoclist_dir ]; then
+    ech0 "subdir exists $exec_dir/gg_assoclist_dir  "
 else
     ech0 "create the necessary subdir" 
-    mkdir $HOME/bin/gg_acrolist_dir
+    mkdir $exec_lib/gg_assoclist_dir
+    touch $exec_lib/gg_assoclist_dir/firsttime  # default entry empty
+    sleep 1
+    dummy="assoc  gg(assoc)  ov1 ov2 ov3 rest"
+    echo "$dummy" > $exec_lib/gg_assoclist_dir/firsttime
 fi
-gg_acroname=$HOME/bin/gg_acroname
-gg_acrolist_dir=$HOME/bin/gg_acrolist_dir
+# setting the value of original current subdir
+if [ -f $exec_lib/gg_assocname ]; then
+    ech0 "filename of current subdir exists."  # skip setting
+else
+    ech0 "creating file for current subdir."
+    touch $exec_lib/gg_assocname
+    sleep 1              # time to populate (first time only)
+    echo "firsttime" > $exec_lib/gg_assocname
+fi
 
+read -r current_gnamelist rest < $exec_lib/gg_assocname
+ech0 "\current_gnamelist $current_gnamelist"
+ech0 "in directory $exec_lib/gg_assoclist_dir"
 
-if [ ".$1" == "." ]; then
-  echo "Activate/Inactivate the name of the acronyn file"
-  echo "found in directory ~/bin/g_acrolist_dir"
-  echo " on  - prompts for the name"
-  echo " off - clears the filename "
+if [ ".$mkey" == "." ]; then
+  clear
+  echo "Activate/Inactivate/choose the name of the gnamelist file in use."
+  echo " set/SET  - prompts for the name"
   echo " null - display help and filename"
-  echo "  .   - vim to the acrofile_name"
-  echo " other - act like g  up to three parms"
-echo " "
-
-# fi
-# nl=`wc $HOME/bin/g_acroname |  awk '{print $1}'`
-  nl=`wc $gg_acroname |  awk '{print $1}'`
-  ech0 "nl is "$nl
-  acronam=""
-  if [ ".$nl" == ".0" ]; then
-    echo $gg_acroname " is NULL"
-  else
-    acroname=`head -n1 $gg_acroname | tail -n1`
-    echo "$HOME/gg_acrolist_dir/"$acroname "is the list to search."
-  fi
-  echo
-  echo Possible member to choose.
-  ls $HOME/bin/gg_acrolist_dir
-  exit
+  echo " 0 or . - the gnamelist"
+  echo " num- handle the num-th item "
+  echo " rep file - overlay gnamelist with file"
+  echo " add file - concate file to list."
+  echo " "
+# echo "Currently using ==>>$current_gnamelist in directory  $rchbls/gg_assoclist_dir"  #<<comment
+  echo "Currently using ==>>$current_gnamelist<<======="
+  echo "in directory  $exec_lib/gg_assoclist_dir"  #<<insert
+  echo " "
+  echo -n "Choices: "
+  #ls $rchbls/gg_assoclist_dir   #<<comment
+  ls $exec_lib/gg_assoclist_dir  #<<insert
+  exit 4
 fi
 
-ech0  got here
-p1=$1
-if [ ".$p1" == ".off" ]; then 
-  p1="OFF"
+p1=$mkey
+
+# Remove on/ON off/OFF  replace with set/SET
+
+if [ ".$p1" == ".set" ]; then
+  p1="SET" 
 fi
 
-if [ ".$p1" == ".OFF" ]; then 
-  rm $HOME/bin/gg_acroname
-  sleep 1
-  touch $HOME/bin/gg_acroname
-  exit 
+if [ ".$p1" == ".SET" ]; then 
+   echo -n "Enter the assocparm file name : "
+   read -r answer   rest
+   assocparm=$answer 
+   echo $assocparm > $exec_lib/gg_assocname # new curr dir
+   echo "Using >"$assocparm" in $exec_lib/gg_assoclist_dir dir."
+   if [ ! -f $exec_lib/gg_assoclist_dir/$assocparm ]; then
+     dummy="assoc  gg(assoc)  ov1 ov2 ov3 rest"
+     echo "$dummy" > $exec_lib/gg_assoclist_dir/$assocparm 
+   fi
+   exit 0
 fi
-
-
-if [ ".$p1" == ".on" ]; then
-  p1="ON" 
-fi
-
-if [ ".$p1" == ".ON" ]; then 
-   echo -n "Enter the acroparm file name : "
-   read answer   rest
-   acroparm=$answer 
-#  echo $acroparm
-   ech0 $acroparm   $HOME/bin/gg_acroname  
-   echo $acroparm > $HOME/bin/gg_acroname  
-   echo "Using >"$acroparm"< for acro list name."
-   cat $HOME/bin/gg_acroname
-   exit
-fi
-#echo acroparm is ">"$acroparm <"
-
-echo go do g1 $1 $2 $3
-g1 $1 $2 $3
-
-
+read -r assocparm rest < $exec_lib/gg_assocname
+assoc_file=$exec_lib/gg_assoclist_dir/$assocparm
+echo "ggwork $assoc_file $mkey $mp1 $mp2 $mp3 $mprest" 
+ggwork $assoc_file $mkey $mp1 $mp2 $mp3 $mprest
+echo "I have returned."

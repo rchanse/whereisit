@@ -6,26 +6,19 @@ function ech0 () {     # turn on debugging with  export ech0=ON
   fi  
 }
 
-# # testing
-# ech0="ON"
-# ech0 "\$1=<$1>, \$2=<$2> "
-# ech0="Off"
-# echo -n "view input parm, hit enter to go onward:"
-# read whocares
-
 #  first make sure there is a parm
 if [ ".$1" == "." ] ; then
   found="yes"
   cat << EOF-usage
-usage: quick change to another director by acronym
+usage: quick change to another director by assoc
 
 syntax;
  . c  parm
    parm1  null - this help info
-          .    - edit on this script to view/alter the acronym list
+          .    - view/alter the assoclist
 	      - , old, back - all act like  cd -  back prev dir \$OLDDIR
 	                  Note this is a toggle  prev-dir and current-dir
-          other - search c_acrolist to see which dir. to use in cd 
+          other - search c_assoclist to see which dir. to use in cd 
 
 EOF-usage
 return
@@ -37,7 +30,7 @@ if [ "$1" == "old" ] || [ "$1" == "back" ] || [ "$1" == "-" ]; then
    return
 fi
 
-acro_to_find=$1
+assoc_to_find=$1
 c_dir=/home/$USER/bintest    # if in bintest
 c_dir=/home/$USER/bin        # if in bin
 
@@ -45,12 +38,12 @@ c_dir=/home/$USER/bin        # if in bin
                         # ~/bin comment out this line.
 
 found="nope"
-# special case to edit the list of acronyms
+# special case to edit the list of assocnyms
 if [ ".$1" == ".." ] ; then 
   echo " editing the 'c' script to view/alter the list "
 # vim $c_dir/c      # <<<-- this much change  org was cd0
-  echo vim $c_dir/c_acrolist      # <<<-- this much change  org was cd0
-  vim $c_dir/c_acrolist      # <<<-- this much change  org was cd0
+  echo vim $c_dir/c_assoclist      # <<<-- this much change  org was cd0
+  vim $c_dir/c_assoclist      # <<<-- this much change  org was cd0
   found="yes"
   return
 fi
@@ -65,21 +58,21 @@ else
   return
 fi
 
-acro_found="no"
+assoc_found="no"
 line_item=''
 ech0 "\$line_item = $line_item."
-while [ ".$acro_found" == ".no" ] && 
+while [ ".$assoc_found" == ".no" ] && 
  read line_item  ; do
 # while  read line_item  ; do
   ech0 $line_item
   IFSsave=$IFS
   IFS=" "
-  read acro_item new_dir_item <<< $line_item
+  read assoc_item new_dir_item <<< $line_item
   IFS=$IFSsave
-# ech0 "dir_new_item=$dir_new_item, arco_item=$acro_item,
-if [ ".$acro_item" == ".$acro_to_find" ]; then
+# ech0 "dir_new_item=$dir_new_item, arco_item=$assoc_item,
+if [ ".$assoc_item" == ".$assoc_to_find" ]; then
   echo
-  echo "$acro_to_find in c_acrolis at line: $line_item"
+  echo "$assoc_to_find in c_assoclis at line: $line_item"
   ## convert '~' to full name
   if [ ${new_dir_item:0:1} == "~" ]; then
     lead=$HOME
@@ -106,9 +99,9 @@ if [ ".$acro_item" == ".$acro_to_find" ]; then
 
     
   ## check to see if new directory exists.
-  acro_found="yes"
-  ech0 "MATCH MATCH $acro_item  $acro_to_find"
-#  gocdit $acro_to_find $action $acro_item $dir_new_item 
+  assoc_found="yes"
+  ech0 "MATCH MATCH $assoc_item  $assoc_to_find"
+#  gocdit $assoc_to_find $action $assoc_item $dir_new_item 
 #function gocdit () {
   echo "change to $new_dir_item"
   echo
@@ -120,14 +113,14 @@ if [ ".$acro_item" == ".$acro_to_find" ]; then
     
   ech0 "PWD=$PWD"
 else
-  ech0 ".$arco_item. <> .$acro_to_find. "
+  ech0 ".$assoc_item. <> .$assoc_to_find. "
 fi
-done <   $c_dir/c_acrolist      # <<<-- this much change  org was cd0
+done <   $c_dir/c_assoclist      # <<<-- this much change  org was cd0
 
 # fall through to message that cd path not found 
-if [ ".$acro_found"  == ".no" ]; then
+if [ ".$assoc_found"  == ".no" ]; then
      echo
-     echo "$acro_to_find NOT FOUND  as an cd path "
+     echo "$assoc_to_find NOT FOUND  as an cd path "
      echo "Check your typing  or look  '. c .'"
 fi
 

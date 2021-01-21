@@ -19,6 +19,7 @@
 #Set default values
 action=$1                                 # default for case
 let count=$#
+read -r action cmdp1 cmdp2 cmdp3 cmdp_rest <<< $@
 
 NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
 
@@ -151,24 +152,40 @@ case "$action" in
 
 if  is_integer $1; then
   if in_range $1; then
-    thefile=`head -n$1 $NAMES_list  | tail -n1`
+    theline=`head -n$1 $NAMES_list  | tail -n1`
+
+    read -r thefile l1 l2 l3 linerest <<< $theline
+
+    # parmlib override
+    line_ov=""
+    if [ ".$l1" != "." ]; then line_ov="$line_ov $l1"; fi
+    if [ ".$l2" != "." ]; then line_ov="$line_ov $l2"; fi
+    if [ ".$l3" != "." ]; then line_ov="$line_ov $l3"; fi
     
+    # cmd_line override
+    cmd_ov=""
+    if [ ".$cmdp1" != "." ]; then cmd_ov="$cmd_ov $cmdp1";fi
+    if [ ".$cmdp2" != "." ]; then cmd_ov="$cmd_ov $cmdp2";fi
+    if [ ".$cmdp3" != "." ]; then cmd_ov="$cmd_ov $cmdp3";fi
     # handle the ~
     if [ ${thefile:0:1} == "~" ] ; then
       tailend=${thefile:1}
       thefile=$HOME$tailend
     fi
     cmd_action="vim"        # the default
-    echo $#  num of parms $count
-    if [ $count -gt 1 ]; then
-       echo revise $cmd_action
-       cmd_action="$2 $3 $4 $5"  # allow for 4 parm
-    fi
-    echo $cmd_action $thefile
-    $cmd_action $thefile
-    #     vim $thefile
+    echo "number:$action, file: $thefile"
+    echo "default         : $cmd_action"
+    echo "parmlib override: $line_ov"
+    echo "command override: $cmd_ov"
+    
+    if [ ".$line_ov" != "." ]; then cmd_action=$line_ov;fi
+    if [ ".$cmd_ov" != "." ]; then cmd_action=$cmd_ov;fi
+    echo "Generated command: $cmd_action $thefile"
+    $cmd_action $thefile 
+    exit
   else
     echo $1 is NOT in RANGE  1 .. $nl
+    exit
   fi
 else
   echo "$1 is NOT and integer"
@@ -178,4 +195,3 @@ fi
   ;;
 esac
 exit 0
-

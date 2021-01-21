@@ -1,0 +1,52 @@
+#
+#        Format of lines below
+#  can use vim   :% su/fubar/fubar/g
+#  in this file change fubar to  your exec-lib (fubar ??)
+# 0. associate filename  up to 3 override parms, if none/null = editor
+# 1. pound in col 1 is comment
+# 2. to insure edit  use  assoc filename  sudo vim    
+# 3. :sort  will 'sort' this file
+#----
+qt ~/.config/qtile
+11       ~/fubar/11asummary
+INSTALL  ~/whereisit/INSTALL
+T       ~/tempname a b c
+a a  
+a1 a p1  
+a2 a p1 p2 
+a3 a p1 p2 p3
+ap       ~/fubar/addpath
+ap0      ~/fubar/addpath0
+boohoo   ~/fubar/BooHoo
+build    ~/whereisit
+dp       ~/fubar/delpath
+exec     ~/fubar
+f        ~/fubar/f
+ff       ~/whereisit/f
+git      ~/.gitconfig
+host    /etc/hosts  
+hoste   /etc/hosts sudo vim
+hostname /etc/hostname
+hosts    /etc/hosts less 
+license  ~/fubar/COPYING
+login    /etc/login.defs
+os      /etc/os-release
+os+n    /etc/os-release sudo nano
+os+v    /etc/os-release sudo vim
+osl     /etc/os-release less
+osn     /etc/os-release nano
+osv     /etc/os-release vim
+pound    ~/fubar/#
+profile  ~/.profile
+pw      /etc/passwd less
+readmore ~/whereisit/README.more.md
+skelprof /etc/skel/.profile
+srcdoc   ~/fubar/srcdoc
+stdio    /usr/include/stdio.h
+stdlib   /usr/include/stdlib.h
+stringh  /usr/include/string.h
+t       tempname
+tn      tempname nano
+tn+     tempname sudo nano
+tvim    tempname sudo vim
+vimrc ~/.vim/vimrc
