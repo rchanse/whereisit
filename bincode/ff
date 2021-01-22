@@ -81,7 +81,8 @@ if [ ".$sub1" == ".." ] ; then    # use  to get to the assoc file
 	exit
 fi
 
-echo "Processing $assoc_file  looking for $sub1"
+echo "Processing $assoc_file"
+echo "looking for assoc: $sub1"
 found="no"   
 
 # logic is processing a file looking for assoc to associate with a
@@ -143,14 +144,14 @@ if [ ".${filename:0:1}" == ".~" ] ; then
 	tailend=${filename:1}   # peel off the ~
 	filename=$lead$tailend  # provide actual name 
 fi
-echo "($parm_ov)"
+echo "default             = "$myeditor
 echo "assoc line override = "$parm_ov
-echo "cmd  line override = "$co
+echo "cmd  line override  = "$co
 
 cmd_action="$myeditor"
 if [ ".$parm_ov" != "." ]; then cmd_action=$parm_ov;fi
 if [ ".$co" != "." ] ; then cmd_action=$co; fi
-echo $cmd_action $filename
+echo "Creatd comand: $cmd_action $filename"
 $cmd_action $filename
 exit
 }
@@ -223,7 +224,7 @@ if [ ".$p1" == ".SET" ]; then
 fi
 
 assoc_file=$exec_dir/ff_assoclist_dir/$assocname
-echo "ffwork $assoc_file  $p1 $p2 $p3 $p4"
+ech0 "ffwork $assoc_file  $p1 $p2 $p3 $p4"
 ffwork $assoc_file  $p1 $p2 $p3 $p4
 echo "return to end of main"
 

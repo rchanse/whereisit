@@ -17,6 +17,7 @@
   fi  
 }
 #Set default values
+myeditor="vim"
 action=$1                                 # default for case
 let count=$#
 read -r action cmdp1 cmdp2 cmdp3 cmdp_rest <<< $@
@@ -72,7 +73,7 @@ echo "List of names file " $NAMES_list "has" $nl "entries"
 
 # start of mainline
 action=none
-echo "original  $action"
+ech0 "original  $action"
 if [ ".$1" == "." ] || [ ".$1" == ".--help" ]; then 
    action=help
 fi
@@ -84,7 +85,7 @@ ech0 "aftershow $action"
 if [ ".$1" == ".0" ] || [ ".$1" == ".." ]; then 
   action=vimit
 fi
-ech0 "aftervimit  $action"
+ech0 "after vimit  $action"
 if [ ".$1" == ".rep" ]; then
   action=overlay
 ech0 $action
@@ -120,17 +121,17 @@ case "$action" in
   echo "       add  file  - concat file to list    "
   echo "       show       - enumerat entire list   "
   echo "       show  n    - 10 entries in list  starting at n "
-  echo "        .         - vim $NAMES_list        "
-  echo "        0         - vim $NAMES_list        "
-  echo "        n         - vim entry n (unless parms 2, 3, 4 "
-  echo "                   - are provided they override the vim cmd "
+  echo "        .         - $myeditor $NAMES_list        "
+  echo "        0         - $myeditor $NAMES_list        "
+  echo "        n         - $myeditor entry n (unless parms 2, 3, 4 "
+  echo "                   - are provided they override the $myeditor cmd "
   echo "                   - eg: g 4 rm -i  uses  rm -i 4-th file "
   echo "        q  value  - q(uickly)   locate value > $NAMES_list "
   echo "                                                           "
  ;;
 
 "vimit" )
-  vim $NAMES_list       # /home/$USER/bin/gnamelistM
+  $myeditor $NAMES_list       # /home/$USER/bin/gnamelistM
   ;;
 
 "show" )
@@ -172,8 +173,8 @@ if  is_integer $1; then
       tailend=${thefile:1}
       thefile=$HOME$tailend
     fi
-    cmd_action="vim"        # the default
-    echo "number:$action, file: $thefile"
+    cmd_action="$myeditor"        # the default
+    echo "number: $1, file: $thefile"
     echo "default         : $cmd_action"
     echo "parmlib override: $line_ov"
     echo "command override: $cmd_ov"

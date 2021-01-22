@@ -73,7 +73,7 @@ sub3=$4
 sub4=$5
 ech0 " 1 $sub1, 2 $sub2, 3 $sub3, 4 $sub4"
 #read -r exec_lib rest < $rchbls/execdir  #<<comment
-echo "gnamelist is  ===>>$assoc_file<<====="
+echo "gnamelist is  ===>>$assocparm<<====="
 echo "in $assocparm_dir"
 #exec_lib/gg_assoclist_dir/$assocparm "
 
@@ -107,7 +107,7 @@ if [ ".$sub1" == ".q" ]; then
      gg rep ~/tempname      # NOTE!!!!    NESTED call
      action=noop
 fi
-echo "\$action $action"
+ech0 "\$action $action"
 
 case "$action" in
 
@@ -149,16 +149,18 @@ if  is_integer $mkey; then
     
     # handle the parmlib override  q1 q2 q3
     parm_ov=""
-    if [ ".$q1" != "." ]; then parm_ov="$parm_ov $q1";fi
+    if [ ".$q1" != "." ]; then parm_ov="$q1";fi
     if [ ".$q2" != "." ]; then parm_ov="$parm_ov $q2";fi
     if [ ".$q3" != "." ]; then parm_ov="$parm_ov $q3";fi
 
     #handle the cmdline override
+    ech0 " 1 $mp1 2 $mp2 3 $mp3"
     cmd_ov=""
-    if [ ".$mp1" != "." ]; then cmd_="$cmd_ov $mp1";fi
+    if [ ".$mp1" != "." ]; then cmd_ov="$mp1";fi
     if [ ".$mp2" != "." ]; then cmd_ov="$cmd_ov $mp2";fi
     if [ ".$mp3" != "." ]; then cmd_ov="$cmd_ov $mp3";fi
     
+    echo "number: $mkey, file $thefile"
     cmd_action="$myeditor"        # the default
     echo "default       : $cmd_action"
     echo "parm override : $parm_ov"
