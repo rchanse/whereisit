@@ -32,7 +32,7 @@ make the following copies.
   cp -pv g  ~/bin/.
   cp -pv gg ~/bin/.
   cp -pv f_assoclist  ~/bin/.
-  cp -pv g_assoclist  ~/bin/.
+  cp -pv c_assoclist  ~/bin/.
 Note: -p retains execution flag  f, ff, g, gg should be exectuable
 and the other not (especially c which you invoke by source or '.'.
 ----------------------------------------------------------------
