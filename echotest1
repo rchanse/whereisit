@@ -28,4 +28,4 @@ echo "Before invoking  echotest1  "
 echo " arm ech0 with 'export ech0=ON' "
 echo " disarm ech0 with 'export ech0=anythingbut_ON' "
 echo 
-echo "At the start of a terminal session \$echo is likely NULL."
+echo "At the start of a terminal session \$ech0 is likely NULL."

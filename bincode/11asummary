@@ -1,0 +1,15 @@
+#member description add as ' - comments '
+11asummary - me, myself and I (one line summaries)
+README - just what you think  "directions"
+c      - quick cd by chosen assoc  (invoke by . or source)
+c_assoclist - sample list for c
+f  -  find a file by a  assoc  (user chosen)
+f1 -  part of old version of f
+f_assoclist - sample assoc list for f
+ff -  f expanded to projects of user choice
+ffold - old version of ff
+fold - old version of f
+g - quick find by number in a list ( gnamelist)
+g1 - part of old version of g
+gg - g expanded to projects of user choice
+ggold - old version of gg

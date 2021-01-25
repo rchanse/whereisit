@@ -1,0 +1,136 @@
+The purpose of this document is to show you how to put  c, f, ff, g, gg
+into your own personal library to use.  From comments during the talk
+(espcially Ed's) I realize arco (or acronym was confusing. I apologize.
+Reading some comp. sci. literature I find that these pieces of code
+act much like what is termed an "associative array".  They provide a
+(key, value) pairs using the scripts as the algorithm to associate
+a key with an associated value. Code in this directory will use
+assoc in place of acro (assoclist for acrolist).
+
+WHAT you need.
+
+1. A directory in your PATH to place the above function.  Many
+distros suggest the  $HOME/bin  or  /home/yourid/bin directory.
+How you get is on you path depends on your distro.  Most commonly
+you place (1) PATH=$PATH:$HOME/bin   or (2) PATH=$HOME/bin:$PATH
+              export PATH                   export PATH
+at the end of your  .profile  or  .bashrc.  
+Some URLs on this topic are provided below.
+
+1a. You may choose to use an existing dir.  e. g. /usr/local/bin
+or some such other.
+
+2. Assuming you use  $HOME/bin and insure it is o your PATH,
+make the following copies.
+
+  cd ~/whereisit/bincode             (or your chosen item)
+    (please be sure to copy from ~/whereisit/bincode  NOT from
+     ~/whereisit)
+  cp -pv c  ~/bin/.
+  cp -pv f  ~/bin/.
+  cp -pv ff ~/bin/.
+  cp -pv g  ~/bin/.
+  cp -pv gg ~/bin/.
+  cp -pv f_assoclist  ~/bin/.
+  cp -pv g_assoclist  ~/bin/.
+Note: -p retains execution flag  f, ff, g, gg should be exectuable
+and the other not (especially c which you invoke by source or '.'.
+----------------------------------------------------------------
+Try these:
+f
+f .
+f h
+f h ls -al
+f sh
+f sh sudo vim 
+f a1
+while in 'f .'   :!f p
+
+get you 'first list for g' with  'g q README'    then 'g .' or 'g 0'
+
+----------------------------------------------------------------
+Tips:
+a.  11asummary is a one line summary of member function.
+
+b.  f    no value provides  help/usage info   (similarly '. c',ff,g,gg)
+
+c.  f .   show the associates    key  value  overrides     list
+
+  ..IMPORTANT
+d...IMPORTANT  if you are in  f .   with vim as your editor you DO NOT
+  ..have to leave  ":!f key"  will work ( " ! " is vim for shellcmd.)
+  ..Sorry I for got to mention that.  I usually have multiple 
+  ..'screens' open, one with  'f .'
+
+e. As presently coded you may have up to 3 override parms in the 
+   f_assoclist, g_assoclist ....
+   You may have up to 3 override parms on cmdline
+
+  cmdline overrides assoclist overrides default (editor)
+
+f. By putting scripts in PATH libraries the automatically become
+   available to all 'subsessions' of that signon.
+   
+g. All scripts mentioned in this member are self contained 
+   (standalone) and do NOT call external scripts.
+----------------------------------------------------------------
+Other comments
+a. Scripts  showpath, meminpath, dirinpath  might be useful for
+   path, pathmember, directory evaluation
+
+b. scripts  addpath, addpath0, delpath might be useful if you
+   are testing.   script  ech0 shows how to ''dynamically'' use
+   echo.
+
+   
+----------------------------------------------------------------
+Some urls pertaining to  $HOME/bin
+
+https://askubuntu.com/questions/402353/how-to-add-home-username-bin-to-path
+
+https://unix.stackexchange.com/questions/26047/how-to-correctly-add-a-path-to-path
+
+https://unix.stackexchange.com/questions/36871/where-should-a-local-executable-be-placed
+
+http://www.troubleshooters.com/linux/prepostpath.htm
+
+- Definitions: ---------------------------------------------
+In computer science, an associative array, map, symbol table, or 
+dictionary is an abstract data type composed of a collection of 
+(key, value) pairs, such that each possible key appears at most 
+once in the collection.
+
+Operations associated with this data type allow:
+    the addition of a pair to the collection;
+    the removal of a pair from the collection;
+    the modification of an existing pair;
+    the lookup of a value associated with a particular key.
+
+---------------------------------------------------------------------
+In mathematics, a function is a binary relation between two sets 
+that associates every element of the first set to exactly one 
+element of the second set. 
+ The set of first elements is usually called the Domain of the function
+ The set of second elements is usually called the Range of the function
+ (Note: my original name f as for function.)
+
+---------------------------------------------------------------------
+
+PERSONAL
+  Were I to present the material, I would have shown it much as
+this README.
+
+I think that the quote by Scotty is appropriate.
+
+"The more they overthink the plumbing, the easier it is to stop 
+up the drain." - Montgomery Scott 
+
+
+I hope this may be of some use.  For me, it 'allowed' me to
+justify the time to spend documenting it so I don't have to
+rethink every couple of months.
+
+New/updates/changes will be reference in  UPDATES/CREDITS
+Enjoy -- Robert C. Hansen  (Bob)
+rchanserpi@gmail.com      (my Rasp-bee-pi id)
+)

@@ -1,0 +1,11 @@
+Wed 13 Jan 2021 -- original version whereisit talk
+
+13 - 25 Jan 2021 -- revise version of code for bincode subdir.
+  change the terminology from  acro to assoc.  rewrite code
+  and doc
+
+Mon 25 Jan 2021 03:17:36 PM CST -- update primary README.md
+to point to  ~/whereisit/README
+
+Other abbreviated info may be gleaned from the git log of the
+provided git repository  https://github.com/rchanse/whereisit.git

@@ -1,3 +1,4 @@
+
 I refer to this as my 'whereis' project.
 
 Fri 27 Nov 2020 11:19:00 AM CST
@@ -14,8 +15,19 @@ f  is to help you find stuff by an acronym that you choose
 
 g  is to find stuff in a list you have by number
 
+===================================================================
+=  IMPORTANT    ===================================================
+===================================================================
+Please consider  ~/whereisit/README  rather than this as a starting
+point.  I would have used it rather this material were I to present
+this collection of information.
 
-member(s) to look at first:
+===================================================================
+=  IMPORTANT    ===================================================
+===================================================================
+
+
+member(s) to look at first: NO-second.
 
 a. go read next 'hearsthedeal'
 
