@@ -6,21 +6,27 @@
 # 2. to insure vim-edit: use  f assoc sudo vim
 # 3. :sort  will 'sort' this file
 #----
-h   /etc/hosts
-hedit  /etc/hosts sudo vim
-heditn /etc/hosts sudo nano
-hn  /etc/hostname
-os  /etc/os-release
-p   /etc/passwd less
-sh  /etc/shadow
-myp ~/.profile
 T       ~/tempname a b c
+t      tempname
+Ts    ~/tempname stat
 a a  
 a1 a p1  
 a2 a p1 p2 
 a3 a p1 p2 p3
 ap       ~/whereisit/addpath
+brc  ~/.bashrc
 build    ~/whereisit
+h   /etc/hosts
+hedit  /etc/hosts sudo vim
+heditn /etc/hosts sudo nano
+hn  /etc/hostname
+myp ~/.profile
+pro    ~/.profile
+prosk  /etc/skel
+os  /etc/os-release
+p   /etc/passwd less
+sh  /etc/shadow
+shlook /etc/shadow sudo less
 t       tempname
 v     ~/.vimrc
 vimrc ~/.vim/vimrc

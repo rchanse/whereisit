@@ -1,27 +1,19 @@
 # assoc   c(assoc)
-mycode  ~/mycodedoc
-micro  ~/gitstuff/micro
-bc     ~/goodbincode
-bincode ~/goodbincode
+bc     ~/whereisit/bincode
+bincode ~/bin
 wbls ~/wherebls
-w   /home/wally/fubar/c_acrolist less
 master /
 home   /home
 vl     /var/log
-doku  /var/www/dokuwiki
-ggh ~/gitandgithub
 wi      ~/whereisit
-wally    /home/wally
 fu      ~/fubar       
 apache   /etc/apache2
 etc     /etc
-apachedoc /usr/share/doc/apache2
 bin        ~/bin
-bintoo        /home/rchansen/bin
+binless   ~/bin  
 binl       ~/.local/bin
 binlocal   ~/.local/bin
 bintest    ~/bintest
-xt         ~/bintest
 dc     ~/Documents
 dl     ~/Downloads
 down   ~/Downloads
@@ -29,6 +21,3 @@ py27       /usr/lib/python2.7
 py34       /usr/lib/python3.4
 vimc     /usr/share/vim/vim80/colors
 vimcolor  ~/.vim/colors
-wally   /home/guido
-
-

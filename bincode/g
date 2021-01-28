@@ -17,12 +17,25 @@
   fi  
 }
 #Set default values
-myeditor="vim"
+myeditor="vim"                         # choose your editor
+base_dir="bin"                         # base index
+parm_dir=$HOME/$base_dir
+
+
 action=$1                                 # default for case
 let count=$#
 read -r action cmdp1 cmdp2 cmdp3 cmdp_rest <<< $@
 
-NAMES_list=$HOME/bin/gnamelist  # non-root file with list of names
+NAMES_list=$parm_dir/gnamelist  # non-root file with list of names
+
+# create is not existent
+if [ ! -d $parm_dir ]; then
+  echo "Creating $parm_dir directory (first time only)k"
+  mkdir $parm_dir
+  echo "Creating  $NAMES_list  (one time only)"
+  echo " g(assoc)  ov1 ov2 ov3  rest " > $NAMES_list
+fi
+
 
 if [ -f $NAMES_list ]; then
   nl=`wc $NAMES_list | awk '{print $1}'`  

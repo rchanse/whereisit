@@ -20,7 +20,7 @@ Some URLs on this topic are provided below.
 1a. You may choose to use an existing dir.  e. g. /usr/local/bin
 or some such other.
 
-2. Assuming you use  $HOME/bin and insure it is o your PATH,
+2. Assuming you use  $HOME/bin and insure it is on your PATH,
 make the following copies.
 
   cd ~/whereisit/bincode             (or your chosen item)
@@ -35,6 +35,10 @@ make the following copies.
   cp -pv c_assoclist  ~/bin/.
 Note: -p retains execution flag  f, ff, g, gg should be exectuable
 and the other not (especially c which you invoke by source or '.'.
+
+2a. To use other than vim  change 'myeditor' in the scripts.
+c_assoclist, f_assoclist, gnamelist ... are hardcoded to be in
+$HOME/bin, to change this modify 'base_dir="bin"' in the scripts.
 ----------------------------------------------------------------
 Try these:
 f
@@ -46,7 +50,8 @@ f sh sudo vim
 f a1
 while in 'f .'   :!f p
 
-get you 'first list for g' with  'g q README'    then 'g .' or 'g 0'
+get your 'first gnamelist for g' with  'g q README' 
+then 'g .' or 'g 0'
 
 ----------------------------------------------------------------
 Tips:
@@ -134,3 +139,4 @@ New/updates/changes will be reference in  UPDATES/CREDITS
 Enjoy -- Robert C. Hansen  (Bob)
 rchanserpi@gmail.com      (my Rasp-bee-pi id)
 )
+

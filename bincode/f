@@ -6,7 +6,6 @@
 # Note: export eth0= cmds may be before invoking f or you can
 #  add then within the code to turn debugging on/off in spots.
 
-editor="vim"                # set the default editor
 
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
@@ -26,8 +25,10 @@ function nop() {    # a NO-OP to make code more readable later
   return 0
 }
 
-#  Below is the assoc file (name of assoc filename action    file WITH   ~/bin being used)
-assoc_file=$HOME"/bin/f_assoclist"
+myeditor="vim"                # set the default myeditor
+base_dir="bin"
+#  Below is the assoc file (name of assoc filename action    file 
+assoc_file=$HOME/$base_dir/f_assoclist
 
 # start of whereis code
 #   if [ -f $rchbls/f_assoclist ]; then
@@ -54,14 +55,14 @@ if [ ".$p1" == "." ] || [ ".$p1" == ".--help" ] ; then
 	echo "::      --help - display this help info          ::"
     echo "::      .      - go edit the assoc list file     ::"
 	echo "::      other  - assoc for filename in assoc_file::"
-	echo "::    p2 p3 p4 - action to take default editor   ::"
-	echo "::               e.g. f x sudo vim > sudo vim x  ::"
+	echo "::    p2 p3 p4 - action to override default editor "
+	echo "::               e.g. f x sudo vim > sudo vim f(x) "
 	echo "::                                               ::"
 	echo ":: format of assoc file    3 values              ::"
 	echo "::   field1 assoc  the associate to search for   ::"
 	echo "::   field2 filename to act upon                 ::"
 	echo "::   3 fields to prove override actions          ::"
-	echo "::   If no parmlib/cmdlib the default is editor  ::"
+	echo "::   If no parmlib/cmdlib the default is $myeditor"
 	echo "::    (more info in the assoc file itself.)      ::"
 	echo ":::::::::::::::::::::::::::::::::::::::::::::::::::"
 	exit 
@@ -69,7 +70,7 @@ fi
 
 # path to the assoc file
 if [ ".$p1" == ".." ] ; then    # use  f .  to get to the assoc file
-	$editor $assoc_file 
+	$myeditor $assoc_file 
 	exit
 fi
 
@@ -126,7 +127,7 @@ done < $assoc_file        # end read loop from given assoc file
 # NOT found msg and exit
 if [ "$found" == "no" ] ; then
 	echo "::                                               "
-	echo ::  assocnym  $p1  NOT found try . for assoclist 
+	echo ::  assoc  $p1  NOT found try . for assoclist 
 	echo "::                                               "
 	exit 4
 fi
@@ -146,11 +147,11 @@ if [ ".$p3" != "." ]; then cmd_ov="$cmd_ov $p3";fi
 if [ ".$p3" != "." ]; then cmd_ov="$cmd_ov $p4";fi
 
 echo "assoc: $p1, filename: $filename"
-echo "default            : $editor"
+echo "default            : $myeditor"
 echo "assoc line override: $line_action"
 echo "cmdline override   : $cmd_ov"
 
-cmd_action="$editor "                      #  set the default
+cmd_action="$myeditor "                      #  set the default
 if [ ".$line_action" != "." ]; then
   cmd_action=$line_action              # parm lib override
 fi

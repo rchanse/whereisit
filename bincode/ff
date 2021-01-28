@@ -12,8 +12,11 @@ myeditor="vim"
 #myeditor="micro"
 #myeditor="mousepad"
 
-#read -r exec_dir rest < $rchbls/execdir         <<==   wi  code
-exec_dir=$HOME/bintest
+
+base_dir="bin"
+parm_dir=$HOME/$base_dir
+
+ech0 " $base_dir   $parm_dir"
 
 usage() {
   cat <<EOF
@@ -25,7 +28,8 @@ syntax   ff assoc  ov1 ov2 ov3
 parms:
   null - shows this help information and current member-name.
   .    - enter the new assoc list file
-  set   - prompt/set the  $exec_dir/ member-name
+  set   - prompt/set the  member               
+          in $parm_dir/ff_assoclist_dir        
   otherwise acts like f with up to three parms.
   assoc - user chosen associate to connect with a file
   ov1 ov2 ov3 - override values (user chosen editor is default)
@@ -58,8 +62,6 @@ function nop() {    # a NO-OP to make code more readable
 # handle the parms passed from mainline code
 # was  ffwork  assoc_file assoc p1 p2 p3
 assoc_file=$1   # the sub dir to use
-exec_dir=`dirname $assoc_file`              #<<== not have to reget
-assocname=`basename $assoc_file`
 sub1=$2      # the assoc passed to ff
 sub2=$3      # override parm1
 sub3=$4      # override parm2
@@ -72,9 +74,6 @@ if [ ".$sub3" != "." ]; then co="$co $sub3";fi
 if [ ".$sub4" != "." ]; then co="$co $sub4";fi
 ech0 "\$co $co"
 
-# code inserted to make work under 'whereis
-#read -r exec_dir rest < $rchbls/execdir  #  <== wi code
-# now covered by passing  exec_dir as part of parm 1
 
 if [ ".$sub1" == ".." ] ; then    # use  to get to the assoc file
 	$myeditor $assoc_file 
@@ -130,7 +129,7 @@ if [ "$found" == "no" ] ; then
 fi
 
 echo "found line ==>>:$aline"
-read -r pr1 pr2 pr3 restaa <<< $resta
+read -r pr1 pr2 pr3 restaa <<< $resta   # parse for overrides
 ech0 "1 $pr1 2 $pr2 3 $pr3"
 
 # handle parmlib override
@@ -138,6 +137,7 @@ parm_ov=""              # default none
 if [ ".$pr1" != "." ]; then parm_ov="$pr1";fi
 if [ ".$pr2" != "." ]; then parm_ov="$parm_ov $pr2";fi
 if [ ".$pr3" != "." ]; then parm_ov="$parm_ov $pr3";fi
+
 # Handle ~/whoever   to become     /home/$USER/whoever
 if [ ".${filename:0:1}" == ".~" ] ; then
 	lead=$HOME              # now is /home/$USER   or   /root
@@ -151,7 +151,7 @@ echo "cmd  line override  = "$co
 cmd_action="$myeditor"
 if [ ".$parm_ov" != "." ]; then cmd_action=$parm_ov;fi
 if [ ".$co" != "." ] ; then cmd_action=$co; fi
-echo "Creatd comand: $cmd_action $filename"
+echo "Created comand: $cmd_action $filename"
 $cmd_action $filename
 exit
 }
@@ -164,26 +164,21 @@ p2=$2
 p3=$3
 p4=$4
 
-#read -r exec_dir rest < $rchbls/execdir     #   <<==   wi  code
-exec_dir=$HOME/bin         #    <<== using ~/bin
-
-ech0 "exec-dir $exec_dir    #,  build-dir $bld_dir "
-
 ## insure the curren member exists  (else make & set it)
 # This is == first time code == to set the environment.
 
 # create the subdir and its member firsttime , populate it
 # set the file with the current usage mem to firsttime
-if [ ! -d $exec_dir/ff_assoclist_dir ]; then
-  mkdir $exec_dir/ff_assoclist_dir
+if [ ! -d $parm_dir/ff_assoclist_dir ]; then
+  mkdir $parm_dir/ff_assoclist_dir
   mkdircc=$?
   dummy="# assoc f(assoc) ov1 ov2 ov3 rest"
-  echo "$dummy" > $exec_dir/ff_assoclist_dir/firsttime 
+  echo "$dummy" > $parm_dir/ff_assoclist_dir/firsttime 
 fi
-if [ ! -f $exec_dir/ff_assocname ]; then
-  echo "firsttime" > $exec_dir/ff_assocname
+if [ ! -f $parm_dir/ff_assocname ]; then
+  echo "firsttime" > $parm_dir/ff_assocname
 else
-  read -r assocname rest < $exec_dir/ff_assocname
+  read -r assocname rest < $parm_dir/ff_assocname
 fi
 
 # end of == first time code ===  only run to seed values.
@@ -193,13 +188,13 @@ if [ ".$p1" == "." ] || [ ".$p1" == ".--help" ]; then
   usage
 
   # in general
-  read -r assocname < $exec_dir/ff_assocname
+  read -r assocname < $parm_dir/ff_assocname
   echo
   echo "Current assoclist ==>> $assocname <<==, found in"
-  echo "directory $exec_dir/ff_assoclist_dir"
+  echo "directory $parm_dir/ff_assoclist_dir"
   echo
   echo "List of non-default current choices:"
-  ls -A $exec_dir/ff_assoclist_dir
+  ls -A $parm_dir/ff_assoclist_dir
   exit 0
 fi
 
@@ -212,18 +207,18 @@ if [ ".$p1" == ".SET" ]; then
   echo -n "Enter the assoclist file name : "
   read -r answer   rest
   assocname=$answer  
-  echo $assocname > $exec_dir/ff_assocname
+  echo $assocname > $parm_dir/ff_assocname
   echo "Using : "$assocname" for ff_assocfile_dir member name."
   # if non-existent then alloc/seed it
-  if [ ! -f $exec_dir/ff_assoclist_dir/$assocname ]; then
+  if [ ! -f $parm_dir/ff_assoclist_dir/$assocname ]; then
     dummy="# assoc  f(assoc) ov1 ov2 ov3 rest"
-    echo "$dummy" > $exec_dir/ff_assoclist_dir/$assocname 
+    echo "$dummy" > $parm_dir/ff_assoclist_dir/$assocname 
   fi
-# assoc_file=$exec_dir/ff_assoclist_dir/$assocname
+# assoc_file=$parm_dir/ff_assoclist_dir/$assocname
   exit      0 
 fi
 
-assoc_file=$exec_dir/ff_assoclist_dir/$assocname
+assoc_file=$parm_dir/ff_assoclist_dir/$assocname
 ech0 "ffwork $assoc_file  $p1 $p2 $p3 $p4"
 ffwork $assoc_file  $p1 $p2 $p3 $p4
 echo "return to end of main"
