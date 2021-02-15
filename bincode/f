@@ -1,5 +1,11 @@
 #!/bin/bash
 
+myeditor="vim"                # set the default myeditor
+base_dir="etc"                # dir for the assoclist
+if [ ! -d $HOME/$basd_dir ]; then
+  mkdir $HOME/base_dir
+fi
+
 # debugging I left in the debugging echos but you can turn then on/off
 # to turn them on   from cmd line  enter  export eth0="ON"
 # to turn then back off                   export eth0=anythingbut_ON
@@ -25,8 +31,6 @@ function nop() {    # a NO-OP to make code more readable later
   return 0
 }
 
-myeditor="vim"                # set the default myeditor
-base_dir="bin"
 #  Below is the assoc file (name of assoc filename action    file 
 assoc_file=$HOME/$base_dir/f_assoclist
 

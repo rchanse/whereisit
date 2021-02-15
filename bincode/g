@@ -1,5 +1,14 @@
 #!/bin/bash
 
+#Set default values
+myeditor="vim"                         # choose your editor
+
+base_dir="etc"                         # base index
+if [ ! -d $HOME/$base_dir ]; then
+  mkdir -pv $HOME/$base_dir
+fi
+parm_dir=$HOME/$base_dir
+
 # IMPORTANT # # This code is to be use if you are invoking ech0 
 # within a # script which has not internal  ech0 function.
 #
@@ -16,12 +25,6 @@
     echo $@
   fi  
 }
-#Set default values
-myeditor="vim"                         # choose your editor
-base_dir="bin"                         # base index
-parm_dir=$HOME/$base_dir
-
-
 action=$1                                 # default for case
 let count=$#
 read -r action cmdp1 cmdp2 cmdp3 cmdp_rest <<< $@

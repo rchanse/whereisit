@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 
+# collect and remember command line values fro $@ 
+read -r mkey mp1 mp2 mp3 mprest <<< $@
+
 # set my editor as global variable
 export myeditor="vim"
 # export myeditor="mousepad"
 # export myeditor="nano"
+
+base_dir="etc"               # used so $HOME/$base_dir will hold the
+                              # directory for 'parms' list.
+parm_dir=$HOME/$base_dir
+if [ ! -d $parm_dir ]; then
+  mkdir -p $parm_dir
+fi
+
+# main driver portion is at bottom since in bash
+# in line functions must precede their 'call'
+# find  gg-start code.
+
+#functions  ech0, nop, is_integer, in_range, list_by_number, ggwork 
 
 # debugging I left in the debugging echos but left off,
 # to turn them on  BEFORE issuing ff  issue export ech0=ON  
@@ -27,7 +43,7 @@ function nop() {    # a NO-OP to make code more readable later
   return 0
 }
 
-#=================================================ggwork start
+#=================================================ggwork-start
 # the code below is a function to do the g - work
 # note it has several internal subfunctions.
 function ggwork () {
@@ -73,10 +89,10 @@ sub2=$3
 sub3=$4
 sub4=$5
 ech0 " 1 $sub1, 2 $sub2, 3 $sub3, 4 $sub4"
-#read -r exec_dir rest < $rchbls/execdir  #<<comment
+#read -r parm_dir rest < $rchbls/execdir  #<<comment
 echo "gnamelist is  ===>>$assocparm<<====="
 echo "in $assocparm_dir"
-#exec_dir/gg_assoclist_dir/$assocparm "
+#parm_dir/gg_assoclist_dir/$assocparm "
 
 # shorten gnamelist to $NAMES_list
 NAMES_list=$assoc_file
@@ -189,84 +205,66 @@ return       # back to gg wrapper call
 ########## end of ggwork function <<============
 
 
-#start of gg code <<====================
-# collect and remember command line values fro $@ 
-read -r mkey mp1 mp2 mp3 mprest <<< $@
+# gg-start of gg code <<====================
 
-# # # # # # # # # # # # # #
-# There are two block of code below  one for wi-system and
-# the the other for file in your personal bin library
-# Uncommit the block you wish to use and comment the other.
-# # # # # # # # # # # # # #
-
-
-## wi code ##
-# IFSsave=$IFS
-# IFS=" "
-# read -r exec_dir rest < $rchbls/execdir
-# read -r build_lib rest < $rchbls/builddir
-# IFS=$IFSsave
-## wi code ##
- 
-
-## bin code                     <<+++  code for bin
-base_dir="bin"
-#parm_dir=$HOME/$base_dir
-exec_dir=$HOME/$base_dir
-## bin code
-
-# # # # # # # # # # # # # #  STOP HERE
 # insure directory of separate members. exists."
-if [ -d $exec_dir/gg_assoclist_dir ]; then
-    ech0 "subdir exists $exec_dir/gg_assoclist_dir  "
+# this is a one-time  first-time ONLY
+if [ -d $parm_dir/gg_assoclist_dir ]; then
+    ech0 "subdir exists $parm_dir/gg_assoclist_dir  "
 else
     ech0 "create the necessary subdir" 
-    mkdir -p $exec_dir/gg_assoclist_dir
+    mkdir -p $parm_dir/gg_assoclist_dir
     mc=$?
     ech0 "mkdir code $mc"
-    touch $exec_dir/gg_assoclist_dir/firsttime  # default entry empty
+    touch $parm_dir/gg_assoclist_dir/firsttime  # default entry empty
     sleep 1
-    dummy="assoc  gg(assoc)  ov1 ov2 ov3 rest"
-    echo "$dummy" > $exec_dir/gg_assoclist_dir/firsttime
+    dummy=" gg(assoc)  ov1 ov2 ov3 rest"
+    echo "$dummy" > $parm_dir/gg_assoclist_dir/firsttime
 fi
+
 # setting the value of original current subdir
-if [ -f $exec_dir/gg_assocname ]; then
+if [ -f $parm_dir/gg_assocname ]; then
     ech0 "filename of current subdir exists."  # skip setting
 else
     ech0 "creating file for current subdir."
-    touch $exec_dir/gg_assocname
+    touch $parm_dir/gg_assocname
     sleep 1              # time to populate (first time only)
-    echo "firsttime" > $exec_dir/gg_assocname
+    echo "firsttime" > $parm_dir/gg_assocname
 fi
 
-read -r current_gnamelist rest < $exec_dir/gg_assocname
+read -r current_gnamelist rest < $parm_dir/gg_assocname
 ech0 "\current_gnamelist $current_gnamelist"
-ech0 "in directory $exec_dir/gg_assoclist_dir"
+ech0 "in directory $parm_dir/gg_assoclist_dir"
 
 if [ ".$mkey" == "." ]; then
   clear
-  echo "Activate/Inactivate/choose the name of the gnamelist file in use."
-  echo " set/SET  - prompts for the name"
-  echo " null - display help and filename"
-  echo " 0 or . - the gnamelist"
-  echo " num- handle the num-th item "
-  echo " rep file - overlay gnamelist with file"
-  echo " add file - concate file to list."
-  echo " "
-# echo "Currently using ==>>$current_gnamelist in directory  $rchbls/gg_assoclist_dir"  #<<comment
-  echo "Currently using ==>>$current_gnamelist<<======="
-  echo "in directory  $exec_dir/gg_assoclist_dir"  #<<insert
-  echo " "
-  echo -n "Choices: "
+cat << EOF-usage
+::: usage ::::::::::::::::::::::::::::::::::::::
+Name: gg - used to extend g to user chose projects
+
+syntax gg parm1  ov1 ov2 ov3 rest
+  parm1:
+    Activate/Inactivate/choose the name of the gnamelist file in use.
+    set/SET  - prompts for the name
+    null - display help and filename
+    0 or . - the gnamelist
+    num- handle the num-th item 
+    rep file - overlay gnamelist with file
+    add file - concate file to list.
+
+ Currently using ==>>$current_gnamelist<<=======
+  in directory  $parm_dir/gg_assoclist_dir
+
+  Choices: 
+EOF-usage
   #ls $rchbls/gg_assoclist_dir   #<<comment
-  ls $exec_dir/gg_assoclist_dir  #<<insert
+  ls $parm_dir/gg_assoclist_dir               #<<insert
   exit 4
 fi
 
 p1=$mkey
 
 # Remove on/ON off/OFF  replace with set/SET
-
 if [ ".$p1" == ".set" ]; then
   p1="SET" 
 fi
@@ -275,16 +273,18 @@ if [ ".$p1" == ".SET" ]; then
    echo -n "Enter the assocparm file name : "
    read -r answer   rest
    assocparm=$answer 
-   echo $assocparm > $exec_dir/gg_assocname # new curr dir
-   echo "Using >"$assocparm" in $exec_dir/gg_assoclist_dir dir."
-   if [ ! -f $exec_dir/gg_assoclist_dir/$assocparm ]; then
-     dummy="assoc  gg(assoc)  ov1 ov2 ov3 rest"
-     echo "$dummy" > $exec_dir/gg_assoclist_dir/$assocparm 
+   echo $assocparm > $parm_dir/gg_assocname # set new curr dir
+   echo "Using >"$assocparm" in $parm_dir/gg_assoclist_dir dir."
+   if [ ! -f $parm_dir/gg_assoclist_dir/$assocparm ]; then
+     dummy=" gg(assoc)  ov1 ov2 ov3 rest"
+     echo "$dummy" > $parm_dir/gg_assoclist_dir/$assocparm 
    fi
    exit 0
 fi
-read -r assocparm rest < $exec_dir/gg_assocname
-assoc_file=$exec_dir/gg_assoclist_dir/$assocparm
+
+# set up to call ggwork   (which will do the job.)
+read -r assocparm rest < $parm_dir/gg_assocname
+assoc_file=$parm_dir/gg_assoclist_dir/$assocparm
 ech0 "ggwork $assoc_file $mkey $mp1 $mp2 $mp3 $mprest" 
 ggwork $assoc_file $mkey $mp1 $mp2 $mp3 $mprest
 ech0 "I have returned."

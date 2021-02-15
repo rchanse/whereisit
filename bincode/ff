@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 
+myeditor="vim"                       # setting the editor used
+#myeditor="nano"
+#myeditor="micro"
+#myeditor="mousepad"
+
+base_dir="etc"           # select hli so 'parmlib' in $HOME/$base_dir
+if [ ! -d $HOME/$base_dir ]; then
+  mkdir -pv $HOME/$base_dir
+fi
+parm_dir=$HOME/$base_dir
+
+ech0 " $base_dir   $parm_dir"
+
 # function to copy at top and use ech0 (rather than ech1
 function ech0 () {     # turn on debugging with  export ech0=ON
   if [ ".$ech0" == ".ON" ]; then
     echo $@
   fi  
 }
-
-myeditor="vim"
-#myeditor="nano"
-#myeditor="micro"
-#myeditor="mousepad"
-
-
-base_dir="bin"
-parm_dir=$HOME/$base_dir
-
-ech0 " $base_dir   $parm_dir"
 
 usage() {
   cat <<EOF
